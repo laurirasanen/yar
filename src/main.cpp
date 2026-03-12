@@ -1,5 +1,5 @@
-#include "Engine.h"
-#include "Log.h"
+#include "engine.h"
+#include "log.h"
 
 #include <cstring>
 #include <exception>

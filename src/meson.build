@@ -2,30 +2,30 @@ sdl_dep = dependency('sdl2', include_type: 'system')
 vk_dep = dependency('vulkan', include_type: 'system')
 
 yar_src = files([
-  'Renderer/Vulkan/VmaUsage.cpp',
-  'Renderer/Vulkan/VulkanBuffer.cpp',
-  'Renderer/Vulkan/VulkanDescriptorSet.cpp',
-  'Renderer/Vulkan/VulkanDevice.cpp',
-  'Renderer/Vulkan/VulkanInstance.cpp',
-  'Renderer/Vulkan/VulkanRenderer.cpp',
+  'renderer/vulkan/vma_usage.cpp',
+  'renderer/vulkan/vulkan_buffer.cpp',
+  'renderer/vulkan/vulkan_descriptor_set.cpp',
+  'renderer/vulkan/vulkan_device.cpp',
+  'renderer/vulkan/vulkan_instance.cpp',
+  'renderer/vulkan/vulkan_renderer.cpp',
   
-  'UI/UI.cpp',
+  'ui/ui.cpp',
 
-  'Window/Window.cpp',
+  'window/window.cpp',
   
-  'World/World.cpp',
+  'world/world.cpp',
 
-  'Engine.cpp',
+  'engine.cpp',
   'main.cpp',
 ])
 
 yar_shaders = files([
-  'Shaders/fullscreen_fs.frag',
-  'Shaders/fullscreen_vs.vert',
-  'Shaders/simple_fs.frag',
-  'Shaders/simple_vs.vert',
-  'Shaders/sky_fs.frag',
-  'Shaders/sky_vs.vert',
+  'shaders/fullscreen_fs.frag',
+  'shaders/fullscreen_vs.vert',
+  'shaders/simple_fs.frag',
+  'shaders/simple_vs.vert',
+  'shaders/sky_fs.frag',
+  'shaders/sky_vs.vert',
 ])
 
 yar_deps = [
