@@ -13,7 +13,7 @@
 #include "Time.h"
 #include "Window/Window.h"
 
-namespace drive
+namespace yar
 {
 Engine::Engine(RendererType rendererType)
 {
@@ -249,4 +249,4 @@ void Engine::RenderThread(const std::stop_token token)
 
     LOG_INFO("Exit RenderThread");
 }
-} // namespace drive
+} // namespace yar

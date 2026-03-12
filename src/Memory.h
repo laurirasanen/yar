@@ -9,7 +9,7 @@
 #include <windows.h>
 #endif
 
-namespace drive
+namespace yar
 {
 class Memory
 {
@@ -37,4 +37,4 @@ class Memory
         return usage;
     }
 };
-}; // namespace drive
+}; // namespace yar

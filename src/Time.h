@@ -2,7 +2,7 @@
 
 #include <chrono>
 
-namespace drive
+namespace yar
 {
 using clock_duration = std::chrono::duration<
     double,
@@ -105,4 +105,4 @@ class Time
     static inline double renderStart;
     static inline double startTime;
 };
-} // namespace drive
+} // namespace yar

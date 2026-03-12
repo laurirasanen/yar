@@ -10,7 +10,7 @@
 #include "../Window/Window.h"
 #include "Buffer.h"
 
-namespace drive
+namespace yar
 {
 enum RendererType
 {
@@ -76,4 +76,4 @@ class Renderer
     // while still in use by command buffer.
     std::vector<std::shared_ptr<Buffer>> m_frameBuffers;
 };
-} // namespace drive
+} // namespace yar

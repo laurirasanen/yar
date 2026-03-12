@@ -6,7 +6,7 @@
 #include "../Shader.h"
 #include "VulkanRenderer.h"
 
-namespace drive
+namespace yar
 {
 
 #define MAX_FRAMES_IN_FLIGHT 2
@@ -191,4 +191,4 @@ constexpr VkPipelineShaderStageCreateInfo VulkanRenderer::FillShaderStageCreateI
     createInfo.pName  = "main";
     return createInfo;
 }
-} // namespace drive
+} // namespace yar

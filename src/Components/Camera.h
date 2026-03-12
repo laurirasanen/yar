@@ -11,7 +11,7 @@
 #include "../Window/Input.h"
 #include "Transform.h"
 
-namespace drive
+namespace yar
 {
 #define CAM_NEAR 0.1f
 #define CAM_FAR  1000.0f
@@ -156,4 +156,4 @@ class NoclipCamera : public Camera
     float MoveSpeed;
     float Sensitivity;
 };
-} // namespace drive
+} // namespace yar

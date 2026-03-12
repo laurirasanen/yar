@@ -6,7 +6,7 @@
 #include "Icosphere.h"
 #include "Sky.h"
 
-namespace drive
+namespace yar
 {
 class World
 {
@@ -34,4 +34,4 @@ class World
     std::shared_ptr<Buffer> m_testPlaneVertexBuffer;
     std::shared_ptr<Buffer> m_testPlaneIndexBuffer;
 };
-} // namespace drive
+} // namespace yar

@@ -5,7 +5,7 @@
 #include "VulkanCommon.h"
 #include "VulkanDescriptorSet.h"
 
-namespace drive
+namespace yar
 {
 VulkanDescriptorSet::VulkanDescriptorSet(
     const VulkanDevice&                        device,
@@ -112,4 +112,4 @@ void VulkanDescriptorSet::Bind(
         nullptr
     );
 }
-} // namespace drive
+} // namespace yar

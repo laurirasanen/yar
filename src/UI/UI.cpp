@@ -10,7 +10,7 @@
 #include "../Memory.h"
 #include "UI.h"
 
-namespace drive
+namespace yar
 {
 
 UI::UI(std::shared_ptr<Window> window, std::shared_ptr<Renderer> renderer) :
@@ -173,4 +173,4 @@ void UI::DemoWindow()
 
     ImGui::ShowDemoWindow(&m_state.showWindow[static_cast<unsigned int>(UIWindow::DEMO)]);
 }
-}; // namespace drive
+}; // namespace yar

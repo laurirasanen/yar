@@ -3,7 +3,7 @@
 #include <glm/vec2.hpp>
 #include <SDL_scancode.h>
 
-namespace drive
+namespace yar
 {
 
 enum Key : unsigned int
@@ -127,4 +127,4 @@ struct WindowInput
         keyFlags &= ~KeyToFlag(key);
     }
 };
-}; // namespace drive
+}; // namespace yar

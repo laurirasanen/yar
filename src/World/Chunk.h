@@ -10,7 +10,7 @@
 
 #define CHUNK_SIZE 64
 
-namespace drive
+namespace yar
 {
 struct Chunk
 {
@@ -41,4 +41,4 @@ struct Chunk
         return glm::ivec2(pos.x / CHUNK_SIZE, pos.y / CHUNK_SIZE);
     }
 };
-}; // namespace drive
+}; // namespace yar

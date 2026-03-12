@@ -2,11 +2,11 @@
 
 #include <glm/vec2.hpp>
 
-namespace drive
+namespace yar
 {
 struct Rect
 {
     glm::ivec2 size;
     glm::ivec2 offset;
 };
-} // namespace drive
+} // namespace yar

@@ -6,7 +6,7 @@
 #include "../Buffer.h"
 #include "VmaUsage.h"
 
-namespace drive
+namespace yar
 {
 class VulkanBuffer : public Buffer
 {
@@ -50,4 +50,4 @@ class VulkanBuffer : public Buffer
     VkBuffer      m_vkBuffer;
     VmaAllocation m_vmaAllocation;
 };
-} // namespace drive
+} // namespace yar

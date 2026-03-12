@@ -6,7 +6,7 @@
 #include "../../Window/Window.h"
 #include "VulkanCommon.h"
 
-namespace drive
+namespace yar
 {
 class VulkanInstance
 {
@@ -57,4 +57,4 @@ class VulkanInstance
     constexpr static bool m_enableValidationLayers = true;
 #endif
 };
-} // namespace drive
+} // namespace yar

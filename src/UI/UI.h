@@ -7,7 +7,7 @@
 #include "../Renderer/Vulkan/VulkanRenderer.h"
 #include "../Window/Window.h"
 
-namespace drive
+namespace yar
 {
 
 enum class UIWindow
@@ -51,4 +51,4 @@ class UI
     VulkanImGuiCreationInfo   m_info;
     UIState                   m_state;
 };
-}; // namespace drive
+}; // namespace yar

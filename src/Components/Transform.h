@@ -5,11 +5,11 @@
 
 #include "Rotation.h"
 
-namespace drive
+namespace yar
 {
 struct Transform
 {
     glm::vec3 position;
     Rotation  rotation;
 };
-} // namespace drive
+} // namespace yar

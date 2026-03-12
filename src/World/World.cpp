@@ -2,7 +2,7 @@
 #include "../Log.h"
 #include "src/Renderer/Renderer.h"
 
-namespace drive
+namespace yar
 {
 
 World::World(std::shared_ptr<Renderer> renderer) : m_renderer(renderer)
@@ -57,4 +57,4 @@ void World::Render()
 
     m_sky->Render();
 }
-} // namespace drive
+} // namespace yar

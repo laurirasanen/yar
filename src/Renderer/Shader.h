@@ -9,7 +9,7 @@
 #include <sky_fs.h>
 #include <sky_vs.h>
 
-namespace drive
+namespace yar
 {
 class Shader
 {
@@ -36,5 +36,5 @@ class Shader
 
 // Usage:
 // auto shader = LOAD_VULKAN_SPV(simple_fs);
-#define LOAD_VULKAN_SPV(NAME) drive::Shader::GetVulkanCreateInfo(NAME, sizeof(NAME))
-} // namespace drive
+#define LOAD_VULKAN_SPV(NAME) yar::Shader::GetVulkanCreateInfo(NAME, sizeof(NAME))
+} // namespace yar

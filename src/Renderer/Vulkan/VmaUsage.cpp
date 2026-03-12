@@ -4,7 +4,7 @@
 #include "VmaUsage.h"
 #include "VulkanCommon.h"
 
-namespace drive
+namespace yar
 {
 VmaAllocator g_vma;
 
@@ -29,4 +29,4 @@ VmaTotalStatistics GetVulkanAllocatorTotalStatistics()
     vmaCalculateStatistics(g_vma, &stats);
     return stats;
 }
-} // namespace drive
+} // namespace yar

@@ -5,7 +5,7 @@
 #include "VulkanDevice.h"
 #include <vulkan/vulkan_core.h>
 
-namespace drive
+namespace yar
 {
 class VulkanDescriptorSet
 {
@@ -43,4 +43,4 @@ class VulkanDescriptorSet
     std::vector<std::shared_ptr<VulkanBuffer>> m_uniformBuffers;
     std::vector<void*>                         m_ubosMappedMemory;
 };
-} // namespace drive
+} // namespace yar

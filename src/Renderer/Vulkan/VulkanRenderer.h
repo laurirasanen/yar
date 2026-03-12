@@ -13,7 +13,7 @@
 #include "VulkanInstance.h"
 #include "VulkanPipeline.h"
 
-namespace drive
+namespace yar
 {
 class VulkanRenderer final : public Renderer
 {
@@ -143,4 +143,4 @@ class VulkanRenderer final : public Renderer
     std::shared_ptr<VulkanPipeline<VertexEmpty>>  m_fullscreenPipeline;
     std::shared_ptr<VulkanPipeline<Vertex_P>>     m_skyPipeline;
 };
-} // namespace drive
+} // namespace yar

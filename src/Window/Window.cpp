@@ -11,7 +11,7 @@
 #include "../Log.h"
 #include "Window.h"
 
-namespace drive
+namespace yar
 {
 Window::Window(std::shared_ptr<InputSettings> inputSettings) : m_inputSettings(inputSettings)
 {
@@ -198,4 +198,4 @@ unsigned int Window::GetRefreshRate()
     LOG_ERROR("Failed to get display mode, {}", SDL_GetError());
     return 60;
 }
-} // namespace drive
+} // namespace yar

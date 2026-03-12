@@ -6,7 +6,7 @@
 
 #include "Input.h"
 
-namespace drive
+namespace yar
 {
 class Window
 {
@@ -38,4 +38,4 @@ class Window
     SDL_Window*                    m_window;
     std::shared_ptr<InputSettings> m_inputSettings;
 };
-} // namespace drive
+} // namespace yar

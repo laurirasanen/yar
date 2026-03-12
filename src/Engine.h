@@ -14,7 +14,7 @@
 #include "Window/Window.h"
 #include "World/World.h"
 
-namespace drive
+namespace yar
 {
 class Engine
 {
@@ -50,4 +50,4 @@ class Engine
     std::binary_semaphore m_mainFrameSemaphore {0};
     std::binary_semaphore m_threadFrameSemaphore {0};
 };
-} // namespace drive
+} // namespace yar

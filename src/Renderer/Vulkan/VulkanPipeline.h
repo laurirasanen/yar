@@ -9,7 +9,7 @@
 #include "VulkanDescriptorSet.h"
 #include "VulkanDevice.h"
 
-namespace drive
+namespace yar
 {
 template<class V>
 class VulkanPipeline
@@ -225,4 +225,4 @@ void VulkanPipeline<V>::Bind(
     vkCmdBindPipeline(commandBuffer, bindPoint, m_vkPipeline);
     m_descriptorSet->Bind(commandBuffer, bindPoint, m_vkPipelineLayout, frameIndex);
 }
-} // namespace drive
+} // namespace yar

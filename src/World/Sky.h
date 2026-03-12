@@ -8,7 +8,7 @@
 #include "../Renderer/Renderer.h"
 #include "Icosphere.h"
 
-namespace drive
+namespace yar
 {
 struct Sky
 {
@@ -50,4 +50,4 @@ struct Sky
         renderer->DrawWithBuffers(vertexBuffer, indexBuffer);
     }
 };
-} // namespace drive
+} // namespace yar

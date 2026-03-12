@@ -1,6 +1,6 @@
 #include "VulkanBuffer.h"
 
-namespace drive
+namespace yar
 {
 VulkanBuffer::VulkanBuffer(
     BufferType     bufferType,
@@ -246,4 +246,4 @@ void VulkanBuffer::Unmap()
     vmaUnmapMemory(g_vma, m_vmaAllocation);
     m_isMapped = false;
 }
-}; // namespace drive
+}; // namespace yar

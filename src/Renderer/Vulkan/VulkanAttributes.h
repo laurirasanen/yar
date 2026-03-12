@@ -7,7 +7,7 @@
 
 #include "../DataTypes.h"
 
-namespace drive
+namespace yar
 {
 template<typename T>
 consteval VkVertexInputBindingDescription GetVulkanBindingDescription()
@@ -82,4 +82,4 @@ constexpr std::vector<VkVertexInputAttributeDescription> GetVulkanAttributeDescr
 
     return desc;
 }
-} // namespace drive
+} // namespace yar

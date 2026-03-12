@@ -3,7 +3,7 @@
 #include <glm/gtc/quaternion.hpp>
 #include <glm/vec3.hpp>
 
-namespace drive
+namespace yar
 {
 struct Rotation
 {
@@ -11,4 +11,4 @@ struct Rotation
     glm::vec3 euler;
     glm::quat quaternion;
 };
-} // namespace drive
+} // namespace yar

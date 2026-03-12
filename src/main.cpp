@@ -26,24 +26,24 @@ bool HasLaunchArg(const char* name, const char* value, int argc, char** argv)
 int main(int argc, char** argv)
 {
 #if NDEBUG
-    drive::Log::SetLogLevel(drive::LogLevel::Warning);
+    yar::Log::SetLogLevel(yar::LogLevel::Warning);
 #else
-    drive::Log::SetLogLevel(drive::LogLevel::Debug);
+    yar::Log::SetLogLevel(yar::LogLevel::Debug);
 #endif
 
     try
     {
-        auto rendererType = drive::RendererType::VULKAN;
+        auto rendererType = yar::RendererType::VULKAN;
         if (HasLaunchArg("-renderer", "empty", argc, argv))
         {
-            rendererType = drive::RendererType::EMPTY;
+            rendererType = yar::RendererType::EMPTY;
         }
-        drive::Engine engine(rendererType);
+        yar::Engine engine(rendererType);
     }
     catch (std::exception& ex)
     {
         LOG_EXCEPTION("Unhandled exception: {}", ex.what());
-        drive::Log::Flush();
+        yar::Log::Flush();
         return -1;
     }
 

@@ -13,7 +13,7 @@
 #include "../Log.h"
 #include "../Renderer/DataTypes.h"
 
-namespace drive
+namespace yar
 {
 static const glm::vec2                 baseSize = {0.525731112119133606f, 0.850650808352039932f};
 static const std::array<glm::vec3, 12> basePositions = {
@@ -192,4 +192,4 @@ struct Icosphere
         return inserted.first->second;
     }
 };
-}; // namespace drive
+}; // namespace yar

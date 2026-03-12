@@ -9,7 +9,7 @@
 #include <vector>
 #include <vulkan/vulkan_core.h>
 
-namespace drive
+namespace yar
 {
 #if __GNUC__
 constexpr
@@ -892,4 +892,4 @@ void VulkanDevice::CreateDescriptorPools()
         "Failed to create ImGui descriptor pool"
     );
 }
-} // namespace drive
+} // namespace yar

@@ -5,7 +5,7 @@
 #include <memory>
 #include <stdexcept>
 
-namespace drive
+namespace yar
 {
 
 enum BufferType
@@ -123,4 +123,4 @@ class Buffer
     size_t         m_size;
     bool           m_isMapped = false;
 };
-} // namespace drive
+} // namespace yar

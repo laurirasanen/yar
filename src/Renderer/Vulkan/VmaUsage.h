@@ -2,7 +2,7 @@
 
 #include <vk_mem_alloc.h>
 
-namespace drive
+namespace yar
 {
 extern void CreateVulkanAllocator(
     VkInstance       instance,
@@ -15,4 +15,4 @@ extern void DestroyVulkanAllocator();
 extern VmaTotalStatistics GetVulkanAllocatorTotalStatistics();
 
 extern VmaAllocator g_vma;
-} // namespace drive
+} // namespace yar

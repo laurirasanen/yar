@@ -15,7 +15,7 @@
 #include "../Components/Camera.h"
 #include "../Log.h"
 
-namespace drive
+namespace yar
 {
 struct Vertex_P
 {
@@ -82,4 +82,4 @@ struct UniformBufferObject
         sunColor = glm::vec3(0.5, 0.5, 0.5);
     }
 };
-} // namespace drive
+} // namespace yar

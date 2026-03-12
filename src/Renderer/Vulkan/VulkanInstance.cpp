@@ -5,7 +5,7 @@
 #include <cstring>
 #include <stdexcept>
 
-namespace drive
+namespace yar
 {
 #if __GNUC__
 constexpr
@@ -238,4 +238,4 @@ void VulkanInstance::CreateSurface()
         throw std::runtime_error("Failed to create vulkan surface");
     }
 }
-} // namespace drive
+} // namespace yar

@@ -1,6 +1,6 @@
 #include "../Renderer.h"
 
-namespace drive
+namespace yar
 {
 class EmptyRenderer final : public Renderer
 {
@@ -82,4 +82,4 @@ class EmptyRenderer final : public Renderer
     {
     }
 };
-} // namespace drive
+} // namespace yar
