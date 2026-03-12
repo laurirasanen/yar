@@ -4,7 +4,7 @@
 #include <memory>
 
 #include "../buffer.h"
-#include "vma_usage.h"
+#include "vma.h"
 
 namespace yar
 {
@@ -35,8 +35,12 @@ class VulkanBuffer : public Buffer
     void Bind(void* commandBuffer) override;
 
     void Draw(void* commandBuffer) override;
-    void Draw(void* commandBuffer, uint32_t indexOffset, uint32_t indexCount, int32_t vertexOffset)
-        override;
+    void Draw(
+        void*    commandBuffer,
+        uint32_t indexOffset,
+        uint32_t indexCount,
+        int32_t  vertexOffset
+    ) override;
 
     void Map(void** data) override;
     void Unmap() override;

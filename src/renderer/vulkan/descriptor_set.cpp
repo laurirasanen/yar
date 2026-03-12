@@ -2,8 +2,8 @@
 #include <cstring>
 
 #include "../data_types.h"
-#include "vulkan_common.h"
-#include "vulkan_descriptor_set.h"
+#include "common.h"
+#include "descriptor_set.h"
 
 namespace yar
 {

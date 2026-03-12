@@ -1,21 +1,21 @@
 #include <imgui_impl_vulkan.h>
 #include <memory>
 
-#include "../../log.h"
-#include "../data_types.h"
-#include "../shader.h"
-#include "vulkan_renderer.h"
+#include "../log.h"
+#include "data_types.h"
+#include "renderer.h"
+#include "shader.h"
 
 namespace yar
 {
 
 #define MAX_FRAMES_IN_FLIGHT 2
 
-VulkanRenderer::VulkanRenderer(std::shared_ptr<Window> window) :
+Renderer::Renderer(std::shared_ptr<Window> window) :
     m_instance(window),
     m_device(m_instance, MAX_FRAMES_IN_FLIGHT)
 {
-    LOG_INFO("Creating VulkanRenderer");
+    LOG_INFO("Creating Renderer");
 
     auto uboBuffers = std::vector<std::shared_ptr<VulkanBuffer>>();
     for (unsigned int i = 0; i < MAX_FRAMES_IN_FLIGHT; i++)
@@ -63,9 +63,9 @@ VulkanRenderer::VulkanRenderer(std::shared_ptr<Window> window) :
         std::make_shared<VulkanPipeline<Vertex_P>>(m_device, m_descriptorSet, skyStages);
 }
 
-VulkanRenderer::~VulkanRenderer()
+Renderer::~Renderer()
 {
-    LOG_INFO("Destroying VulkanRenderer");
+    LOG_INFO("Destroying Renderer");
 
     vkDeviceWaitIdle(m_device.GetVkDevice());
 
@@ -83,37 +83,37 @@ VulkanRenderer::~VulkanRenderer()
     m_frameBuffers.clear();
 }
 
-void VulkanRenderer::SetWindow(std::shared_ptr<Window> window)
+void Renderer::SetWindow(std::shared_ptr<Window> window)
 {
     LOG_INFO("Setting window");
     m_instance.SetWindow(window);
     Resize();
 }
 
-void VulkanRenderer::ClearViewport()
+void Renderer::ClearViewport()
 {
     auto commandBuffer = m_device.GetCommandBuffer();
     BindPipeline(RenderPipeline::FULLSCREEN);
     vkCmdDraw(commandBuffer, 3, 1, 0, 0);
 }
 
-void VulkanRenderer::Resize()
+void Renderer::Resize()
 {
     LOG_INFO("Resizing");
     m_device.ResizeFramebuffer();
 }
 
-float VulkanRenderer::GetAspect()
+float Renderer::GetAspect()
 {
     return m_device.GetSwapchainAspect();
 }
 
-void VulkanRenderer::Begin()
+void Renderer::Begin()
 {
     m_device.Begin();
 }
 
-void VulkanRenderer::Submit()
+void Renderer::Submit()
 {
     m_device.Submit();
 
@@ -122,24 +122,24 @@ void VulkanRenderer::Submit()
     m_frameBuffers.clear();
 }
 
-void VulkanRenderer::Present()
+void Renderer::Present()
 {
     m_device.Present();
 }
 
-void VulkanRenderer::UpdateUniforms(const std::shared_ptr<Camera> camera)
+void Renderer::UpdateUniforms(const std::shared_ptr<Camera> camera)
 {
     auto currentFrame = m_device.GetCurrentFrame();
     auto ubo          = UniformBufferObject(camera);
     m_descriptorSet->UpdateUBO(currentFrame, &ubo);
 }
 
-void VulkanRenderer::WaitForIdle()
+void Renderer::WaitForIdle()
 {
     vkDeviceWaitIdle(m_device.GetVkDevice());
 }
 
-void VulkanRenderer::GetImGuiInfo(VulkanImGuiCreationInfo& info)
+void Renderer::GetImGuiInfo(VulkanImGuiCreationInfo& info)
 {
     info.colorFormat     = m_device.GetSwapchainImageFormat();
     VkFormat depthFormat = m_device.GetDepthFormat();
@@ -169,7 +169,7 @@ void VulkanRenderer::GetImGuiInfo(VulkanImGuiCreationInfo& info)
     info.imGuiInfo.CheckVkResultFn             = ImGuiVkCheck;
 }
 
-VkShaderModule& VulkanRenderer::CreateShaderModule(VkShaderModuleCreateInfo createInfo)
+VkShaderModule& Renderer::CreateShaderModule(VkShaderModuleCreateInfo createInfo)
 {
     VkShaderModule module;
     VK_CHECK(
@@ -179,7 +179,7 @@ VkShaderModule& VulkanRenderer::CreateShaderModule(VkShaderModuleCreateInfo crea
     return m_vkShaderModules.emplace_back(module);
 }
 
-constexpr VkPipelineShaderStageCreateInfo VulkanRenderer::FillShaderStageCreateInfo(
+constexpr VkPipelineShaderStageCreateInfo Renderer::FillShaderStageCreateInfo(
     VkShaderModule&       module,
     VkShaderStageFlagBits stage
 )

@@ -1,9 +1,10 @@
 #pragma once
 
-#include "../data_types.h"
-#include "vulkan_buffer.h"
-#include "vulkan_device.h"
 #include <vulkan/vulkan_core.h>
+
+#include "../data_types.h"
+#include "buffer.h"
+#include "device.h"
 
 namespace yar
 {

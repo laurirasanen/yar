@@ -3,8 +3,8 @@
 #include <stdexcept>
 
 #include "../../log.h"
-#include "vulkan_common.h"
-#include "vulkan_instance.h"
+#include "common.h"
+#include "instance.h"
 
 namespace yar
 {

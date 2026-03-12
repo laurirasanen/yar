@@ -4,7 +4,7 @@
 
 #include <glm/vec2.hpp>
 
-#include "../renderer/vulkan/vulkan_renderer.h"
+#include "../renderer/renderer.h"
 #include "../window/window.h"
 
 namespace yar

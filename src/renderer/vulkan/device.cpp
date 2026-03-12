@@ -7,8 +7,8 @@
 #include <vulkan/vulkan_core.h>
 
 #include "../../log.h"
-#include "vulkan_common.h"
-#include "vulkan_device.h"
+#include "common.h"
+#include "device.h"
 
 namespace yar
 {

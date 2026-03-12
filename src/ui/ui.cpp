@@ -27,26 +27,9 @@ UI::UI(std::shared_ptr<Window> window, std::shared_ptr<Renderer> renderer) :
     io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;
     io.ConfigDebugIsDebuggerPresent = true;
 
-    switch (m_renderer->Type())
-    {
-        case RendererType::EMPTY:
-        {
-            ImGui_ImplSDL2_InitForOther(m_window->GetSDLWindow());
-            break;
-        }
-
-        case RendererType::VULKAN:
-        {
-            ImGui_ImplSDL2_InitForVulkan(m_window->GetSDLWindow());
-            auto vulkanRenderer = std::static_pointer_cast<VulkanRenderer>(m_renderer);
-            vulkanRenderer->GetImGuiInfo(m_info);
-            ImGui_ImplVulkan_Init(&m_info.imGuiInfo);
-            break;
-        }
-
-        default:
-            throw std::logic_error("implement me");
-    }
+    ImGui_ImplSDL2_InitForVulkan(m_window->GetSDLWindow());
+    renderer->GetImGuiInfo(m_info);
+    ImGui_ImplVulkan_Init(&m_info.imGuiInfo);
 
     m_state.showWindow[static_cast<unsigned int>(UIWindow::DEBUG)] = true;
 }
@@ -54,78 +37,25 @@ UI::UI(std::shared_ptr<Window> window, std::shared_ptr<Renderer> renderer) :
 UI::~UI()
 {
     LOG_INFO("Destroying UI");
-
-    switch (m_renderer->Type())
-    {
-        case RendererType::EMPTY:
-        {
-            break;
-        }
-
-        case RendererType::VULKAN:
-        {
-            ImGui_ImplVulkan_Shutdown();
-            break;
-        }
-
-        default:
-        {
-            LOG_ERROR("implement me");
-            break;
-        }
-    }
-
+    ImGui_ImplVulkan_Shutdown();
     ImGui_ImplSDL2_Shutdown();
     ImGui::DestroyContext();
 }
 
 void UI::Render()
 {
-    // Start new frame
-    switch (m_renderer->Type())
-    {
-        case RendererType::EMPTY:
-        {
-            return;
-        }
-
-        case RendererType::VULKAN:
-        {
-            ImGui_ImplVulkan_NewFrame();
-            break;
-        }
-
-        default:
-            throw std::logic_error("implement me");
-    }
+    ImGui_ImplVulkan_NewFrame();
     ImGui_ImplSDL2_NewFrame();
     ImGui::NewFrame();
 
     DebugWindow();
     DemoWindow();
 
-    // Prep data for renderer implementation
     ImGui::Render();
 
-    // Pass the data to renderer
-    switch (m_renderer->Type())
-    {
-        case RendererType::EMPTY:
-        {
-            break;
-        }
-
-        case RendererType::VULKAN:
-        {
-            auto data           = ImGui::GetDrawData();
-            auto vulkanRenderer = std::static_pointer_cast<VulkanRenderer>(m_renderer);
-            ImGui_ImplVulkan_RenderDrawData(data, vulkanRenderer->GetVkCommandBuffer());
-            break;
-        }
-
-        default:
-            throw std::logic_error("implement me");
-    }
+    auto data     = ImGui::GetDrawData();
+    auto renderer = std::static_pointer_cast<Renderer>(m_renderer);
+    ImGui_ImplVulkan_RenderDrawData(data, renderer->GetVkCommandBuffer());
 }
 
 void UI::DebugWindow()

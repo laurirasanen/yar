@@ -2,17 +2,18 @@ sdl_dep = dependency('sdl2', include_type: 'system')
 vk_dep = dependency('vulkan', include_type: 'system')
 
 yar_src = files([
-  'renderer/vulkan/vma_usage.cpp',
-  'renderer/vulkan/vulkan_buffer.cpp',
-  'renderer/vulkan/vulkan_descriptor_set.cpp',
-  'renderer/vulkan/vulkan_device.cpp',
-  'renderer/vulkan/vulkan_instance.cpp',
-  'renderer/vulkan/vulkan_renderer.cpp',
-  
+  'renderer/vulkan/vma.cpp',
+  'renderer/vulkan/buffer.cpp',
+  'renderer/vulkan/descriptor_set.cpp',
+  'renderer/vulkan/device.cpp',
+  'renderer/vulkan/instance.cpp',
+
+  'renderer/renderer.cpp',
+
   'ui/ui.cpp',
 
   'window/window.cpp',
-  
+
   'world/world.cpp',
 
   'engine.cpp',

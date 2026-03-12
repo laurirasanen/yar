@@ -23,7 +23,7 @@ bool HasLaunchArg(const char* name, const char* value, int argc, char** argv)
     return false;
 }
 
-int main(int argc, char** argv)
+int main(/*int argc, char** argv*/)
 {
 #if NDEBUG
     yar::Log::SetLogLevel(yar::LogLevel::Warning);
@@ -33,12 +33,7 @@ int main(int argc, char** argv)
 
     try
     {
-        auto rendererType = yar::RendererType::VULKAN;
-        if (HasLaunchArg("-renderer", "empty", argc, argv))
-        {
-            rendererType = yar::RendererType::EMPTY;
-        }
-        yar::Engine engine(rendererType);
+        yar::Engine engine;
     }
     catch (std::exception& ex)
     {

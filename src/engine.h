@@ -19,7 +19,7 @@ namespace yar
 class Engine
 {
   public:
-    Engine(RendererType rendererType);
+    Engine();
     ~Engine();
 
   private:

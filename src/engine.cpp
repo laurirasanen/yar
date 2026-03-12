@@ -8,14 +8,12 @@
 
 #include "engine.h"
 #include "log.h"
-#include "renderer/empty/empty_renderer.h"
-#include "renderer/vulkan/vulkan_renderer.h"
 #include "time.h"
 #include "window/window.h"
 
 namespace yar
 {
-Engine::Engine(RendererType rendererType)
+Engine::Engine()
 {
     LOG_INFO("Creating Engine");
 
@@ -25,25 +23,7 @@ Engine::Engine(RendererType rendererType)
     m_window        = std::make_shared<Window>(m_inputSettings);
     m_camera        = std::make_shared<NoclipCamera>();
 
-    switch (rendererType)
-    {
-        case RendererType::EMPTY:
-        {
-            m_renderer = std::make_shared<EmptyRenderer>();
-            break;
-        }
-
-        case RendererType::VULKAN:
-        {
-            m_renderer = std::make_shared<VulkanRenderer>(m_window);
-            break;
-        }
-
-        default:
-        {
-            throw std::runtime_error("Unhandled renderer type");
-        }
-    }
+    m_renderer = std::make_shared<Renderer>(m_window);
 
     m_ui    = std::make_unique<UI>(m_window, m_renderer);
     m_world = std::make_shared<World>(m_renderer);

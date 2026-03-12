@@ -1,4 +1,4 @@
-#include "vulkan_buffer.h"
+#include "buffer.h"
 
 namespace yar
 {

@@ -5,9 +5,9 @@
 #include "vulkan/vulkan_core.h"
 
 #include "../../log.h"
-#include "vulkan_attributes.h"
-#include "vulkan_descriptor_set.h"
-#include "vulkan_device.h"
+#include "attributes.h"
+#include "descriptor_set.h"
+#include "device.h"
 
 namespace yar
 {

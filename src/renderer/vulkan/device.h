@@ -3,8 +3,8 @@
 #include <optional>
 
 #include "../../components/rect.h"
-#include "vma_usage.h"
-#include "vulkan_instance.h"
+#include "instance.h"
+#include "vma.h"
 
 namespace yar
 {
@@ -126,10 +126,11 @@ class VulkanDevice
     constexpr VkSurfaceFormatKHR  ChooseSwapSurfaceFormat(
          const std::vector<VkSurfaceFormatKHR>& available
      );
-    constexpr VkPresentModeKHR ChooseSwapPresentMode(const std::vector<VkPresentModeKHR>& available
+    constexpr VkPresentModeKHR ChooseSwapPresentMode(
+        const std::vector<VkPresentModeKHR>& available
     );
-    constexpr VkExtent2D       ChooseSwapExtent(const VkSurfaceCapabilitiesKHR& capabilities);
-    void                       CreateSwapchain();
+    constexpr VkExtent2D ChooseSwapExtent(const VkSurfaceCapabilitiesKHR& capabilities);
+    void                 CreateSwapchain();
 
     void CreateImage(
         VkImage*          image,
