@@ -1,12 +1,12 @@
-[submodule "include/imgui"]
-	path = include/imgui
+[submodule "imgui"]
+	path = thirdparty/imgui
 	url = https://github.com/ocornut/imgui.git
-[submodule "include/glm"]
-	path = include/glm
+[submodule "glm"]
+	path = thirdparty/glm
 	url = https://github.com/g-truc/glm.git
-[submodule "include/VulkanMemoryAllocator"]
-	path = include/VulkanMemoryAllocator
+[submodule "VulkanMemoryAllocator"]
+	path = thirdparty/VulkanMemoryAllocator
 	url = https://github.com/GPUOpen-LibrariesAndSDKs/VulkanMemoryAllocator.git
-[submodule "include/vulkan-headers"]
-	path = include/vulkan-headers
+[submodule "vulkan-headers"]
+	path = thirdparty/vulkan-headers
 	url = https://github.com/KhronosGroup/Vulkan-Headers.git

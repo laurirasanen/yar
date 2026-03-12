@@ -71,27 +71,27 @@ add_project_arguments(cpp.get_supported_arguments(compiler_args), language: 'cpp
 add_project_link_arguments(cpp.get_supported_link_arguments(linker_args), language: 'cpp')
 
 includes = include_directories(
-  'include/vulkan-headers/include',
-  'include/VulkanMemoryAllocator/include',
+  'thirdparty/vulkan-headers/include',
+  'thirdparty/VulkanMemoryAllocator/include',
 
-  'include/glm',
+  'thirdparty/glm',
 
-  'include/imgui',
-  'include/imgui/backends',
+  'thirdparty/imgui',
+  'thirdparty/imgui/backends',
 
   is_system: true,
 )
 
 # TODO: is there a way to disable warnings for these?
 imgui_src = [
-  'include/imgui/imgui.cpp',
-  'include/imgui/imgui_demo.cpp',
-  'include/imgui/imgui_draw.cpp',
-  'include/imgui/imgui_tables.cpp',
-  'include/imgui/imgui_widgets.cpp',
+  'thirdparty/imgui/imgui.cpp',
+  'thirdparty/imgui/imgui_demo.cpp',
+  'thirdparty/imgui/imgui_draw.cpp',
+  'thirdparty/imgui/imgui_tables.cpp',
+  'thirdparty/imgui/imgui_widgets.cpp',
 
-  'include/imgui/backends/imgui_impl_sdl2.cpp',
-  'include/imgui/backends/imgui_impl_vulkan.cpp',
+  'thirdparty/imgui/backends/imgui_impl_sdl2.cpp',
+  'thirdparty/imgui/backends/imgui_impl_vulkan.cpp',
 ]
 
 glsl_compiler = find_program('glslang', 'glslangValidator')
