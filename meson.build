@@ -71,6 +71,7 @@ add_project_arguments(cpp.get_supported_arguments(compiler_args), language: 'cpp
 add_project_link_arguments(cpp.get_supported_link_arguments(linker_args), language: 'cpp')
 
 includes = include_directories(
+  'include/vulkan-headers/include',
   'include/VulkanMemoryAllocator/include',
 
   'include/glm',
@@ -95,7 +96,7 @@ imgui_src = [
 
 glsl_compiler = find_program('glslang', 'glslangValidator')
 glsl_args = [
-  '--target-env', 'vulkan1.3',
+  '--target-env', 'vulkan1.4',
   '--variable-name', '@BASENAME@',
   '--depfile', '@DEPFILE@',
   '@INPUT@',

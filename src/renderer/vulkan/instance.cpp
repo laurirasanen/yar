@@ -81,7 +81,7 @@ VulkanInstance::VulkanInstance(std::shared_ptr<Window> window) : m_window(window
     appInfo.applicationVersion = VK_MAKE_VERSION(1, 0, 0);
     appInfo.pEngineName        = "drive";
     appInfo.engineVersion      = VK_MAKE_VERSION(1, 0, 0);
-    appInfo.apiVersion         = VK_API_VERSION_1_3;
+    appInfo.apiVersion         = VK_API_VERSION_1_4;
 
     if (m_enableValidationLayers && !ValidationLayersSupported())
     {
