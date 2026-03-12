@@ -106,13 +106,6 @@ class VulkanRenderer final : public Renderer
                 break;
             }
 
-            case TERRAIN:
-            {
-                m_terrainPipeline
-                    ->Bind(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, currentFrame);
-                break;
-            }
-
             case FULLSCREEN:
             {
                 m_fullscreenPipeline
@@ -147,7 +140,6 @@ class VulkanRenderer final : public Renderer
     std::vector<VkShaderModule>          m_vkShaderModules;
 
     std::shared_ptr<VulkanPipeline<Vertex_P_C>>   m_testPipeline;
-    std::shared_ptr<VulkanPipeline<Vertex_P_N_C>> m_terrainPipeline;
     std::shared_ptr<VulkanPipeline<VertexEmpty>>  m_fullscreenPipeline;
     std::shared_ptr<VulkanPipeline<Vertex_P>>     m_skyPipeline;
 };

@@ -2,5 +2,7 @@
 
 set -euo pipefail
 
-meson setup -Dbuildtype=release -Doptimization=2 build
+rm -rf ./build
 
+meson setup -Dbuildtype=release -Doptimization=2 build
+meson compile -C build

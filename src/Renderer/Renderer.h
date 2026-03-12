@@ -21,7 +21,6 @@ enum RendererType
 enum RenderPipeline
 {
     TEST,
-    TERRAIN,
     FULLSCREEN,
     SKY,
 };

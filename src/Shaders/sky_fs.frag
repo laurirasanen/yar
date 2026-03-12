@@ -1,7 +1,9 @@
 #version 450
 
-#include "include/UniformBufferObject.glsl"
-#include "include/Util.glsl"
+#extension GL_GOOGLE_include_directive : enable
+
+#include "include/ubo.glsl"
+#include "include/util.glsl"
 
 layout(location = 0) in vec3 fragDir;
 

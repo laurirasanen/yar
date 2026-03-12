@@ -1,5 +1,5 @@
 project(
-  'drive',
+  'yar',
   'cpp',
   default_options: [
     'default_library=static',
@@ -16,7 +16,7 @@ buildtype = get_option('buildtype')
 source_dir = meson.current_source_dir()
 
 # Sanity checks
-if compiler not in ['gcc', 'msvc']
+if compiler not in ['gcc']
   error('Unsupported compiler ', compiler)
 endif
 
@@ -78,12 +78,8 @@ includes = include_directories(
   'include/imgui',
   'include/imgui/backends',
 
-  'include/PerlinNoise',
-
   is_system: true,
 )
-
-subdir('src')
 
 # TODO: is there a way to disable warnings for these?
 imgui_src = [
@@ -97,21 +93,29 @@ imgui_src = [
   'include/imgui/backends/imgui_impl_vulkan.cpp',
 ]
 
-shadercompiler = executable('shadercompiler', shadercompiler_src)
-shader_headers = custom_target(
-  'shaders',
-  output: 'Shaders.h',
-  command: [shadercompiler, source_dir + '/src/Shaders', source_dir + '/src/Generated'],
-  build_always: true,
+glsl_compiler = find_program('glslang', 'glslangValidator')
+glsl_args = [
+  '--target-env', 'vulkan1.3',
+  '--variable-name', '@BASENAME@',
+  '--depfile', '@DEPFILE@',
+  '@INPUT@',
+  '-o', '@OUTPUT@',
+]
+glsl_generator = generator(
+  glsl_compiler,
+  output: ['@BASENAME@.h'],
+  depfile: '@BASENAME@.h.d',
+  arguments: glsl_args,
 )
 
-src = drive_src + imgui_src + shader_headers
-deps = drive_deps
-inc = includes
+subdir('src')
 
-executable('drive', src,
-  dependencies: deps,
-  include_directories: inc
+executable(
+  'yar',
+  yar_src + imgui_src,
+  glsl_generator.process(yar_shaders),
+  dependencies: yar_deps,
+  include_directories: includes
 )
 
 

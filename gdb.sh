@@ -4,5 +4,5 @@ set -euo pipefail
 
 cd build
 meson compile
-LSAN_OPTIONS="suppressions=../suppr.txt" gdb drive
+LSAN_OPTIONS="suppressions=../suppr.txt" gdb yar
 

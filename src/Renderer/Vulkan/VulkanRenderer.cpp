@@ -27,8 +27,8 @@ VulkanRenderer::VulkanRenderer(std::shared_ptr<Window> window) :
     m_descriptorSet = std::make_shared<VulkanDescriptorSet>(m_device, uboBuffers);
 
     // TODO: abstract away all the shader + pipeline setup
-    auto moduleSimpleFrag = CreateShaderModule(LOAD_VULKAN_SPV(Simple_frag));
-    auto moduleSimpleVert = CreateShaderModule(LOAD_VULKAN_SPV(Simple_vert));
+    auto moduleSimpleFrag = CreateShaderModule(LOAD_VULKAN_SPV(simple_fs));
+    auto moduleSimpleVert = CreateShaderModule(LOAD_VULKAN_SPV(simple_vs));
     auto stageSimpleFrag =
         FillShaderStageCreateInfo(moduleSimpleFrag, VK_SHADER_STAGE_FRAGMENT_BIT);
     auto stageSimpleVert = FillShaderStageCreateInfo(moduleSimpleVert, VK_SHADER_STAGE_VERTEX_BIT);
@@ -37,19 +37,8 @@ VulkanRenderer::VulkanRenderer(std::shared_ptr<Window> window) :
     m_testPipeline =
         std::make_shared<VulkanPipeline<Vertex_P_C>>(m_device, m_descriptorSet, simpleStages);
 
-    auto moduleTerrainFrag = CreateShaderModule(LOAD_VULKAN_SPV(Terrain_frag));
-    auto moduleTerrainVert = CreateShaderModule(LOAD_VULKAN_SPV(Terrain_vert));
-    auto stageTerrainFrag =
-        FillShaderStageCreateInfo(moduleTerrainFrag, VK_SHADER_STAGE_FRAGMENT_BIT);
-    auto stageTerrainVert =
-        FillShaderStageCreateInfo(moduleTerrainVert, VK_SHADER_STAGE_VERTEX_BIT);
-    std::vector terrainStages {stageTerrainFrag, stageTerrainVert};
-
-    m_terrainPipeline =
-        std::make_shared<VulkanPipeline<Vertex_P_N_C>>(m_device, m_descriptorSet, terrainStages);
-
-    auto moduleFullscreenFrag = CreateShaderModule(LOAD_VULKAN_SPV(Fullscreen_frag));
-    auto moduleFullscreenVert = CreateShaderModule(LOAD_VULKAN_SPV(Fullscreen_vert));
+    auto moduleFullscreenFrag = CreateShaderModule(LOAD_VULKAN_SPV(fullscreen_fs));
+    auto moduleFullscreenVert = CreateShaderModule(LOAD_VULKAN_SPV(fullscreen_vs));
     auto stageFullscreenFrag =
         FillShaderStageCreateInfo(moduleFullscreenFrag, VK_SHADER_STAGE_FRAGMENT_BIT);
     auto stageFullscreenVert =
@@ -64,8 +53,8 @@ VulkanRenderer::VulkanRenderer(std::shared_ptr<Window> window) :
         false
     );
 
-    auto moduleSkyFrag = CreateShaderModule(LOAD_VULKAN_SPV(Sky_frag));
-    auto moduleSkyVert = CreateShaderModule(LOAD_VULKAN_SPV(Sky_vert));
+    auto moduleSkyFrag = CreateShaderModule(LOAD_VULKAN_SPV(sky_fs));
+    auto moduleSkyVert = CreateShaderModule(LOAD_VULKAN_SPV(sky_vs));
     auto stageSkyFrag  = FillShaderStageCreateInfo(moduleSkyFrag, VK_SHADER_STAGE_FRAGMENT_BIT);
     auto stageSkyVert  = FillShaderStageCreateInfo(moduleSkyVert, VK_SHADER_STAGE_VERTEX_BIT);
     std::vector skyStages {stageSkyFrag, stageSkyVert};
@@ -81,7 +70,6 @@ VulkanRenderer::~VulkanRenderer()
     vkDeviceWaitIdle(m_device.GetVkDevice());
 
     m_testPipeline.reset();
-    m_terrainPipeline.reset();
     m_fullscreenPipeline.reset();
     m_skyPipeline.reset();
 

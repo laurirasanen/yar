@@ -1,7 +1,9 @@
 #version 450
 
-#include "include/VertexPC.glsl"
-#include "include/UniformBufferObject.glsl"
+#extension GL_GOOGLE_include_directive : enable
+
+#include "include/vertex_pc.glsl"
+#include "include/ubo.glsl"
 
 layout(location = 0) out vec3 fragColor;
 
