@@ -1,7 +1,7 @@
 #pragma once
 
 #include <glm/vec2.hpp>
-#include <SDL_scancode.h>
+#include <SDL3/SDL_scancode.h>
 
 namespace yar
 {
@@ -35,7 +35,7 @@ class InputSettings
   public:
     InputSettings()
     {
-        for (unsigned int i = 0; i < SDL_NUM_SCANCODES; i++)
+        for (unsigned int i = 0; i < SDL_SCANCODE_COUNT; i++)
         {
             m_sdlKeyMap[i] = Key::KEY_NONE;
         }
@@ -53,7 +53,6 @@ class InputSettings
         m_sdlKeyMap[static_cast<unsigned int>(SDL_SCANCODE_LCTRL)] = Key::KEY_MOVE_DOWN;
 
         m_sdlKeyMap[static_cast<unsigned int>(SDL_SCANCODE_F1)] = Key::KEY_MOUSE_GRAB;
-
         m_sdlKeyMap[static_cast<unsigned int>(SDL_SCANCODE_F2)] = Key::KEY_WINDOW_DEBUG;
         m_sdlKeyMap[static_cast<unsigned int>(SDL_SCANCODE_F3)] = Key::KEY_WINDOW_DEMO;
     }
@@ -64,7 +63,7 @@ class InputSettings
     }
 
   private:
-    Key m_sdlKeyMap[SDL_NUM_SCANCODES];
+    Key m_sdlKeyMap[SDL_SCANCODE_COUNT];
 };
 
 struct WindowInput
@@ -75,8 +74,8 @@ struct WindowInput
 
     unsigned long long keyFlags;
 
-    glm::ivec2 mouse;
-    glm::ivec2 scroll;
+    glm::vec2 mouse;
+    glm::vec2 scroll;
 
     WindowInput()
     {

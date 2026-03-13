@@ -1,4 +1,4 @@
-sdl_dep = dependency('sdl2', include_type: 'system')
+sdl_dep = dependency('sdl3', include_type: 'system')
 vk_dep = dependency('vulkan', include_type: 'system')
 
 yar_src = files([

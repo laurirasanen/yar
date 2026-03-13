@@ -1,12 +1,12 @@
 #include <imgui.h>
-#include <imgui_impl_sdl2.h>
-#include <SDL.h>
-#include <SDL_events.h>
-#include <SDL_mouse.h>
-#include <SDL_scancode.h>
-#include <SDL_stdinc.h>
-#include <SDL_video.h>
-#include <SDL_vulkan.h>
+#include <imgui_impl_sdl3.h>
+#include <SDL3/SDL.h>
+#include <SDL3/SDL_events.h>
+#include <SDL3/SDL_mouse.h>
+#include <SDL3/SDL_scancode.h>
+#include <SDL3/SDL_stdinc.h>
+#include <SDL3/SDL_video.h>
+#include <SDL3/SDL_vulkan.h>
 
 #include "../log.h"
 #include "window.h"
@@ -19,10 +19,10 @@ Window::Window(std::shared_ptr<InputSettings> inputSettings) : m_inputSettings(i
         "Creating window, SDL version: {}.{}.{}",
         SDL_MAJOR_VERSION,
         SDL_MINOR_VERSION,
-        SDL_PATCHLEVEL
+        SDL_MICRO_VERSION
     );
 
-    if (SDL_Init(SDL_INIT_VIDEO) < 0)
+    if (!SDL_Init(SDL_INIT_VIDEO))
     {
         LOG_ERROR("SDL could not initialize. SDL_Error: {}", SDL_GetError());
         throw("Failed to create Engine");
@@ -30,24 +30,14 @@ Window::Window(std::shared_ptr<InputSettings> inputSettings) : m_inputSettings(i
 
     m_window = SDL_CreateWindow(
         "yar",
-        SDL_WINDOWPOS_UNDEFINED,
-        SDL_WINDOWPOS_UNDEFINED,
         1280,
         720,
-        SDL_WINDOW_VULKAN | SDL_WINDOW_SHOWN | SDL_WINDOW_RESIZABLE | SDL_WINDOW_MAXIMIZED
+        SDL_WINDOW_VULKAN | SDL_WINDOW_RESIZABLE | SDL_WINDOW_MAXIMIZED
     );
 
     if (m_window == nullptr)
     {
         LOG_ERROR("Window could not be created. SDL_Error: {}", SDL_GetError());
-        throw("Failed to create window");
-    }
-
-    SDL_SysWMinfo wmi;
-    SDL_VERSION(&wmi.version);
-    if (!SDL_GetWindowWMInfo(m_window, &wmi))
-    {
-        LOG_ERROR("SDL_SysWMinfo could not be retrieved. SDL_Error: {}", SDL_GetError());
         throw("Failed to create window");
     }
 
@@ -66,12 +56,12 @@ Window::~Window()
 
 void Window::SetMouseGrab(bool grab)
 {
-    SDL_SetRelativeMouseMode(grab ? SDL_TRUE : SDL_FALSE);
+    SDL_SetWindowRelativeMouseMode(m_window, grab);
 }
 
 bool Window::IsMouseGrabbed()
 {
-    return SDL_GetRelativeMouseMode() == SDL_TRUE;
+    return SDL_GetWindowRelativeMouseMode(m_window);
 }
 
 void Window::AggregateInput(WindowInput& input)
@@ -82,13 +72,13 @@ void Window::AggregateInput(WindowInput& input)
 
     for (SDL_Event event; SDL_PollEvent(&event) != 0;)
     {
-        if (event.type == SDL_QUIT)
+        if (event.type == SDL_EVENT_QUIT)
         {
             input.wantsQuit = true;
             break;
         }
 
-        ImGui_ImplSDL2_ProcessEvent(&event);
+        ImGui_ImplSDL3_ProcessEvent(&event);
         handleKeyboard = !io.WantCaptureKeyboard;
         handleMouse    = !io.WantCaptureMouse;
 
@@ -101,11 +91,11 @@ void Window::AggregateInput(WindowInput& input)
             handleKeyboard = false;
         }
 
-        if (event.type == SDL_WINDOWEVENT)
+        if (event.type >= SDL_EVENT_WINDOW_FIRST && event.type <= SDL_EVENT_WINDOW_LAST)
         {
-            switch (event.window.event)
+            switch (event.window.type)
             {
-                case SDL_WINDOWEVENT_SIZE_CHANGED:
+                case SDL_EVENT_WINDOW_RESIZED:
                     input.wantsResize = true;
                     break;
 
@@ -116,22 +106,22 @@ void Window::AggregateInput(WindowInput& input)
 
         if (handleKeyboard)
         {
-            if (event.type == SDL_KEYDOWN)
+            if (event.type == SDL_EVENT_KEY_DOWN)
             {
-                auto key = m_inputSettings->GetKeyFromSDL(event.key.keysym.scancode);
+                auto key = m_inputSettings->GetKeyFromSDL(event.key.scancode);
                 input.KeyDown(key);
             }
 
-            if (event.type == SDL_KEYUP)
+            if (event.type == SDL_EVENT_KEY_UP)
             {
-                auto key = m_inputSettings->GetKeyFromSDL(event.key.keysym.scancode);
+                auto key = m_inputSettings->GetKeyFromSDL(event.key.scancode);
                 input.KeyUp(key);
             }
         }
 
         if (handleMouse)
         {
-            if (event.type == SDL_MOUSEBUTTONDOWN)
+            if (event.type == SDL_EVENT_MOUSE_BUTTON_DOWN)
             {
                 switch (event.button.button)
                 {
@@ -146,12 +136,12 @@ void Window::AggregateInput(WindowInput& input)
 
             if (IsMouseGrabbed())
             {
-                if (event.type == SDL_MOUSEMOTION)
+                if (event.type == SDL_EVENT_MOUSE_MOTION)
                 {
                     input.mouse.x += event.motion.xrel;
                     input.mouse.y += event.motion.yrel;
                 }
-                if (event.type == SDL_MOUSEWHEEL)
+                if (event.type == SDL_EVENT_MOUSE_WHEEL)
                 {
                     input.scroll.x += event.motion.xrel;
                     input.scroll.y += event.motion.yrel;
@@ -163,19 +153,18 @@ void Window::AggregateInput(WindowInput& input)
 
 void Window::GetFramebufferSize(int* width, int* height)
 {
-    SDL_Vulkan_GetDrawableSize(m_window, width, height);
+    SDL_GetWindowSizeInPixels(m_window, width, height);
 }
 
 bool Window::CreateVulkanSurface(VkInstance instance, VkSurfaceKHR* surface)
 {
-    auto result = SDL_Vulkan_CreateSurface(m_window, instance, surface);
-    return result == SDL_TRUE;
+    // TODO alloc cb
+    return SDL_Vulkan_CreateSurface(m_window, instance, nullptr, surface);
 }
 
-bool Window::GetVulkanExtensions(unsigned int* pCount, const char** pNames)
+const char* const* Window::GetVulkanExtensions(unsigned int* pCount)
 {
-    auto result = SDL_Vulkan_GetInstanceExtensions(m_window, pCount, pNames);
-    return result == SDL_TRUE;
+    return SDL_Vulkan_GetInstanceExtensions(pCount);
 }
 
 bool Window::IsMinimized()
@@ -185,13 +174,12 @@ bool Window::IsMinimized()
 
 unsigned int Window::GetRefreshRate()
 {
-    auto display = SDL_GetWindowDisplayIndex(m_window);
-    if (display >= 0)
+    auto display = SDL_GetDisplayForWindow(m_window);
+    if (display != 0)
     {
-        SDL_DisplayMode mode = {};
-        if (SDL_GetDesktopDisplayMode(0, &mode) == 0)
+        if (const auto* mode = SDL_GetDesktopDisplayMode(display))
         {
-            return static_cast<unsigned int>(mode.refresh_rate);
+            return static_cast<unsigned int>(mode->refresh_rate);
         }
     }
 

@@ -1,7 +1,8 @@
 #pragma once
 
 #include <memory>
-#include <SDL_syswm.h>
+
+#include <SDL3/SDL_video.h>
 #include <vulkan/vulkan_core.h>
 
 #include "input.h"
@@ -23,7 +24,7 @@ class Window
 
     bool CreateVulkanSurface(VkInstance instance, VkSurfaceKHR* surface);
 
-    bool GetVulkanExtensions(unsigned int* pCount, const char** pNames);
+    const char* const* GetVulkanExtensions(unsigned int* pCount);
 
     bool IsMinimized();
 

@@ -21,9 +21,10 @@ constexpr static void ImGuiVkCheck(VkResult result)
 // Hold color format so it doesn't get dropped from stack
 struct VulkanImGuiCreationInfo
 {
-    VkFormat                      colorFormat;
-    VkPipelineRenderingCreateInfo pipelineCreateInfo;
-    ImGui_ImplVulkan_InitInfo     imGuiInfo;
+    VkFormat                      vkColor;
+    VkPipelineRenderingCreateInfo vkPipeline;
+    ImGui_ImplVulkan_PipelineInfo imPipeline;
+    ImGui_ImplVulkan_InitInfo     imInit;
 };
 
 constexpr static VkPipelineStageFlags GetPipelineStageFlags(const VkImageLayout imageLayout)

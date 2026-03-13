@@ -1,10 +1,10 @@
 #include <stdexcept>
 
 #include <imgui.h>
-#include <imgui_impl_sdl2.h>
+#include <imgui_impl_sdl3.h>
 #include <imgui_impl_vulkan.h>
 #include <imgui_internal.h>
-#include <SDL_events.h>
+#include <SDL3/SDL_events.h>
 
 #include "../log.h"
 #include "../memory.h"
@@ -27,9 +27,9 @@ UI::UI(std::shared_ptr<Window> window, std::shared_ptr<Renderer> renderer) :
     io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;
     io.ConfigDebugIsDebuggerPresent = true;
 
-    ImGui_ImplSDL2_InitForVulkan(m_window->GetSDLWindow());
+    ImGui_ImplSDL3_InitForVulkan(m_window->GetSDLWindow());
     renderer->GetImGuiInfo(m_info);
-    ImGui_ImplVulkan_Init(&m_info.imGuiInfo);
+    ImGui_ImplVulkan_Init(&m_info.imInit);
 
     m_state.showWindow[static_cast<unsigned int>(UIWindow::DEBUG)] = true;
 }
@@ -38,14 +38,14 @@ UI::~UI()
 {
     LOG_INFO("Destroying UI");
     ImGui_ImplVulkan_Shutdown();
-    ImGui_ImplSDL2_Shutdown();
+    ImGui_ImplSDL3_Shutdown();
     ImGui::DestroyContext();
 }
 
 void UI::Render()
 {
     ImGui_ImplVulkan_NewFrame();
-    ImGui_ImplSDL2_NewFrame();
+    ImGui_ImplSDL3_NewFrame();
     ImGui::NewFrame();
 
     DebugWindow();

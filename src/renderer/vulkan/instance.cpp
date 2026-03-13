@@ -144,15 +144,13 @@ void VulkanInstance::SetWindow(std::shared_ptr<Window> window)
 
 std::vector<const char*> VulkanInstance::GetRequiredExtensions()
 {
-    unsigned int extensionCount = 0;
-    if (!m_window->GetVulkanExtensions(&extensionCount, nullptr))
-    {
-        throw std::runtime_error("Failed to get vulkan extensions from window");
-    }
+    unsigned int             extensionCount = 0;
     std::vector<const char*> extensions(extensionCount);
-    if (!m_window->GetVulkanExtensions(&extensionCount, extensions.data()))
+
+    const char* const* sdlExt = m_window->GetVulkanExtensions(&extensionCount);
+    for (unsigned int i = 0; i < extensionCount; i++)
     {
-        throw std::runtime_error("Failed to get vulkan extensions from window");
+        extensions.push_back(sdlExt[i]);
     }
 
     if (m_enableValidationLayers)
@@ -216,6 +214,7 @@ void VulkanInstance::SetupDebugMessenger()
     VkDebugUtilsMessengerCreateInfoEXT createInfo {};
     PopulateDebugMessengerCreateInfo(createInfo);
 
+    // todo alloc cb
     VK_CHECK(
         _CreateDebugUtilsMessengerEXT(m_vkInstance, &createInfo, nullptr, &m_vkDebugMessenger),
         "Failed to set up debug messenger"

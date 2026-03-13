@@ -90,7 +90,7 @@ imgui_src = [
   'thirdparty/imgui/imgui_tables.cpp',
   'thirdparty/imgui/imgui_widgets.cpp',
 
-  'thirdparty/imgui/backends/imgui_impl_sdl2.cpp',
+  'thirdparty/imgui/backends/imgui_impl_sdl3.cpp',
   'thirdparty/imgui/backends/imgui_impl_vulkan.cpp',
 ]
 

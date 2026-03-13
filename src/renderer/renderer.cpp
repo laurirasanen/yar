@@ -1,5 +1,6 @@
 #include <imgui_impl_vulkan.h>
 #include <memory>
+#include <vulkan/vulkan_core.h>
 
 #include "../log.h"
 #include "data_types.h"
@@ -136,32 +137,44 @@ void Renderer::WaitForIdle()
 
 void Renderer::GetImGuiInfo(VulkanImGuiCreationInfo& info)
 {
-    info.colorFormat     = m_device.GetSwapchainImageFormat();
+    info.vkColor         = m_device.GetSwapchainImageFormat();
     VkFormat depthFormat = m_device.GetDepthFormat();
 
-    info.pipelineCreateInfo                      = {};
-    info.pipelineCreateInfo.sType                = VK_STRUCTURE_TYPE_PIPELINE_RENDERING_CREATE_INFO;
-    info.pipelineCreateInfo.pNext                = VK_NULL_HANDLE;
-    info.pipelineCreateInfo.colorAttachmentCount = 1;
-    info.pipelineCreateInfo.pColorAttachmentFormats = &info.colorFormat;
-    info.pipelineCreateInfo.depthAttachmentFormat   = depthFormat;
-    info.pipelineCreateInfo.stencilAttachmentFormat = VK_FORMAT_UNDEFINED;
+    info.vkPipeline                         = {};
+    info.vkPipeline.sType                   = VK_STRUCTURE_TYPE_PIPELINE_RENDERING_CREATE_INFO;
+    info.vkPipeline.pNext                   = VK_NULL_HANDLE;
+    info.vkPipeline.colorAttachmentCount    = 1;
+    info.vkPipeline.pColorAttachmentFormats = &info.vkColor;
+    info.vkPipeline.depthAttachmentFormat   = depthFormat;
+    info.vkPipeline.stencilAttachmentFormat = VK_FORMAT_UNDEFINED;
 
-    info.imGuiInfo                             = {};
-    info.imGuiInfo.Instance                    = m_instance.GetVkInstance();
-    info.imGuiInfo.PhysicalDevice              = m_device.GetVkPhysicalDevice();
-    info.imGuiInfo.Device                      = m_device.GetVkDevice();
-    info.imGuiInfo.QueueFamily                 = m_device.GetGraphicsQueueIndex();
-    info.imGuiInfo.Queue                       = m_device.GetGraphicsQueue();
-    info.imGuiInfo.PipelineCache               = VK_NULL_HANDLE; // TODO
-    info.imGuiInfo.DescriptorPool              = m_device.GetImGuiDescriptorPool();
-    info.imGuiInfo.UseDynamicRendering         = true;
-    info.imGuiInfo.PipelineRenderingCreateInfo = info.pipelineCreateInfo;
-    info.imGuiInfo.MinImageCount               = MAX_FRAMES_IN_FLIGHT;
-    info.imGuiInfo.ImageCount                  = MAX_FRAMES_IN_FLIGHT;
-    info.imGuiInfo.MSAASamples                 = VK_SAMPLE_COUNT_1_BIT;
-    info.imGuiInfo.Allocator                   = nullptr; // TODO vma?
-    info.imGuiInfo.CheckVkResultFn             = ImGuiVkCheck;
+    info.imPipeline                             = {};
+    info.imPipeline.RenderPass                  = VK_NULL_HANDLE;
+    info.imPipeline.Subpass                     = 0;
+    info.imPipeline.MSAASamples                 = VK_SAMPLE_COUNT_1_BIT;
+    info.imPipeline.ExtraDynamicStates          = {};
+    info.imPipeline.PipelineRenderingCreateInfo = info.vkPipeline;
+
+    info.imInit                            = {};
+    info.imInit.ApiVersion                 = VK_API_VERSION_1_4;
+    info.imInit.Instance                   = m_instance.GetVkInstance();
+    info.imInit.PhysicalDevice             = m_device.GetVkPhysicalDevice();
+    info.imInit.Device                     = m_device.GetVkDevice();
+    info.imInit.QueueFamily                = m_device.GetGraphicsQueueIndex();
+    info.imInit.Queue                      = m_device.GetGraphicsQueue();
+    info.imInit.DescriptorPool             = m_device.GetImGuiDescriptorPool();
+    info.imInit.DescriptorPoolSize         = 0;
+    info.imInit.MinImageCount              = 2;
+    info.imInit.ImageCount                 = MAX_FRAMES_IN_FLIGHT;
+    info.imInit.PipelineCache              = VK_NULL_HANDLE; // TODO
+    info.imInit.PipelineInfoMain           = info.imPipeline;
+    info.imInit.UseDynamicRendering        = true;
+    info.imInit.MinImageCount              = MAX_FRAMES_IN_FLIGHT;
+    info.imInit.Allocator                  = nullptr; // TODO vma?
+    info.imInit.CheckVkResultFn            = ImGuiVkCheck;
+    info.imInit.MinAllocationSize          = 1024 * 1024;
+    info.imInit.CustomShaderVertCreateInfo = {};
+    info.imInit.CustomShaderFragCreateInfo = {};
 }
 
 constexpr VkPipelineShaderStageCreateInfo Renderer::FillShaderStageCreateInfo(
