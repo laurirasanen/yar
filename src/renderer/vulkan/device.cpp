@@ -365,35 +365,51 @@ bool VulkanDevice::IsDeviceSuitable(const VkPhysicalDevice device)
 {
     VkPhysicalDeviceProperties deviceProperties {};
     vkGetPhysicalDeviceProperties(device, &deviceProperties);
+    LOG_DEBUG("Device: {}", deviceProperties.deviceName);
 
-    VkPhysicalDeviceDynamicRenderingFeatures dynamicRenderingFeature {};
-    dynamicRenderingFeature.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_DYNAMIC_RENDERING_FEATURES;
-    dynamicRenderingFeature.pNext = nullptr;
+    VkPhysicalDeviceMaintenance5Features featureM5 {};
+    featureM5.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_MAINTENANCE_5_FEATURES;
+    featureM5.pNext = nullptr;
+
+    VkPhysicalDeviceDynamicRenderingFeatures featureDR {};
+    featureDR.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_DYNAMIC_RENDERING_FEATURES;
+    featureDR.pNext = &featureM5;
 
     VkPhysicalDeviceFeatures2 deviceFeatures {};
     deviceFeatures.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_FEATURES_2;
-    deviceFeatures.pNext = &dynamicRenderingFeature;
+    deviceFeatures.pNext = &featureDR;
 
     vkGetPhysicalDeviceFeatures2(device, &deviceFeatures);
 
-    auto dynamicRenderingSupported = dynamicRenderingFeature.dynamicRendering == VK_TRUE;
-
-    auto featuresSupported = dynamicRenderingSupported;
-
-    auto familyIndices       = FindQueueFamilies(device);
-    auto extensionsSupported = CheckDeviceExtensionSupport(device);
-
-    auto swapchainAdequate = false;
-    if (extensionsSupported)
+    auto dynamicRenderingSupported = featureDR.dynamicRendering == VK_TRUE;
+    auto maintenance5Supported     = featureM5.maintenance5 == VK_TRUE;
+    auto featuresSupported         = dynamicRenderingSupported && maintenance5Supported;
+    if (!featuresSupported)
     {
-        auto swapchainSupport = QuerySwapchainSupport(device);
-        swapchainAdequate =
-            !swapchainSupport.formats.empty() && !swapchainSupport.presentModes.empty();
+        return false;
     }
 
-    return deviceProperties.deviceType == VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU
-           && familyIndices.IsComplete() && featuresSupported && extensionsSupported
-           && swapchainAdequate;
+    auto familyIndices = FindQueueFamilies(device);
+    if (!familyIndices.IsComplete())
+    {
+        return false;
+    }
+
+    auto extensionsSupported = CheckDeviceExtensionSupport(device);
+    if (!extensionsSupported)
+    {
+        return false;
+    }
+
+    auto swapchainSupport = QuerySwapchainSupport(device);
+    auto swapchainAdequate =
+        !swapchainSupport.formats.empty() && !swapchainSupport.presentModes.empty();
+    if (!swapchainAdequate)
+    {
+        return false;
+    }
+
+    return true;
 }
 
 VulkanQueueFamilyIndices VulkanDevice::FindQueueFamilies(const VkPhysicalDevice device)
@@ -444,6 +460,12 @@ bool VulkanDevice::CheckDeviceExtensionSupport(const VkPhysicalDevice device)
         &extensionCount,
         availableExtensions.data()
     );
+
+    LOG_DEBUG("Available extensions:");
+    for (auto& ext : availableExtensions)
+    {
+        LOG_DEBUG("{} {}", ext.extensionName, ext.specVersion);
+    }
 
     std::set<std::string> uniqueRequired(m_requiredExtensions.begin(), m_requiredExtensions.end());
     for (const auto& extension : availableExtensions)
@@ -729,14 +751,19 @@ void VulkanDevice::CreateLogicalDevice()
         queueCreateInfos.push_back(queueCreateInfo);
     }
 
-    VkPhysicalDeviceDynamicRenderingFeatures dynamicRenderingFeature {};
-    dynamicRenderingFeature.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_DYNAMIC_RENDERING_FEATURES;
-    dynamicRenderingFeature.dynamicRendering = VK_TRUE;
-    dynamicRenderingFeature.pNext            = nullptr;
+    VkPhysicalDeviceMaintenance5Features featureM5 {};
+    featureM5.sType        = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_MAINTENANCE_5_FEATURES;
+    featureM5.maintenance5 = VK_TRUE;
+    featureM5.pNext        = nullptr;
+
+    VkPhysicalDeviceDynamicRenderingFeatures featureDR {};
+    featureDR.sType            = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_DYNAMIC_RENDERING_FEATURES;
+    featureDR.dynamicRendering = VK_TRUE;
+    featureDR.pNext            = &featureM5;
 
     VkPhysicalDeviceFeatures2 deviceFeatures {};
     deviceFeatures.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_FEATURES_2;
-    deviceFeatures.pNext = &dynamicRenderingFeature;
+    deviceFeatures.pNext = &featureDR;
 
     VkDeviceCreateInfo deviceCreateInfo {};
     deviceCreateInfo.sType                   = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;

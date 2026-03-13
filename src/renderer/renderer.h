@@ -148,17 +148,15 @@ class Renderer
     }
 
   private:
-    VkShaderModule& CreateShaderModule(VkShaderModuleCreateInfo createInfo);
     constexpr VkPipelineShaderStageCreateInfo FillShaderStageCreateInfo(
-        VkShaderModule&       module,
-        VkShaderStageFlagBits stage
+        VkShaderModuleCreateInfo* module,
+        VkShaderStageFlagBits     stage
     );
 
     VulkanInstance m_instance;
     VulkanDevice   m_device;
 
     std::shared_ptr<VulkanDescriptorSet> m_descriptorSet;
-    std::vector<VkShaderModule>          m_vkShaderModules;
 
     std::shared_ptr<VulkanPipeline<Vertex_P_C>>  m_testPipeline;
     std::shared_ptr<VulkanPipeline<VertexEmpty>> m_fullscreenPipeline;

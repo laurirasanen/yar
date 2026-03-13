@@ -27,22 +27,22 @@ Renderer::Renderer(std::shared_ptr<Window> window) :
     m_descriptorSet = std::make_shared<VulkanDescriptorSet>(m_device, uboBuffers);
 
     // TODO: abstract away all the shader + pipeline setup
-    auto moduleSimpleFrag = CreateShaderModule(LOAD_VULKAN_SPV(simple_fs));
-    auto moduleSimpleVert = CreateShaderModule(LOAD_VULKAN_SPV(simple_vs));
+    auto moduleSimpleFrag = LOAD_VULKAN_SPV(simple_fs);
+    auto moduleSimpleVert = LOAD_VULKAN_SPV(simple_vs);
     auto stageSimpleFrag =
-        FillShaderStageCreateInfo(moduleSimpleFrag, VK_SHADER_STAGE_FRAGMENT_BIT);
-    auto stageSimpleVert = FillShaderStageCreateInfo(moduleSimpleVert, VK_SHADER_STAGE_VERTEX_BIT);
+        FillShaderStageCreateInfo(&moduleSimpleFrag, VK_SHADER_STAGE_FRAGMENT_BIT);
+    auto stageSimpleVert = FillShaderStageCreateInfo(&moduleSimpleVert, VK_SHADER_STAGE_VERTEX_BIT);
     std::vector simpleStages {stageSimpleFrag, stageSimpleVert};
 
     m_testPipeline =
         std::make_shared<VulkanPipeline<Vertex_P_C>>(m_device, m_descriptorSet, simpleStages);
 
-    auto moduleFullscreenFrag = CreateShaderModule(LOAD_VULKAN_SPV(fullscreen_fs));
-    auto moduleFullscreenVert = CreateShaderModule(LOAD_VULKAN_SPV(fullscreen_vs));
+    auto moduleFullscreenFrag = LOAD_VULKAN_SPV(fullscreen_fs);
+    auto moduleFullscreenVert = LOAD_VULKAN_SPV(fullscreen_vs);
     auto stageFullscreenFrag =
-        FillShaderStageCreateInfo(moduleFullscreenFrag, VK_SHADER_STAGE_FRAGMENT_BIT);
+        FillShaderStageCreateInfo(&moduleFullscreenFrag, VK_SHADER_STAGE_FRAGMENT_BIT);
     auto stageFullscreenVert =
-        FillShaderStageCreateInfo(moduleFullscreenVert, VK_SHADER_STAGE_VERTEX_BIT);
+        FillShaderStageCreateInfo(&moduleFullscreenVert, VK_SHADER_STAGE_VERTEX_BIT);
     std::vector fullscreenStages {stageFullscreenFrag, stageFullscreenVert};
 
     m_fullscreenPipeline = std::make_shared<VulkanPipeline<VertexEmpty>>(
@@ -53,10 +53,10 @@ Renderer::Renderer(std::shared_ptr<Window> window) :
         false
     );
 
-    auto moduleSkyFrag = CreateShaderModule(LOAD_VULKAN_SPV(sky_fs));
-    auto moduleSkyVert = CreateShaderModule(LOAD_VULKAN_SPV(sky_vs));
-    auto stageSkyFrag  = FillShaderStageCreateInfo(moduleSkyFrag, VK_SHADER_STAGE_FRAGMENT_BIT);
-    auto stageSkyVert  = FillShaderStageCreateInfo(moduleSkyVert, VK_SHADER_STAGE_VERTEX_BIT);
+    auto moduleSkyFrag = LOAD_VULKAN_SPV(sky_fs);
+    auto moduleSkyVert = LOAD_VULKAN_SPV(sky_vs);
+    auto stageSkyFrag  = FillShaderStageCreateInfo(&moduleSkyFrag, VK_SHADER_STAGE_FRAGMENT_BIT);
+    auto stageSkyVert  = FillShaderStageCreateInfo(&moduleSkyVert, VK_SHADER_STAGE_VERTEX_BIT);
     std::vector skyStages {stageSkyFrag, stageSkyVert};
 
     m_skyPipeline =
@@ -74,11 +74,6 @@ Renderer::~Renderer()
     m_skyPipeline.reset();
 
     m_descriptorSet.reset();
-
-    for (auto& module : m_vkShaderModules)
-    {
-        vkDestroyShaderModule(m_device.GetVkDevice(), module, nullptr);
-    }
 
     m_frameBuffers.clear();
 }
@@ -144,10 +139,10 @@ void Renderer::GetImGuiInfo(VulkanImGuiCreationInfo& info)
     info.colorFormat     = m_device.GetSwapchainImageFormat();
     VkFormat depthFormat = m_device.GetDepthFormat();
 
-    info.pipelineCreateInfo       = {};
-    info.pipelineCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_RENDERING_CREATE_INFO;
-    info.pipelineCreateInfo.pNext = VK_NULL_HANDLE;
-    info.pipelineCreateInfo.colorAttachmentCount    = 1;
+    info.pipelineCreateInfo                      = {};
+    info.pipelineCreateInfo.sType                = VK_STRUCTURE_TYPE_PIPELINE_RENDERING_CREATE_INFO;
+    info.pipelineCreateInfo.pNext                = VK_NULL_HANDLE;
+    info.pipelineCreateInfo.colorAttachmentCount = 1;
     info.pipelineCreateInfo.pColorAttachmentFormats = &info.colorFormat;
     info.pipelineCreateInfo.depthAttachmentFormat   = depthFormat;
     info.pipelineCreateInfo.stencilAttachmentFormat = VK_FORMAT_UNDEFINED;
@@ -169,26 +164,17 @@ void Renderer::GetImGuiInfo(VulkanImGuiCreationInfo& info)
     info.imGuiInfo.CheckVkResultFn             = ImGuiVkCheck;
 }
 
-VkShaderModule& Renderer::CreateShaderModule(VkShaderModuleCreateInfo createInfo)
-{
-    VkShaderModule module;
-    VK_CHECK(
-        vkCreateShaderModule(m_device.GetVkDevice(), &createInfo, nullptr, &module),
-        "Failed to create shader module"
-    );
-    return m_vkShaderModules.emplace_back(module);
-}
-
 constexpr VkPipelineShaderStageCreateInfo Renderer::FillShaderStageCreateInfo(
-    VkShaderModule&       module,
-    VkShaderStageFlagBits stage
+    VkShaderModuleCreateInfo* module,
+    VkShaderStageFlagBits     stage
 )
 {
     VkPipelineShaderStageCreateInfo createInfo {};
     createInfo.sType  = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
     createInfo.stage  = stage;
-    createInfo.module = module;
+    createInfo.module = VK_NULL_HANDLE;
     createInfo.pName  = "main";
+    createInfo.pNext  = module;
     return createInfo;
 }
 } // namespace yar
