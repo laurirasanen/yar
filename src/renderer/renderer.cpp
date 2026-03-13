@@ -145,7 +145,7 @@ void Renderer::GetImGuiInfo(VulkanImGuiCreationInfo& info)
     VkFormat depthFormat = m_device.GetDepthFormat();
 
     info.pipelineCreateInfo       = {};
-    info.pipelineCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_RENDERING_CREATE_INFO_KHR;
+    info.pipelineCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_RENDERING_CREATE_INFO;
     info.pipelineCreateInfo.pNext = VK_NULL_HANDLE;
     info.pipelineCreateInfo.colorAttachmentCount    = 1;
     info.pipelineCreateInfo.pColorAttachmentFormats = &info.colorFormat;

@@ -169,8 +169,8 @@ VulkanPipeline<V>::VulkanPipeline(
     VkFormat colorFormat = m_device.GetSwapchainImageFormat();
     VkFormat depthFormat = m_device.GetDepthFormat();
 
-    VkPipelineRenderingCreateInfoKHR pipelineCreateInfo {};
-    pipelineCreateInfo.sType                = VK_STRUCTURE_TYPE_PIPELINE_RENDERING_CREATE_INFO_KHR;
+    VkPipelineRenderingCreateInfo pipelineCreateInfo {};
+    pipelineCreateInfo.sType                = VK_STRUCTURE_TYPE_PIPELINE_RENDERING_CREATE_INFO;
     pipelineCreateInfo.pNext                = VK_NULL_HANDLE;
     pipelineCreateInfo.colorAttachmentCount = 1;
     pipelineCreateInfo.pColorAttachmentFormats = &colorFormat;

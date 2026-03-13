@@ -12,37 +12,6 @@
 
 namespace yar
 {
-constexpr static void _vkCmdBeginRenderingKHR(
-    VkInstance             instance,
-    VkCommandBuffer        commandBuffer,
-    const VkRenderingInfo* renderingInfo
-)
-{
-    auto func =
-        (PFN_vkCmdBeginRenderingKHR)vkGetInstanceProcAddr(instance, "vkCmdBeginRenderingKHR");
-    if (func != nullptr)
-    {
-        func(commandBuffer, renderingInfo);
-    }
-    else
-    {
-        throw std::runtime_error("Failed to find vkCmdBeginRenderingKHR address");
-    }
-}
-
-constexpr static void _vkCmdEndRenderingKHR(VkInstance instance, VkCommandBuffer commandBuffer)
-{
-    auto func = (PFN_vkCmdEndRenderingKHR)vkGetInstanceProcAddr(instance, "vkCmdEndRenderingKHR");
-    if (func != nullptr)
-    {
-        func(commandBuffer);
-    }
-    else
-    {
-        throw std::runtime_error("Failed to find vkCmdEndRenderingKHR address");
-    }
-}
-
 VulkanDevice::VulkanDevice(const VulkanInstance& instance, uint32_t maxFramesInFlight) :
     m_instance(instance),
     m_maxFramesInFlight(maxFramesInFlight)
@@ -151,7 +120,7 @@ void VulkanDevice::Begin()
     VkClearValue clearDepth {};
     clearDepth.depthStencil = {1.0f, 0};
 
-    VkRenderingAttachmentInfoKHR colorAttachment {};
+    VkRenderingAttachmentInfo colorAttachment {};
     colorAttachment.sType       = VK_STRUCTURE_TYPE_RENDERING_ATTACHMENT_INFO;
     colorAttachment.clearValue  = clearColor;
     colorAttachment.loadOp      = VK_ATTACHMENT_LOAD_OP_CLEAR;
@@ -160,7 +129,7 @@ void VulkanDevice::Begin()
     colorAttachment.imageLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
     colorAttachment.resolveMode = VK_RESOLVE_MODE_NONE;
 
-    VkRenderingAttachmentInfoKHR depthAttachment {};
+    VkRenderingAttachmentInfo depthAttachment {};
     depthAttachment.sType       = VK_STRUCTURE_TYPE_RENDERING_ATTACHMENT_INFO;
     depthAttachment.clearValue  = clearDepth;
     depthAttachment.loadOp      = VK_ATTACHMENT_LOAD_OP_CLEAR;
@@ -184,11 +153,7 @@ void VulkanDevice::Begin()
     renderingInfo.pStencilAttachment   = nullptr;
     renderingInfo.flags                = 0;
 
-    _vkCmdBeginRenderingKHR(
-        m_instance.GetVkInstance(),
-        m_vkCommandBuffers[m_currentFrame],
-        &renderingInfo
-    );
+    vkCmdBeginRendering(m_vkCommandBuffers[m_currentFrame], &renderingInfo);
 
     ResetViewport();
 }
@@ -229,7 +194,7 @@ void VulkanDevice::SetViewport(Rect rect)
 
 void VulkanDevice::Submit()
 {
-    _vkCmdEndRenderingKHR(m_instance.GetVkInstance(), m_vkCommandBuffers[m_currentFrame]);
+    vkCmdEndRendering(m_vkCommandBuffers[m_currentFrame]);
 
     TransitionImageLayout(
         m_vkCommandBuffers[m_currentFrame],
