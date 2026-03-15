@@ -28,12 +28,7 @@ Window::Window(std::shared_ptr<InputSettings> inputSettings) : m_inputSettings(i
         throw("Failed to create Engine");
     }
 
-    m_window = SDL_CreateWindow(
-        "yar",
-        1280,
-        720,
-        SDL_WINDOW_VULKAN | SDL_WINDOW_RESIZABLE | SDL_WINDOW_MAXIMIZED
-    );
+    m_window = SDL_CreateWindow("yar", 1920, 1080, SDL_WINDOW_VULKAN | SDL_WINDOW_RESIZABLE);
 
     if (m_window == nullptr)
     {
