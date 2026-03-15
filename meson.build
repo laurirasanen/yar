@@ -1,8 +1,9 @@
 project(
   'yar',
-  'cpp',
+  ['c', 'cpp'],
   default_options: [
-    'default_library=static',
+    'default_library=shared',
+    'c_std=c23',
     'cpp_std=c++23',
     'b_ndebug=if-release',
     'warning_level=3',
@@ -10,15 +11,9 @@ project(
 )
 
 cpp = meson.get_compiler('cpp')
-compiler = cpp.get_id()
 host_system = host_machine.system()
 buildtype = get_option('buildtype')
 source_dir = meson.current_source_dir()
-
-# Sanity checks
-if compiler not in ['gcc']
-  error('Unsupported compiler ', compiler)
-endif
 
 compiler_args = [
   '-Wcast-align',
@@ -94,29 +89,14 @@ imgui_src = [
   'thirdparty/imgui/backends/imgui_impl_vulkan.cpp',
 ]
 
-glsl_compiler = find_program('glslang', 'glslangValidator')
-glsl_args = [
-  '--target-env', 'vulkan1.4',
-  '--variable-name', '@BASENAME@',
-  '--depfile', '@DEPFILE@',
-  '@INPUT@',
-  '-o', '@OUTPUT@',
-]
-glsl_generator = generator(
-  glsl_compiler,
-  output: ['@BASENAME@.h'],
-  depfile: '@BASENAME@.h.d',
-  arguments: glsl_args,
-)
-
 subdir('src')
+subdir('assets')
 
 executable(
   'yar',
   yar_src + imgui_src,
-  glsl_generator.process(yar_shaders),
   dependencies: yar_deps,
-  include_directories: includes
+  include_directories: includes,
 )
 
 

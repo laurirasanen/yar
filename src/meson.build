@@ -1,7 +1,14 @@
 sdl_dep = dependency('sdl3', include_type: 'system')
 vk_dep = dependency('vulkan', include_type: 'system')
 
+slang_dep = declare_dependency(
+  link_args: ['-lslang-compiler'],
+  include_directories: include_directories('/usr/local/include')
+)
+
 yar_src = files([
+  'platform/fs.cpp',
+
   'renderer/vulkan/vma.cpp',
   'renderer/vulkan/buffer.cpp',
   'renderer/vulkan/descriptor_set.cpp',
@@ -9,6 +16,8 @@ yar_src = files([
   'renderer/vulkan/instance.cpp',
 
   'renderer/renderer.cpp',
+
+  'shader/compiler.cpp',
 
   'ui/ui.cpp',
 
@@ -20,17 +29,9 @@ yar_src = files([
   'main.cpp',
 ])
 
-yar_shaders = files([
-  'shaders/fullscreen_fs.frag',
-  'shaders/fullscreen_vs.vert',
-  'shaders/simple_fs.frag',
-  'shaders/simple_vs.vert',
-  'shaders/sky_fs.frag',
-  'shaders/sky_vs.vert',
-])
-
 yar_deps = [
     sdl_dep,
     vk_dep,
+    slang_dep
 ]
 

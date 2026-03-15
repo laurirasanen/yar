@@ -24,61 +24,32 @@ constexpr std::vector<VkVertexInputAttributeDescription> GetVulkanAttributeDescr
 {
     std::vector<VkVertexInputAttributeDescription> desc {};
 
-    // TODO: reflection
+    // TODO: vertex pulling
 
-    if constexpr (std::is_same_v<T, Vertex_P>)
-    {
-        desc.push_back({
-            .location = 0,
-            .binding  = 0,
-            .format   = VK_FORMAT_R32G32B32_SFLOAT,
-            .offset   = offsetof(T, position),
-        });
-    }
-    else if constexpr (std::is_same_v<T, Vertex_P_C>)
-    {
-        desc.push_back({
-            .location = 0,
-            .binding  = 0,
-            .format   = VK_FORMAT_R32G32B32_SFLOAT,
-            .offset   = offsetof(T, position),
-        });
-        desc.push_back({
-            .location = 1,
-            .binding  = 0,
-            .format   = VK_FORMAT_R32G32B32_SFLOAT,
-            .offset   = offsetof(T, color),
-        });
-    }
-    else if constexpr (std::is_same_v<T, Vertex_P_N_C>)
-    {
-        desc.push_back({
-            .location = 0,
-            .binding  = 0,
-            .format   = VK_FORMAT_R32G32B32_SFLOAT,
-            .offset   = offsetof(T, position),
-        });
-        desc.push_back({
-            .location = 1,
-            .binding  = 0,
-            .format   = VK_FORMAT_R32G32B32_SFLOAT,
-            .offset   = offsetof(T, normal),
-        });
-        desc.push_back({
-            .location = 2,
-            .binding  = 0,
-            .format   = VK_FORMAT_R32G32B32_SFLOAT,
-            .offset   = offsetof(T, color),
-        });
-    }
-    else if constexpr (std::is_same_v<T, VertexEmpty>)
-    {
-        // nada
-    }
-    else
-    {
-        static_assert(false, "Unhandled type for attribute descriptions");
-    }
+    desc.push_back({
+        .location = 0,
+        .binding  = 0,
+        .format   = VK_FORMAT_R32G32B32_SFLOAT,
+        .offset   = offsetof(T, position),
+    });
+    desc.push_back({
+        .location = 1,
+        .binding  = 0,
+        .format   = VK_FORMAT_R32G32B32_SFLOAT,
+        .offset   = offsetof(T, normal),
+    });
+    desc.push_back({
+        .location = 2,
+        .binding  = 0,
+        .format   = VK_FORMAT_R32G32_SFLOAT,
+        .offset   = offsetof(T, uv),
+    });
+    desc.push_back({
+        .location = 3,
+        .binding  = 0,
+        .format   = VK_FORMAT_R32G32B32_SFLOAT,
+        .offset   = offsetof(T, color),
+    });
 
     return desc;
 }

@@ -11,18 +11,18 @@ World::World(std::shared_ptr<Renderer> renderer) : m_renderer(renderer)
     m_sky = std::make_unique<Sky>(renderer);
 
     // test plane
-    std::vector<Vertex_P_C> planeVertices = {
-        {{-0.5, -0.5, 100.0}, {1.0f, 0.0f, -0.1f}},
-        { {0.5, -0.5, 100.0}, {0.0f, 1.0f, -0.1f}},
-        {  {0.5, 0.5, 100.0},  {0.0f, 0.0f, 0.9f}},
-        { {-0.5, 0.5, 100.0},  {1.0f, 1.0f, 0.9f}},
+    std::vector<Vertex> planeVertices = {
+        {.position = {-0.5, -0.5, 100.0}, .normal = {}, .uv = {}, .color = {1.0f, 0.0f, -0.1f}},
+        { .position = {0.5, -0.5, 100.0}, .normal = {}, .uv = {}, .color = {0.0f, 1.0f, -0.1f}},
+        {  .position = {0.5, 0.5, 100.0}, .normal = {}, .uv = {},  .color = {0.0f, 0.0f, 0.9f}},
+        { .position = {-0.5, 0.5, 100.0}, .normal = {}, .uv = {},  .color = {1.0f, 1.0f, 0.9f}},
     };
     std::vector<Index> planeIndices = {0, 1, 2, 2, 3, 0};
     renderer->CreateBuffer(
         m_testPlaneVertexBuffer,
         VertexBuffer,
         planeVertices.data(),
-        sizeof(Vertex_P_C),
+        sizeof(Vertex),
         static_cast<uint32_t>(planeVertices.size())
     );
     renderer->CreateBuffer(

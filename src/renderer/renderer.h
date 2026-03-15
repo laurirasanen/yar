@@ -24,7 +24,6 @@ namespace yar
 enum RenderPipeline
 {
     TEST,
-    FULLSCREEN,
     SKY,
 };
 
@@ -51,7 +50,6 @@ class Renderer
         m_device.SetViewport(rect);
     }
 
-    void  ClearViewport();
     void  Resize();
     float GetAspect();
     void  Begin();
@@ -114,13 +112,6 @@ class Renderer
                 break;
             }
 
-            case FULLSCREEN:
-            {
-                m_fullscreenPipeline
-                    ->Bind(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, currentFrame);
-                break;
-            }
-
             case SKY:
             {
                 m_skyPipeline->Bind(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, currentFrame);
@@ -148,6 +139,8 @@ class Renderer
     }
 
   private:
+    constexpr VkShaderModuleCreateInfo GetVulkanCreateInfo(const void* data, size_t size);
+
     constexpr VkPipelineShaderStageCreateInfo FillShaderStageCreateInfo(
         VkShaderModuleCreateInfo* module,
         VkShaderStageFlagBits     stage
@@ -158,9 +151,8 @@ class Renderer
 
     std::shared_ptr<VulkanDescriptorSet> m_descriptorSet;
 
-    std::shared_ptr<VulkanPipeline<Vertex_P_C>>  m_testPipeline;
-    std::shared_ptr<VulkanPipeline<VertexEmpty>> m_fullscreenPipeline;
-    std::shared_ptr<VulkanPipeline<Vertex_P>>    m_skyPipeline;
+    std::shared_ptr<VulkanPipeline<Vertex>> m_testPipeline;
+    std::shared_ptr<VulkanPipeline<Vertex>> m_skyPipeline;
 
     // Hold so we don't call Buffer destructor
     // while still in use by command buffer.

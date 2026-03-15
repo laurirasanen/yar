@@ -17,27 +17,12 @@
 
 namespace yar
 {
-struct Vertex_P
-{
-    glm::vec3 position;
-};
-
-struct Vertex_P_C
-{
-    glm::vec3 position;
-    glm::vec3 color;
-};
-
-struct Vertex_P_N_C
+struct Vertex
 {
     glm::vec3 position;
     glm::vec3 normal;
+    glm::vec2 uv;
     glm::vec3 color;
-};
-
-// For fullscreen triangle
-struct VertexEmpty
-{
 };
 
 typedef uint32_t Index;

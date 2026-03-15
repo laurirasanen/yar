@@ -21,18 +21,23 @@ struct Sky
         renderer       = rend;
         auto icosphere = Icosphere({}, CAM_FAR * 0.95f, 1, true);
 
-        std::vector<Vertex_P> vertices;
+        std::vector<Vertex> vertices;
         vertices.reserve(icosphere.positions.size());
         for (unsigned int i = 0; i < icosphere.positions.size(); i++)
         {
-            vertices.push_back({icosphere.positions[i]});
+            vertices.push_back(
+                {.position = icosphere.positions[i],
+                 .normal   = -icosphere.normals[i],
+                 .uv       = {},
+                 .color    = {}}
+            );
         }
 
         renderer->CreateBuffer(
             vertexBuffer,
             VertexBuffer,
             vertices.data(),
-            sizeof(Vertex_P),
+            sizeof(Vertex),
             static_cast<uint32_t>(vertices.size())
         );
         renderer->CreateBuffer(

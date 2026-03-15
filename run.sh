@@ -4,5 +4,5 @@ set -euo pipefail
 
 cd build
 meson compile
-LSAN_OPTIONS="suppressions=../suppr.txt" ./yar
+LD_LIBRARY_PATH="/usr/local/lib" LSAN_OPTIONS="suppressions=../suppr.txt" ./yar
 

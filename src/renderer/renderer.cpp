@@ -3,9 +3,9 @@
 #include <vulkan/vulkan_core.h>
 
 #include "../log.h"
+#include "../shader/compiler.h"
 #include "data_types.h"
 #include "renderer.h"
-#include "shader.h"
 
 namespace yar
 {
@@ -28,40 +28,45 @@ Renderer::Renderer(std::shared_ptr<Window> window) :
     m_descriptorSet = std::make_shared<VulkanDescriptorSet>(m_device, uboBuffers);
 
     // TODO: abstract away all the shader + pipeline setup
-    auto moduleSimpleFrag = LOAD_VULKAN_SPV(simple_fs);
-    auto moduleSimpleVert = LOAD_VULKAN_SPV(simple_vs);
+    ShaderCompiler compiler;
+    size_t         size;
+    const void*    spirv = compiler.GetSpirv("simple.slang", SHADER_ENTRY_PIXEL, size);
+    if (!spirv)
+    {
+        throw std::runtime_error("failed to load shader 1");
+    }
+    auto moduleSimpleFrag = GetVulkanCreateInfo(spirv, size);
+    spirv                 = compiler.GetSpirv("simple.slang", SHADER_ENTRY_VERTEX, size);
+    if (!spirv)
+    {
+        throw std::runtime_error("failed to load shader 2");
+    }
+    auto moduleSimpleVert = GetVulkanCreateInfo(spirv, size);
     auto stageSimpleFrag =
         FillShaderStageCreateInfo(&moduleSimpleFrag, VK_SHADER_STAGE_FRAGMENT_BIT);
     auto stageSimpleVert = FillShaderStageCreateInfo(&moduleSimpleVert, VK_SHADER_STAGE_VERTEX_BIT);
     std::vector simpleStages {stageSimpleFrag, stageSimpleVert};
 
     m_testPipeline =
-        std::make_shared<VulkanPipeline<Vertex_P_C>>(m_device, m_descriptorSet, simpleStages);
+        std::make_shared<VulkanPipeline<Vertex>>(m_device, m_descriptorSet, simpleStages);
 
-    auto moduleFullscreenFrag = LOAD_VULKAN_SPV(fullscreen_fs);
-    auto moduleFullscreenVert = LOAD_VULKAN_SPV(fullscreen_vs);
-    auto stageFullscreenFrag =
-        FillShaderStageCreateInfo(&moduleFullscreenFrag, VK_SHADER_STAGE_FRAGMENT_BIT);
-    auto stageFullscreenVert =
-        FillShaderStageCreateInfo(&moduleFullscreenVert, VK_SHADER_STAGE_VERTEX_BIT);
-    std::vector fullscreenStages {stageFullscreenFrag, stageFullscreenVert};
-
-    m_fullscreenPipeline = std::make_shared<VulkanPipeline<VertexEmpty>>(
-        m_device,
-        m_descriptorSet,
-        fullscreenStages,
-        false,
-        false
-    );
-
-    auto moduleSkyFrag = LOAD_VULKAN_SPV(sky_fs);
-    auto moduleSkyVert = LOAD_VULKAN_SPV(sky_vs);
+    spirv = compiler.GetSpirv("sky.slang", SHADER_ENTRY_PIXEL, size);
+    if (!spirv)
+    {
+        throw std::runtime_error("failed to load shader 3");
+    }
+    auto moduleSkyFrag = GetVulkanCreateInfo(spirv, size);
+    spirv              = compiler.GetSpirv("sky.slang", SHADER_ENTRY_VERTEX, size);
+    if (!spirv)
+    {
+        throw std::runtime_error("failed to load shader 4");
+    }
+    auto moduleSkyVert = GetVulkanCreateInfo(spirv, size);
     auto stageSkyFrag  = FillShaderStageCreateInfo(&moduleSkyFrag, VK_SHADER_STAGE_FRAGMENT_BIT);
     auto stageSkyVert  = FillShaderStageCreateInfo(&moduleSkyVert, VK_SHADER_STAGE_VERTEX_BIT);
     std::vector skyStages {stageSkyFrag, stageSkyVert};
 
-    m_skyPipeline =
-        std::make_shared<VulkanPipeline<Vertex_P>>(m_device, m_descriptorSet, skyStages);
+    m_skyPipeline = std::make_shared<VulkanPipeline<Vertex>>(m_device, m_descriptorSet, skyStages);
 }
 
 Renderer::~Renderer()
@@ -71,7 +76,6 @@ Renderer::~Renderer()
     vkDeviceWaitIdle(m_device.GetVkDevice());
 
     m_testPipeline.reset();
-    m_fullscreenPipeline.reset();
     m_skyPipeline.reset();
 
     m_descriptorSet.reset();
@@ -84,13 +88,6 @@ void Renderer::SetWindow(std::shared_ptr<Window> window)
     LOG_INFO("Setting window");
     m_instance.SetWindow(window);
     Resize();
-}
-
-void Renderer::ClearViewport()
-{
-    auto commandBuffer = m_device.GetCommandBuffer();
-    BindPipeline(RenderPipeline::FULLSCREEN);
-    vkCmdDraw(commandBuffer, 3, 1, 0, 0);
 }
 
 void Renderer::Resize()
@@ -175,6 +172,15 @@ void Renderer::GetImGuiInfo(VulkanImGuiCreationInfo& info)
     info.imInit.MinAllocationSize          = 1024 * 1024;
     info.imInit.CustomShaderVertCreateInfo = {};
     info.imInit.CustomShaderFragCreateInfo = {};
+}
+
+constexpr VkShaderModuleCreateInfo Renderer::GetVulkanCreateInfo(const void* data, size_t size)
+{
+    VkShaderModuleCreateInfo createInfo {};
+    createInfo.sType    = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO;
+    createInfo.codeSize = size;
+    createInfo.pCode    = static_cast<const uint32_t*>(data);
+    return createInfo;
 }
 
 constexpr VkPipelineShaderStageCreateInfo Renderer::FillShaderStageCreateInfo(
