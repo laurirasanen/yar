@@ -22,7 +22,7 @@ class Camera
     Camera()
     {
         transform          = {};
-        transform.position = glm::vec3(0, -3.0, 100.0);
+        transform.position = glm::vec3(0, -3.0, 1.0);
         fov                = 60.0f;
         near               = CAM_NEAR;
         far                = CAM_FAR;

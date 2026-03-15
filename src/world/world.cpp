@@ -12,10 +12,10 @@ World::World(std::shared_ptr<Renderer> renderer) : m_renderer(renderer)
 
     // test plane
     std::vector<Vertex> planeVertices = {
-        {.position = {-0.5, -0.5, 100.0}, .normal = {}, .uv = {}, .color = {1.0f, 0.0f, -0.1f}},
-        { .position = {0.5, -0.5, 100.0}, .normal = {}, .uv = {}, .color = {0.0f, 1.0f, -0.1f}},
-        {  .position = {0.5, 0.5, 100.0}, .normal = {}, .uv = {},  .color = {0.0f, 0.0f, 0.9f}},
-        { .position = {-0.5, 0.5, 100.0}, .normal = {}, .uv = {},  .color = {1.0f, 1.0f, 0.9f}},
+        {.position = {-0.5, -0.5, 0.0}, .normal = {}, .uv = {}, .color = {1.0f, 0.0f, -0.1f}},
+        { .position = {0.5, -0.5, 0.0}, .normal = {}, .uv = {}, .color = {0.0f, 1.0f, -0.1f}},
+        {  .position = {0.5, 0.5, 0.0}, .normal = {}, .uv = {},  .color = {0.0f, 0.0f, 0.9f}},
+        { .position = {-0.5, 0.5, 0.0}, .normal = {}, .uv = {},  .color = {1.0f, 1.0f, 0.9f}},
     };
     std::vector<Index> planeIndices = {0, 1, 2, 2, 3, 0};
     renderer->CreateBuffer(
