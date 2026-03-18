@@ -9,4 +9,5 @@ Yet another renderer.
 - [VulkanMemoryAllocator](https://github.com/GPUOpen-LibrariesAndSDKs/VulkanMemoryAllocator)
 - [SDL](https://github.com/libsdl-org/SDL)
 - [Vulkan-Headers](https://github.com/KhronosGroup/Vulkan-Headers)
+- [slang](https://github.com/shader-slang/slang)
 
