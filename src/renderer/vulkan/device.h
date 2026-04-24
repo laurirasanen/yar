@@ -1,6 +1,7 @@
 #pragma once
 
 #include <optional>
+#include <vulkan/vulkan_core.h>
 
 #include "../../components/rect.h"
 #include "instance.h"
@@ -90,7 +91,7 @@ class VulkanDevice
 
     VkFormat GetDepthFormat() const
     {
-        return VK_FORMAT_D32_SFLOAT;
+        return VK_FORMAT_D32_SFLOAT_S8_UINT;
     }
 
     VkDescriptorPool GetUboDescriptorPool() const
@@ -124,8 +125,8 @@ class VulkanDevice
 
     VulkanSwapchainSupportDetails QuerySwapchainSupport(const VkPhysicalDevice device);
     constexpr VkSurfaceFormatKHR  ChooseSwapSurfaceFormat(
-         const std::vector<VkSurfaceFormatKHR>& available
-     );
+        const std::vector<VkSurfaceFormatKHR>& available
+    );
     constexpr VkPresentModeKHR ChooseSwapPresentMode(
         const std::vector<VkPresentModeKHR>& available
     );

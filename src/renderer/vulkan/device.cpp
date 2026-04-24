@@ -110,7 +110,10 @@ void VulkanDevice::Begin()
         m_vkCommandBuffers[m_currentFrame],
         m_vkSwapchainImages[m_currentImageIndex],
         VK_IMAGE_LAYOUT_UNDEFINED,
-        VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL
+        VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL,
+        m_vkDepthImage,
+        VK_IMAGE_LAYOUT_UNDEFINED,
+        VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL
     );
 
     VkClearValue clearColor {};
@@ -135,7 +138,7 @@ void VulkanDevice::Begin()
     depthAttachment.loadOp      = VK_ATTACHMENT_LOAD_OP_CLEAR;
     depthAttachment.storeOp     = VK_ATTACHMENT_STORE_OP_STORE;
     depthAttachment.imageView   = m_vkDepthImageView;
-    depthAttachment.imageLayout = VK_IMAGE_LAYOUT_DEPTH_ATTACHMENT_OPTIMAL;
+    depthAttachment.imageLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
     depthAttachment.resolveMode = VK_RESOLVE_MODE_NONE;
 
     VkRect2D renderArea {};
@@ -200,7 +203,11 @@ void VulkanDevice::Submit()
         m_vkCommandBuffers[m_currentFrame],
         m_vkSwapchainImages[m_currentImageIndex],
         VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL,
-        VK_IMAGE_LAYOUT_PRESENT_SRC_KHR
+        VK_IMAGE_LAYOUT_PRESENT_SRC_KHR,
+        // TODO: depth barrier needed?
+        m_vkDepthImage,
+        VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL,
+        VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL
     );
 
     VK_CHECK(
@@ -208,22 +215,30 @@ void VulkanDevice::Submit()
         "Failed to end command buffer"
     );
 
-    VkSemaphore          waitSemaphores[]   = {m_vkImageSemaphores[m_currentFrame]};
-    VkPipelineStageFlags waitStages[]       = {VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT};
-    VkSemaphore          signalSemaphores[] = {m_vkRenderSemaphores[m_currentFrame]};
+    VkCommandBufferSubmitInfo bufferInfo {};
+    bufferInfo.sType         = VK_STRUCTURE_TYPE_COMMAND_BUFFER_SUBMIT_INFO;
+    bufferInfo.commandBuffer = m_vkCommandBuffers[m_currentFrame];
 
-    VkSubmitInfo submitInfo {};
-    submitInfo.sType                = VK_STRUCTURE_TYPE_SUBMIT_INFO;
-    submitInfo.commandBufferCount   = 1;
-    submitInfo.pCommandBuffers      = &m_vkCommandBuffers[m_currentFrame];
-    submitInfo.waitSemaphoreCount   = 1;
-    submitInfo.pWaitSemaphores      = waitSemaphores;
-    submitInfo.pWaitDstStageMask    = waitStages;
-    submitInfo.signalSemaphoreCount = 1;
-    submitInfo.pSignalSemaphores    = signalSemaphores;
+    VkSemaphoreSubmitInfo waitInfo {};
+    waitInfo.sType     = VK_STRUCTURE_TYPE_SEMAPHORE_SUBMIT_INFO;
+    waitInfo.semaphore = m_vkImageSemaphores[m_currentFrame];
+    waitInfo.stageMask = VK_PIPELINE_STAGE_2_COLOR_ATTACHMENT_OUTPUT_BIT;
+
+    VkSemaphoreSubmitInfo signalInfo {};
+    signalInfo.sType     = VK_STRUCTURE_TYPE_SEMAPHORE_SUBMIT_INFO;
+    signalInfo.semaphore = m_vkRenderSemaphores[m_currentFrame];
+
+    VkSubmitInfo2 submitInfo {};
+    submitInfo.sType                    = VK_STRUCTURE_TYPE_SUBMIT_INFO_2;
+    submitInfo.pCommandBufferInfos      = &bufferInfo;
+    submitInfo.commandBufferInfoCount   = 1;
+    submitInfo.pWaitSemaphoreInfos      = &waitInfo;
+    submitInfo.waitSemaphoreInfoCount   = 1;
+    submitInfo.pSignalSemaphoreInfos    = &signalInfo;
+    submitInfo.signalSemaphoreInfoCount = 1;
 
     VK_CHECK(
-        vkQueueSubmit(m_vkGraphicsQueue, 1, &submitInfo, m_vkInFlightFences[m_currentFrame]),
+        vkQueueSubmit2(m_vkGraphicsQueue, 1, &submitInfo, m_vkInFlightFences[m_currentFrame]),
         "Failed to submit queue"
     );
 }
@@ -292,13 +307,17 @@ void VulkanDevice::SubmitTemporaryCommandBuffer(VkCommandBuffer commandBuffer)
 {
     VK_CHECK(vkEndCommandBuffer(commandBuffer), "Failed to end temporary command buffer");
 
-    VkSubmitInfo submitInfo {};
-    submitInfo.sType              = VK_STRUCTURE_TYPE_SUBMIT_INFO;
-    submitInfo.commandBufferCount = 1;
-    submitInfo.pCommandBuffers    = &commandBuffer;
+    VkCommandBufferSubmitInfo bufferInfo {};
+    bufferInfo.sType         = VK_STRUCTURE_TYPE_COMMAND_BUFFER_SUBMIT_INFO;
+    bufferInfo.commandBuffer = commandBuffer;
+
+    VkSubmitInfo2 submitInfo {};
+    submitInfo.sType                  = VK_STRUCTURE_TYPE_SUBMIT_INFO_2;
+    submitInfo.pCommandBufferInfos    = &bufferInfo;
+    submitInfo.commandBufferInfoCount = 1;
 
     VK_CHECK(
-        vkQueueSubmit(m_vkGraphicsQueue, 1, &submitInfo, VK_NULL_HANDLE),
+        vkQueueSubmit2(m_vkGraphicsQueue, 1, &submitInfo, VK_NULL_HANDLE),
         "Failed to submit temporary command buffer"
     );
     // TODO: wait all copies with fences?
@@ -367,9 +386,15 @@ bool VulkanDevice::IsDeviceSuitable(const VkPhysicalDevice device)
     vkGetPhysicalDeviceProperties(device, &deviceProperties);
     LOG_DEBUG("Device: {}", deviceProperties.deviceName);
 
+    // FIXME duplicate code
+    VkPhysicalDeviceSynchronization2Features featureSync2 {};
+    featureSync2.sType            = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_SYNCHRONIZATION_2_FEATURES;
+    featureSync2.synchronization2 = VK_TRUE;
+    featureSync2.pNext            = nullptr;
+
     VkPhysicalDeviceMaintenance5Features featureM5 {};
     featureM5.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_MAINTENANCE_5_FEATURES;
-    featureM5.pNext = nullptr;
+    featureM5.pNext = &featureSync2;
 
     VkPhysicalDeviceDynamicRenderingFeatures featureDR {};
     featureDR.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_DYNAMIC_RENDERING_FEATURES;
@@ -381,9 +406,10 @@ bool VulkanDevice::IsDeviceSuitable(const VkPhysicalDevice device)
 
     vkGetPhysicalDeviceFeatures2(device, &deviceFeatures);
 
+    auto sync2Supported            = featureSync2.synchronization2 == VK_TRUE;
     auto dynamicRenderingSupported = featureDR.dynamicRendering == VK_TRUE;
     auto maintenance5Supported     = featureM5.maintenance5 == VK_TRUE;
-    auto featuresSupported         = dynamicRenderingSupported && maintenance5Supported;
+    auto featuresSupported = dynamicRenderingSupported && maintenance5Supported && sync2Supported;
     if (!featuresSupported)
     {
         return false;
@@ -592,6 +618,8 @@ void VulkanDevice::CreateSwapchain()
         imageCount = support.capabilities.maxImageCount;
     }
 
+    LOG_DEBUG("Using {} swapchain images", imageCount);
+
     VkSwapchainCreateInfoKHR createInfo {};
     createInfo.sType            = VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR;
     createInfo.surface          = m_instance.GetSurface();
@@ -724,7 +752,7 @@ void VulkanDevice::CreateImageViews()
         &m_vkDepthImageView,
         VK_IMAGE_VIEW_TYPE_2D,
         GetDepthFormat(),
-        VK_IMAGE_ASPECT_DEPTH_BIT
+        VK_IMAGE_ASPECT_DEPTH_BIT | VK_IMAGE_ASPECT_STENCIL_BIT
     );
 }
 
@@ -751,10 +779,15 @@ void VulkanDevice::CreateLogicalDevice()
         queueCreateInfos.push_back(queueCreateInfo);
     }
 
+    VkPhysicalDeviceSynchronization2Features featureSync2 {};
+    featureSync2.sType            = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_SYNCHRONIZATION_2_FEATURES;
+    featureSync2.synchronization2 = VK_TRUE;
+    featureSync2.pNext            = nullptr;
+
     VkPhysicalDeviceMaintenance5Features featureM5 {};
     featureM5.sType        = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_MAINTENANCE_5_FEATURES;
     featureM5.maintenance5 = VK_TRUE;
-    featureM5.pNext        = nullptr;
+    featureM5.pNext        = &featureSync2;
 
     VkPhysicalDeviceDynamicRenderingFeatures featureDR {};
     featureDR.sType            = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_DYNAMIC_RENDERING_FEATURES;

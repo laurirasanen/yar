@@ -170,9 +170,9 @@ VulkanPipeline<V>::VulkanPipeline(
     VkFormat depthFormat = m_device.GetDepthFormat();
 
     VkPipelineRenderingCreateInfo pipelineCreateInfo {};
-    pipelineCreateInfo.sType                = VK_STRUCTURE_TYPE_PIPELINE_RENDERING_CREATE_INFO;
-    pipelineCreateInfo.pNext                = VK_NULL_HANDLE;
-    pipelineCreateInfo.colorAttachmentCount = 1;
+    pipelineCreateInfo.sType                   = VK_STRUCTURE_TYPE_PIPELINE_RENDERING_CREATE_INFO;
+    pipelineCreateInfo.pNext                   = VK_NULL_HANDLE;
+    pipelineCreateInfo.colorAttachmentCount    = 1;
     pipelineCreateInfo.pColorAttachmentFormats = &colorFormat;
     pipelineCreateInfo.depthAttachmentFormat   = depthFormat;
     pipelineCreateInfo.stencilAttachmentFormat = VK_FORMAT_UNDEFINED;
