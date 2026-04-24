@@ -389,7 +389,6 @@ bool VulkanDevice::IsDeviceSuitable(const VkPhysicalDevice device)
     // FIXME duplicate code
     VkPhysicalDeviceSynchronization2Features featureSync2 {};
     featureSync2.sType            = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_SYNCHRONIZATION_2_FEATURES;
-    featureSync2.synchronization2 = VK_TRUE;
     featureSync2.pNext            = nullptr;
 
     VkPhysicalDeviceMaintenance5Features featureM5 {};
