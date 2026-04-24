@@ -139,8 +139,7 @@ class VulkanDevice
         VkFormat          format,
         VkImageUsageFlags usage,
         uint32_t          width,
-        uint32_t          height,
-        VkImageLayout     layout
+        uint32_t          height
     );
     void CreateImageView(
         VkImage            image,
