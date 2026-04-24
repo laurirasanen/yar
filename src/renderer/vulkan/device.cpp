@@ -640,7 +640,8 @@ void VulkanDevice::CreateSwapchain()
         GetDepthFormat(),
         VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT,
         extent.width,
-        extent.height
+        extent.height,
+        VK_IMAGE_LAYOUT_DEPTH_ATTACHMENT_OPTIMAL
     );
 }
 
@@ -651,7 +652,8 @@ void VulkanDevice::CreateImage(
     VkFormat          format,
     VkImageUsageFlags usage,
     uint32_t          width,
-    uint32_t          height
+    uint32_t          height,
+    VkImageLayout     layout
 )
 {
     VkImageCreateInfo createInfo {};
@@ -664,7 +666,7 @@ void VulkanDevice::CreateImage(
     createInfo.mipLevels     = 1;
     createInfo.arrayLayers   = 1;
     createInfo.tiling        = VK_IMAGE_TILING_OPTIMAL;
-    createInfo.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+    createInfo.initialLayout = layout;
     createInfo.usage         = usage;
     createInfo.sharingMode   = VK_SHARING_MODE_EXCLUSIVE;
     createInfo.samples       = VK_SAMPLE_COUNT_1_BIT;
