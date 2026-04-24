@@ -388,8 +388,8 @@ bool VulkanDevice::IsDeviceSuitable(const VkPhysicalDevice device)
 
     // FIXME duplicate code
     VkPhysicalDeviceSynchronization2Features featureSync2 {};
-    featureSync2.sType            = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_SYNCHRONIZATION_2_FEATURES;
-    featureSync2.pNext            = nullptr;
+    featureSync2.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_SYNCHRONIZATION_2_FEATURES;
+    featureSync2.pNext = nullptr;
 
     VkPhysicalDeviceMaintenance5Features featureM5 {};
     featureM5.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_MAINTENANCE_5_FEATURES;
@@ -611,13 +611,13 @@ void VulkanDevice::CreateSwapchain()
     auto surfaceFormat = ChooseSwapSurfaceFormat(support.formats);
     auto presentMode   = ChooseSwapPresentMode(support.presentModes);
     auto extent        = ChooseSwapExtent(support.capabilities);
-    auto imageCount    = support.capabilities.minImageCount + 1;
-    if (support.capabilities.maxImageCount > 0 && imageCount > support.capabilities.maxImageCount)
-    {
-        imageCount = support.capabilities.maxImageCount;
-    }
+    auto imageCount    = support.capabilities.minImageCount;
 
     LOG_DEBUG("Using {} swapchain images", imageCount);
+    if (imageCount < m_maxFramesInFlight)
+    {
+        LOG_ERROR("This is probably bad");
+    }
 
     VkSwapchainCreateInfoKHR createInfo {};
     createInfo.sType            = VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR;
