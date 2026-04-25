@@ -1,6 +1,11 @@
+#include <cstring>
 #include <filesystem>
 #include <fstream>
 #include <iterator>
+
+#if LINUX
+#include <unistd.h>
+#endif
 
 #include "fs.h"
 
@@ -21,6 +26,10 @@ std::string fs_read_text(const char* path)
 std::vector<std::filesystem::path> fs_iter(const char* path, const char* ext, bool recursive)
 {
     std::filesystem::path folder(path);
+    if (folder.is_relative())
+    {
+        folder = fs_program_root().append(path);
+    }
     if (!std::filesystem::is_directory(folder))
     {
         throw std::runtime_error(std::format("path {} is not a directory", path));
@@ -41,5 +50,33 @@ std::vector<std::filesystem::path> fs_iter(const char* path, const char* ext, bo
     }
 
     return filepaths;
+}
+
+std::filesystem::path fs_program_root()
+{
+    const size_t sz = 256;
+    char         buf[sz];
+    std::memset(buf, '\0', sz);
+
+#if LINUX
+    ssize_t bytes = readlink("/proc/self/exe", buf, sz);
+#elif WIN64
+    size_t bytes = GetModuleFileName(NULL, buf, sz);
+#else
+#error implement me
+#endif
+
+    if (bytes <= 0)
+    {
+        throw std::runtime_error("Couldn't get program path");
+    }
+    buf[sz - 1] = '\0';
+
+    std::filesystem::path p {buf};
+    if (!p.has_parent_path())
+    {
+        throw std::runtime_error("Couldn't get program parent path");
+    }
+    return p.parent_path();
 }
 } // namespace yar
