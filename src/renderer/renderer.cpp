@@ -48,13 +48,13 @@ Renderer::Renderer(std::shared_ptr<Window> window) :
     // TODO: abstract away all the shader + pipeline setup
     ShaderCompiler compiler;
     size_t         size;
-    const void*    spirv = compiler.GetSpirv("simple.slang", SHADER_ENTRY_PIXEL, size);
+    const void*    spirv = compiler.GetSpirv("unlit.slang", SHADER_ENTRY_PIXEL, size);
     if (!spirv)
     {
         throw std::runtime_error("failed to load shader 1");
     }
     auto moduleSimpleFrag = GetVulkanCreateInfo(spirv, size);
-    spirv                 = compiler.GetSpirv("simple.slang", SHADER_ENTRY_VERTEX, size);
+    spirv                 = compiler.GetSpirv("unlit.slang", SHADER_ENTRY_VERTEX, size);
     if (!spirv)
     {
         throw std::runtime_error("failed to load shader 2");
