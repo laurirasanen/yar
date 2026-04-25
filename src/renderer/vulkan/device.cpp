@@ -24,7 +24,6 @@ VulkanDevice::VulkanDevice(const VulkanInstance& instance, uint32_t maxFramesInF
     CreateVulkanAllocator(m_instance.GetVkInstance(), m_vkPhysicalDevice, m_vkDevice);
 
     CreateSwapchain();
-    CreateImageViews();
     CreateCommandPool();
     CreateCommandBuffers();
     CreateSyncObjects();
@@ -45,10 +44,6 @@ VulkanDevice::~VulkanDevice()
         vkDestroyFence(m_vkDevice, fence, nullptr);
     }
     for (auto& semaphore : m_vkImageSemaphores)
-    {
-        vkDestroySemaphore(m_vkDevice, semaphore, nullptr);
-    }
-    for (auto& semaphore : m_vkRenderSemaphores)
     {
         vkDestroySemaphore(m_vkDevice, semaphore, nullptr);
     }
@@ -203,11 +198,7 @@ void VulkanDevice::Submit()
         m_vkCommandBuffers[m_currentFrame],
         m_vkSwapchainImages[m_currentImageIndex],
         VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL,
-        VK_IMAGE_LAYOUT_PRESENT_SRC_KHR,
-        // TODO: depth barrier needed?
-        m_vkDepthImage,
-        VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL,
-        VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL
+        VK_IMAGE_LAYOUT_PRESENT_SRC_KHR
     );
 
     VK_CHECK(
@@ -226,7 +217,7 @@ void VulkanDevice::Submit()
 
     VkSemaphoreSubmitInfo signalInfo {};
     signalInfo.sType     = VK_STRUCTURE_TYPE_SEMAPHORE_SUBMIT_INFO;
-    signalInfo.semaphore = m_vkRenderSemaphores[m_currentFrame];
+    signalInfo.semaphore = m_vkRenderSemaphores[m_currentImageIndex];
 
     VkSubmitInfo2 submitInfo {};
     submitInfo.sType                    = VK_STRUCTURE_TYPE_SUBMIT_INFO_2;
@@ -245,13 +236,13 @@ void VulkanDevice::Submit()
 
 void VulkanDevice::Present()
 {
-    VkSemaphore    signalSemaphores[] = {m_vkRenderSemaphores[m_currentFrame]};
+    VkSemaphore    renderSemaphores[] = {m_vkRenderSemaphores[m_currentImageIndex]};
     VkSwapchainKHR swapchains[]       = {m_vkSwapchain};
 
     VkPresentInfoKHR presentInfo {};
     presentInfo.sType              = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
     presentInfo.waitSemaphoreCount = 1;
-    presentInfo.pWaitSemaphores    = signalSemaphores;
+    presentInfo.pWaitSemaphores    = renderSemaphores;
     presentInfo.swapchainCount     = 1;
     presentInfo.pSwapchains        = swapchains;
     presentInfo.pImageIndices      = &m_currentImageIndex;
@@ -329,15 +320,19 @@ void VulkanDevice::SubmitTemporaryCommandBuffer(VkCommandBuffer commandBuffer)
 void VulkanDevice::RecreateSwapchain()
 {
     vkDeviceWaitIdle(m_vkDevice);
-
+    // TODO: should pass previous chain to
+    // VkSwapchainCreateInfoKHR.oldSwapchain
     DestroySwapchain();
-
     CreateSwapchain();
-    CreateImageViews();
 }
 
 void VulkanDevice::DestroySwapchain()
 {
+    for (auto& semaphore : m_vkRenderSemaphores)
+    {
+        vkDestroySemaphore(m_vkDevice, semaphore, nullptr);
+    }
+
     for (auto view : m_vkSwapchainImageViews)
     {
         vkDestroyImageView(m_vkDevice, view, nullptr);
@@ -641,6 +636,37 @@ void VulkanDevice::CreateSwapchain()
         extent.width,
         extent.height
     );
+
+    m_vkSwapchainImageViews.resize(m_vkSwapchainImages.size());
+    for (size_t i = 0; i < m_vkSwapchainImages.size(); i++)
+    {
+        CreateImageView(
+            m_vkSwapchainImages[i],
+            &m_vkSwapchainImageViews[i],
+            VK_IMAGE_VIEW_TYPE_2D,
+            m_vkSwapchainImageFormat,
+            VK_IMAGE_ASPECT_COLOR_BIT
+        );
+    }
+
+    CreateImageView(
+        m_vkDepthImage,
+        &m_vkDepthImageView,
+        VK_IMAGE_VIEW_TYPE_2D,
+        GetDepthFormat(),
+        VK_IMAGE_ASPECT_DEPTH_BIT | VK_IMAGE_ASPECT_STENCIL_BIT
+    );
+
+    m_vkRenderSemaphores.resize(imageCount);
+    VkSemaphoreCreateInfo semaphoreInfo {};
+    semaphoreInfo.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO;
+    for (uint32_t i = 0; i < m_vkSwapchainImages.size(); i++)
+    {
+        VK_CHECK(
+            vkCreateSemaphore(m_vkDevice, &semaphoreInfo, nullptr, &m_vkRenderSemaphores[i]),
+            "Failed to create render semaphore"
+        );
+    }
 }
 
 void VulkanDevice::CreateImage(
@@ -701,29 +727,6 @@ void VulkanDevice::CreateImageView(
     VK_CHECK(
         vkCreateImageView(m_vkDevice, &createInfo, nullptr, imageView),
         "Failed to create image view"
-    );
-}
-
-void VulkanDevice::CreateImageViews()
-{
-    m_vkSwapchainImageViews.resize(m_vkSwapchainImages.size());
-    for (size_t i = 0; i < m_vkSwapchainImages.size(); i++)
-    {
-        CreateImageView(
-            m_vkSwapchainImages[i],
-            &m_vkSwapchainImageViews[i],
-            VK_IMAGE_VIEW_TYPE_2D,
-            m_vkSwapchainImageFormat,
-            VK_IMAGE_ASPECT_COLOR_BIT
-        );
-    }
-
-    CreateImageView(
-        m_vkDepthImage,
-        &m_vkDepthImageView,
-        VK_IMAGE_VIEW_TYPE_2D,
-        GetDepthFormat(),
-        VK_IMAGE_ASPECT_DEPTH_BIT | VK_IMAGE_ASPECT_STENCIL_BIT
     );
 }
 
@@ -831,7 +834,6 @@ void VulkanDevice::CreateCommandBuffers()
 void VulkanDevice::CreateSyncObjects()
 {
     m_vkImageSemaphores.resize(m_maxFramesInFlight);
-    m_vkRenderSemaphores.resize(m_maxFramesInFlight);
     m_vkInFlightFences.resize(m_maxFramesInFlight);
 
     VkSemaphoreCreateInfo semaphoreInfo {};
@@ -846,10 +848,6 @@ void VulkanDevice::CreateSyncObjects()
         VK_CHECK(
             vkCreateSemaphore(m_vkDevice, &semaphoreInfo, nullptr, &m_vkImageSemaphores[i]),
             "Failed to create image semaphore"
-        );
-        VK_CHECK(
-            vkCreateSemaphore(m_vkDevice, &semaphoreInfo, nullptr, &m_vkRenderSemaphores[i]),
-            "Failed to create render semaphore"
         );
         VK_CHECK(
             vkCreateFence(m_vkDevice, &fenceInfo, nullptr, &m_vkInFlightFences[i]),

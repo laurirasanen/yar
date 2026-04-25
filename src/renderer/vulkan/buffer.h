@@ -13,6 +13,7 @@ class VulkanBuffer : public Buffer
   public:
     VulkanBuffer() = delete;
     VulkanBuffer(
+        VkDevice       device,
         BufferType     bufferType,
         BufferLocation bufferLocation,
         uint32_t       elementSize,
@@ -50,16 +51,13 @@ class VulkanBuffer : public Buffer
         return m_vkBuffer;
     }
 
-    VkDeviceAddress GetDeviceAddress(VkDevice device) const
+    VkDeviceAddress* GetDeviceAddress()
     {
         if (m_bufferLocation != Device && m_bufferLocation != SecretThirdOption)
         {
             throw std::runtime_error("Unhandled buffer type");
         }
-        VkBufferDeviceAddressInfo addressInfo {};
-        addressInfo.sType  = VK_STRUCTURE_TYPE_BUFFER_DEVICE_ADDRESS_INFO;
-        addressInfo.buffer = m_vkBuffer;
-        return vkGetBufferDeviceAddress(device, &addressInfo);
+        return &m_vkDeviceAddress;
     }
 
     VmaAllocationInfo GetAllocationInfo() const

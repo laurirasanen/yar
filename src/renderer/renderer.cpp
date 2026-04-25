@@ -11,36 +11,28 @@
 
 namespace yar
 {
-
-#define MAX_FRAMES_IN_FLIGHT 2
-
 Renderer::Renderer(std::shared_ptr<Window> window) :
     m_instance(window),
     m_device(m_instance, MAX_FRAMES_IN_FLIGHT)
 {
     LOG_INFO("Creating Renderer");
 
-    m_shaderDataBuffers.resize(MAX_FRAMES_IN_FLIGHT);
-    m_modelDataBuffers.resize(MAX_FRAMES_IN_FLIGHT);
+    m_shaderGlobalBuffers.resize(MAX_FRAMES_IN_FLIGHT);
+    m_shaderGlobalData.resize(MAX_FRAMES_IN_FLIGHT);
     for (unsigned int i = 0; i < MAX_FRAMES_IN_FLIGHT; i++)
     {
-        m_shaderDataBuffers[i] = std::make_shared<VulkanBuffer>(
+        m_shaderGlobalBuffers[i] = std::make_shared<VulkanBuffer>(
+            m_device.GetVkDevice(),
             ShaderDataBuffer,
             SecretThirdOption,
             sizeof(ShaderGlobalData),
             1
         );
-        m_modelDataBuffers[i] = std::make_shared<VulkanBuffer>(
-            ShaderDataBuffer,
-            SecretThirdOption,
-            sizeof(ShaderObjectData),
-            MAX_MODELS
-        );
-    }
-
-    for (unsigned int i = 0; i < MAX_MODELS; i++)
-    {
-        m_objectData[i].model = glm::identity<glm::mat4>();
+        m_shaderGlobalData[i] = std::make_shared<ShaderGlobalData>();
+        for (unsigned int j = 0; j < MAX_MODELS; j++)
+        {
+            m_shaderGlobalData[i]->models[j] = glm::identity<glm::mat4>();
+        }
     }
 
     m_descriptorSet = std::make_shared<VulkanDescriptorSet>(m_device, MAX_FRAMES_IN_FLIGHT);
@@ -139,17 +131,12 @@ void Renderer::UpdateUniforms(const std::shared_ptr<Camera> camera)
 {
     auto currentFrame = m_device.GetCurrentFrame();
 
-    auto shaderData = ShaderGlobalData(camera);
-    std::memcpy(
-        m_shaderDataBuffers[currentFrame]->GetAllocationInfo().pMappedData,
-        &shaderData,
-        sizeof(ShaderGlobalData)
-    );
+    m_shaderGlobalData[currentFrame]->Update(camera);
 
     std::memcpy(
-        m_modelDataBuffers[currentFrame]->GetAllocationInfo().pMappedData,
-        m_objectData.data(),
-        sizeof(ShaderObjectData) * MAX_MODELS
+        m_shaderGlobalBuffers[currentFrame]->GetAllocationInfo().pMappedData,
+        m_shaderGlobalData[currentFrame].get(),
+        sizeof(ShaderGlobalData)
     );
 }
 

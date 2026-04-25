@@ -7,11 +7,13 @@
 #include <glm/vec3.hpp>
 
 #include <imgui_impl_vulkan.h>
+#include <vulkan/vulkan_core.h>
 
 #include "../components/camera.h"
 #include "../components/rect.h"
 #include "../window/window.h"
 #include "buffer.h"
+#include "data_types.h"
 #include "vulkan/buffer.h"
 #include "vulkan/common.h"
 #include "vulkan/descriptor_set.h"
@@ -21,7 +23,7 @@
 
 namespace yar
 {
-#define MAX_MODELS 64
+#define MAX_FRAMES_IN_FLIGHT 2
 
 enum RenderPipeline
 {
@@ -90,10 +92,20 @@ class Renderer
         uint32_t                 elementCount
     )
     {
-        auto hostBuffer =
-            std::make_shared<VulkanBuffer>(bufferType, Host, elementSize, elementCount);
-        auto deviceBuffer =
-            std::make_shared<VulkanBuffer>(bufferType, Device, elementSize, elementCount);
+        auto hostBuffer = std::make_shared<VulkanBuffer>(
+            m_device.GetVkDevice(),
+            bufferType,
+            Host,
+            elementSize,
+            elementCount
+        );
+        auto deviceBuffer = std::make_shared<VulkanBuffer>(
+            m_device.GetVkDevice(),
+            bufferType,
+            Device,
+            elementSize,
+            elementCount
+        );
         hostBuffer->Write(data, elementSize * elementCount);
         auto tempBuffer = GetTemporaryCommandBuffer();
         hostBuffer->CopyToDevice(tempBuffer, static_pointer_cast<Buffer>(deviceBuffer));
@@ -111,12 +123,28 @@ class Renderer
             case TEST:
             {
                 m_testPipeline->Bind(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, currentFrame);
+                vkCmdPushConstants(
+                    commandBuffer,
+                    m_testPipeline->GetVkPipelineLayout(),
+                    VK_SHADER_STAGE_VERTEX_BIT,
+                    0,
+                    sizeof(VkDeviceAddress),
+                    m_shaderGlobalBuffers[currentFrame]->GetDeviceAddress()
+                );
                 break;
             }
 
             case SKY:
             {
                 m_skyPipeline->Bind(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, currentFrame);
+                vkCmdPushConstants(
+                    commandBuffer,
+                    m_skyPipeline->GetVkPipelineLayout(),
+                    VK_SHADER_STAGE_VERTEX_BIT,
+                    0,
+                    sizeof(VkDeviceAddress),
+                    m_shaderGlobalBuffers[currentFrame]->GetDeviceAddress()
+                );
                 break;
             }
 
@@ -153,10 +181,8 @@ class Renderer
 
     std::shared_ptr<VulkanDescriptorSet> m_descriptorSet;
 
-    std::vector<std::shared_ptr<VulkanBuffer>> m_shaderDataBuffers;
-    std::vector<std::shared_ptr<VulkanBuffer>> m_modelDataBuffers;
-
-    std::array<ShaderObjectData, MAX_MODELS> m_objectData;
+    std::vector<std::shared_ptr<VulkanBuffer>>     m_shaderGlobalBuffers;
+    std::vector<std::shared_ptr<ShaderGlobalData>> m_shaderGlobalData;
 
     std::shared_ptr<VulkanPipeline<Vertex>> m_testPipeline;
     std::shared_ptr<VulkanPipeline<Vertex>> m_skyPipeline;

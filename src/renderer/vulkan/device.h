@@ -149,7 +149,6 @@ class VulkanDevice
         VkFormat           format,
         VkImageAspectFlags aspect
     );
-    void CreateImageViews();
 
     void CreateLogicalDevice();
 
@@ -184,9 +183,12 @@ class VulkanDevice
     VkCommandPool                m_vkCommandPool;
     std::vector<VkCommandBuffer> m_vkCommandBuffers;
 
+    // These should be indexed by m_currentFrame
     std::vector<VkSemaphore> m_vkImageSemaphores;
-    std::vector<VkSemaphore> m_vkRenderSemaphores;
     std::vector<VkFence>     m_vkInFlightFences;
+
+    // These should be indexed by m_currentImageIndex
+    std::vector<VkSemaphore> m_vkRenderSemaphores;
 
     VkDescriptorPool m_vkUboDescriptorPool;
     VkDescriptorPool m_vkImGuiDescriptorPool;

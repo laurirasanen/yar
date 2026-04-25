@@ -18,6 +18,8 @@
 
 namespace yar
 {
+#define MAX_MODELS 64
+
 struct Vertex
 {
     glm::vec3 position;
@@ -40,9 +42,15 @@ struct ShaderGlobalData
 
     alignas(16) glm::vec4 viewport;
 
-    alignas(16) glm::vec3 eye;
+    alignas(16) glm::vec4 eye;
 
-    ShaderGlobalData(const std::shared_ptr<Camera> cam)
+    alignas(16) glm::mat4 models[MAX_MODELS];
+
+    ShaderGlobalData()
+    {
+    }
+
+    void Update(const std::shared_ptr<Camera> cam)
     {
         view     = cam->view;
         proj     = cam->proj;
@@ -54,13 +62,8 @@ struct ShaderGlobalData
 
         viewport = cam->viewport;
 
-        eye = cam->transform.position;
+        eye = glm::vec4(cam->transform.position, 0);
     }
 };
 
-struct ShaderObjectData
-{
-    alignas(16) glm::mat4 model;
-    alignas(16) uint32_t materialID;
-};
 } // namespace yar

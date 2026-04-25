@@ -32,6 +32,11 @@ class VulkanPipeline
 
     void Bind(VkCommandBuffer commandBuffer, VkPipelineBindPoint bindPoint, uint32_t frameIndex);
 
+    VkPipelineLayout GetVkPipelineLayout() const
+    {
+        return m_vkPipelineLayout;
+    }
+
     VkPipeline GetVkPipeline() const
     {
         return m_vkPipeline;
@@ -137,17 +142,10 @@ VulkanPipeline<V>::VulkanPipeline(
     colorBlendState.attachmentCount = 1;
     colorBlendState.pAttachments    = &colorBlendAttachment;
 
-    std::array<VkPushConstantRange, 2> pushConstants {
-        // global data
-        VkPushConstantRange {
-                             .stageFlags = VK_SHADER_STAGE_VERTEX_BIT,
-                             .offset     = 0,
-                             .size       = sizeof(VkDeviceAddress)},
-        // object data
-        VkPushConstantRange {
-                             .stageFlags = VK_SHADER_STAGE_VERTEX_BIT,
-                             .offset     = sizeof(VkDeviceAddress),
-                             .size       = sizeof(VkDeviceAddress)}
+    VkPushConstantRange pushConstantRange {
+        .stageFlags = VK_SHADER_STAGE_VERTEX_BIT,
+        .offset     = 0,
+        .size       = sizeof(VkDeviceAddress)
     };
 
     auto descriptorSetLayouts = descriptorSet->GetLayouts();
@@ -156,8 +154,8 @@ VulkanPipeline<V>::VulkanPipeline(
     pipelineLayoutInfo.sType                  = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
     pipelineLayoutInfo.setLayoutCount         = static_cast<uint32_t>(descriptorSetLayouts.size());
     pipelineLayoutInfo.pSetLayouts            = descriptorSetLayouts.data();
-    pipelineLayoutInfo.pushConstantRangeCount = pushConstants.size();
-    pipelineLayoutInfo.pPushConstantRanges    = pushConstants.data();
+    pipelineLayoutInfo.pushConstantRangeCount = 1;
+    pipelineLayoutInfo.pPushConstantRanges    = &pushConstantRange;
 
     VK_CHECK(
         vkCreatePipelineLayout(

@@ -148,4 +148,42 @@ constexpr static void TransitionImageLayout(
 
     vkCmdPipelineBarrier2(commandBuffer, &dep);
 }
+
+constexpr static void TransitionImageLayout(
+    VkCommandBuffer commandBuffer,
+    VkImage         color,
+    VkImageLayout   oldColorLayout,
+    VkImageLayout   newColorLayout
+)
+{
+    VkImageSubresourceRange colorRange {};
+    colorRange.aspectMask     = VK_IMAGE_ASPECT_COLOR_BIT;
+    colorRange.baseMipLevel   = 0;
+    colorRange.levelCount     = 1;
+    colorRange.baseArrayLayer = 0;
+    colorRange.layerCount     = 1;
+
+    VkImageMemoryBarrier2 barrier {
+        .sType               = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER_2,
+        .pNext               = nullptr,
+        .srcStageMask        = VK_PIPELINE_STAGE_2_COLOR_ATTACHMENT_OUTPUT_BIT,
+        .srcAccessMask       = GetAccessFlags(oldColorLayout),
+        .dstStageMask        = VK_PIPELINE_STAGE_2_COLOR_ATTACHMENT_OUTPUT_BIT,
+        .dstAccessMask       = GetAccessFlags(newColorLayout),
+        .oldLayout           = oldColorLayout,
+        .newLayout           = newColorLayout,
+        .srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED,
+        .dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED,
+        .image               = color,
+        .subresourceRange    = colorRange,
+    };
+
+    VkDependencyInfo dep {};
+    dep.sType                   = VK_STRUCTURE_TYPE_DEPENDENCY_INFO;
+    dep.dependencyFlags         = 0; // TODO: the docs on this suck
+    dep.pImageMemoryBarriers    = &barrier;
+    dep.imageMemoryBarrierCount = 1;
+
+    vkCmdPipelineBarrier2(commandBuffer, &dep);
+}
 } // namespace yar

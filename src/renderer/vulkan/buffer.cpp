@@ -3,6 +3,7 @@
 namespace yar
 {
 VulkanBuffer::VulkanBuffer(
+    VkDevice       device,
     BufferType     bufferType,
     BufferLocation bufferLocation,
     uint32_t       elementSize,
@@ -77,6 +78,10 @@ VulkanBuffer::VulkanBuffer(
 
         case SecretThirdOption:
         {
+            if (m_bufferType != ShaderDataBuffer)
+            {
+                throw std::runtime_error("Unhandled buffer type");
+            }
             allocInfo.flags = VMA_ALLOCATION_CREATE_HOST_ACCESS_SEQUENTIAL_WRITE_BIT
                               | VMA_ALLOCATION_CREATE_HOST_ACCESS_ALLOW_TRANSFER_INSTEAD_BIT
                               | VMA_ALLOCATION_CREATE_MAPPED_BIT;
@@ -98,6 +103,14 @@ VulkanBuffer::VulkanBuffer(
         &m_vmaAllocation,
         &m_vmaAllocationInfo
     );
+
+    if (m_bufferLocation == Device || m_bufferLocation == SecretThirdOption)
+    {
+        VkBufferDeviceAddressInfo addressInfo {};
+        addressInfo.sType  = VK_STRUCTURE_TYPE_BUFFER_DEVICE_ADDRESS_INFO;
+        addressInfo.buffer = m_vkBuffer;
+        m_vkDeviceAddress  = vkGetBufferDeviceAddress(device, &addressInfo);
+    }
 }
 
 VulkanBuffer::~VulkanBuffer()
