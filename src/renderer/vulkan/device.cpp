@@ -386,34 +386,6 @@ bool VulkanDevice::IsDeviceSuitable(const VkPhysicalDevice device)
     vkGetPhysicalDeviceProperties(device, &deviceProperties);
     LOG_DEBUG("Device: {}", deviceProperties.deviceName);
 
-    // FIXME duplicate code
-    VkPhysicalDeviceSynchronization2Features featureSync2 {};
-    featureSync2.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_SYNCHRONIZATION_2_FEATURES;
-    featureSync2.pNext = nullptr;
-
-    VkPhysicalDeviceMaintenance5Features featureM5 {};
-    featureM5.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_MAINTENANCE_5_FEATURES;
-    featureM5.pNext = &featureSync2;
-
-    VkPhysicalDeviceDynamicRenderingFeatures featureDR {};
-    featureDR.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_DYNAMIC_RENDERING_FEATURES;
-    featureDR.pNext = &featureM5;
-
-    VkPhysicalDeviceFeatures2 deviceFeatures {};
-    deviceFeatures.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_FEATURES_2;
-    deviceFeatures.pNext = &featureDR;
-
-    vkGetPhysicalDeviceFeatures2(device, &deviceFeatures);
-
-    auto sync2Supported            = featureSync2.synchronization2 == VK_TRUE;
-    auto dynamicRenderingSupported = featureDR.dynamicRendering == VK_TRUE;
-    auto maintenance5Supported     = featureM5.maintenance5 == VK_TRUE;
-    auto featuresSupported = dynamicRenderingSupported && maintenance5Supported && sync2Supported;
-    if (!featuresSupported)
-    {
-        return false;
-    }
-
     auto familyIndices = FindQueueFamilies(device);
     if (!familyIndices.IsComplete())
     {
@@ -778,31 +750,39 @@ void VulkanDevice::CreateLogicalDevice()
         queueCreateInfos.push_back(queueCreateInfo);
     }
 
-    VkPhysicalDeviceSynchronization2Features featureSync2 {};
-    featureSync2.sType            = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_SYNCHRONIZATION_2_FEATURES;
-    featureSync2.synchronization2 = VK_TRUE;
-    featureSync2.pNext            = nullptr;
-
-    VkPhysicalDeviceMaintenance5Features featureM5 {};
-    featureM5.sType        = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_MAINTENANCE_5_FEATURES;
-    featureM5.maintenance5 = VK_TRUE;
-    featureM5.pNext        = &featureSync2;
-
-    VkPhysicalDeviceDynamicRenderingFeatures featureDR {};
-    featureDR.sType            = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_DYNAMIC_RENDERING_FEATURES;
-    featureDR.dynamicRendering = VK_TRUE;
-    featureDR.pNext            = &featureM5;
-
+    // 1.0
     VkPhysicalDeviceFeatures2 deviceFeatures {};
     deviceFeatures.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_FEATURES_2;
-    deviceFeatures.pNext = &featureDR;
+
+    // 1.1
+    VkPhysicalDeviceVulkan11Features vk11Features {};
+    vk11Features.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_1_FEATURES;
+    vk11Features.pNext = &deviceFeatures;
+
+    // 1.2
+    VkPhysicalDeviceVulkan12Features vk12Features {};
+    vk12Features.sType               = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_2_FEATURES;
+    vk12Features.bufferDeviceAddress = VK_TRUE;
+    vk12Features.pNext               = &vk11Features;
+
+    // 1.3
+    VkPhysicalDeviceVulkan13Features vk13Features {};
+    vk13Features.sType            = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_3_FEATURES;
+    vk13Features.dynamicRendering = VK_TRUE;
+    vk13Features.synchronization2 = VK_TRUE;
+    vk13Features.pNext            = &vk12Features;
+
+    // 1.4
+    VkPhysicalDeviceVulkan14Features vk14Features {};
+    vk14Features.sType        = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_4_FEATURES;
+    vk14Features.maintenance5 = VK_TRUE;
+    vk14Features.pNext        = &vk13Features;
 
     VkDeviceCreateInfo deviceCreateInfo {};
     deviceCreateInfo.sType                   = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
     deviceCreateInfo.pQueueCreateInfos       = queueCreateInfos.data();
     deviceCreateInfo.queueCreateInfoCount    = static_cast<uint32_t>(queueCreateInfos.size());
-    deviceCreateInfo.pEnabledFeatures        = nullptr; // handled in pNext
-    deviceCreateInfo.pNext                   = &deviceFeatures;
+    deviceCreateInfo.pNext                   = &vk14Features;
     deviceCreateInfo.enabledExtensionCount   = static_cast<uint32_t>(m_requiredExtensions.size());
     deviceCreateInfo.ppEnabledExtensionNames = m_requiredExtensions.data();
 
