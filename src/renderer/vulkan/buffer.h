@@ -34,7 +34,7 @@ class VulkanBuffer : public Buffer
 
     void Bind(void* commandBuffer) override;
 
-    void Draw(void* commandBuffer) override;
+    void Draw(void* commandBuffer, uint32_t firstInstance, uint32_t instanceCount) override;
     void Draw(
         void*    commandBuffer,
         uint32_t indexOffset,
@@ -50,8 +50,27 @@ class VulkanBuffer : public Buffer
         return m_vkBuffer;
     }
 
+    VkDeviceAddress GetDeviceAddress(VkDevice device) const
+    {
+        if (m_bufferLocation != Device && m_bufferLocation != SecretThirdOption)
+        {
+            throw std::runtime_error("Unhandled buffer type");
+        }
+        VkBufferDeviceAddressInfo addressInfo {};
+        addressInfo.sType  = VK_STRUCTURE_TYPE_BUFFER_DEVICE_ADDRESS_INFO;
+        addressInfo.buffer = m_vkBuffer;
+        return vkGetBufferDeviceAddress(device, &addressInfo);
+    }
+
+    VmaAllocationInfo GetAllocationInfo() const
+    {
+        return m_vmaAllocationInfo;
+    }
+
   private:
-    VkBuffer      m_vkBuffer;
-    VmaAllocation m_vmaAllocation;
+    VkBuffer          m_vkBuffer;
+    VmaAllocation     m_vmaAllocation;
+    VmaAllocationInfo m_vmaAllocationInfo;
+    VkDeviceAddress   m_vkDeviceAddress;
 };
 } // namespace yar

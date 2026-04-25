@@ -7,26 +7,23 @@
 
 namespace yar
 {
-VulkanDescriptorSet::VulkanDescriptorSet(
-    const VulkanDevice&                        device,
-    std::vector<std::shared_ptr<VulkanBuffer>> uboBuffers
-) :
-    m_device(device),
-    m_uniformBuffers(uboBuffers)
+VulkanDescriptorSet::VulkanDescriptorSet(const VulkanDevice& device, uint32_t maxFrames) :
+    m_device(device)
 {
+    /*
     VkDescriptorSetLayoutBinding uboBinding {};
     uboBinding.binding            = 0;
     uboBinding.descriptorType     = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
     uboBinding.descriptorCount    = 1;
     uboBinding.stageFlags         = VK_SHADER_STAGE_VERTEX_BIT;
     uboBinding.pImmutableSamplers = nullptr;
+    */
 
     VkDescriptorSetLayoutCreateInfo layoutInfo {};
     layoutInfo.sType        = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
-    layoutInfo.bindingCount = 1;
-    layoutInfo.pBindings    = &uboBinding;
+    layoutInfo.bindingCount = 0;
+    layoutInfo.pBindings    = nullptr;
 
-    const auto maxFrames = static_cast<uint32_t>(m_uniformBuffers.size());
     m_vkLayouts.resize(maxFrames);
 
     for (uint32_t i = 0; i < maxFrames; i++)
@@ -55,6 +52,7 @@ VulkanDescriptorSet::VulkanDescriptorSet(
         "Failed to allocate descriptor sets"
     );
 
+    /*
     m_ubosMappedMemory.resize(maxFrames);
     for (uint32_t i = 0; i < maxFrames; i++)
     {
@@ -77,21 +75,17 @@ VulkanDescriptorSet::VulkanDescriptorSet(
 
         vkUpdateDescriptorSets(m_device.GetVkDevice(), 1, &descriptorWrite, 0, nullptr);
     }
+    */
 }
 
 VulkanDescriptorSet::~VulkanDescriptorSet()
 {
-    m_uniformBuffers.clear();
+    // m_uniformBuffers.clear();
 
     for (auto& layout : m_vkLayouts)
     {
         vkDestroyDescriptorSetLayout(m_device.GetVkDevice(), layout, nullptr);
     }
-}
-
-void VulkanDescriptorSet::UpdateUBO(uint32_t frameIndex, const UniformBufferObject* ubo)
-{
-    std::memcpy(m_ubosMappedMemory[frameIndex], ubo, sizeof(UniformBufferObject));
 }
 
 void VulkanDescriptorSet::Bind(

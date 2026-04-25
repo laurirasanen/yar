@@ -13,6 +13,7 @@ VmaAllocator g_vma;
 void CreateVulkanAllocator(VkInstance instance, VkPhysicalDevice physicalDevice, VkDevice device)
 {
     VmaAllocatorCreateInfo createInfo {};
+    createInfo.flags            = VMA_ALLOCATOR_CREATE_BUFFER_DEVICE_ADDRESS_BIT;
     createInfo.instance         = instance;
     createInfo.physicalDevice   = physicalDevice;
     createInfo.device           = device;

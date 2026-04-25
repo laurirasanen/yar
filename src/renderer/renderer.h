@@ -21,6 +21,8 @@
 
 namespace yar
 {
+#define MAX_MODELS 64
+
 enum RenderPipeline
 {
     TEST,
@@ -132,7 +134,7 @@ class Renderer
         {
             vertexBuffer->Bind(commandBuffer);
             indexBuffer->Bind(commandBuffer);
-            indexBuffer->Draw(commandBuffer);
+            indexBuffer->Draw(commandBuffer, 0, 1);
             m_frameBuffers.push_back(vertexBuffer);
             m_frameBuffers.push_back(indexBuffer);
         }
@@ -150,6 +152,11 @@ class Renderer
     VulkanDevice   m_device;
 
     std::shared_ptr<VulkanDescriptorSet> m_descriptorSet;
+
+    std::vector<std::shared_ptr<VulkanBuffer>> m_shaderDataBuffers;
+    std::vector<std::shared_ptr<VulkanBuffer>> m_modelDataBuffers;
+
+    std::array<ShaderObjectData, MAX_MODELS> m_objectData;
 
     std::shared_ptr<VulkanPipeline<Vertex>> m_testPipeline;
     std::shared_ptr<VulkanPipeline<Vertex>> m_skyPipeline;

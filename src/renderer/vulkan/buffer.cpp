@@ -39,6 +39,12 @@ VulkanBuffer::VulkanBuffer(
             break;
         }
 
+        case ShaderDataBuffer:
+        {
+            bufferInfo.usage |= VK_BUFFER_USAGE_SHADER_DEVICE_ADDRESS_BIT;
+            break;
+        }
+
         default:
         {
             std::runtime_error("Unhandled buffer type");
@@ -69,13 +75,29 @@ VulkanBuffer::VulkanBuffer(
             break;
         }
 
+        case SecretThirdOption:
+        {
+            allocInfo.flags = VMA_ALLOCATION_CREATE_HOST_ACCESS_SEQUENTIAL_WRITE_BIT
+                              | VMA_ALLOCATION_CREATE_HOST_ACCESS_ALLOW_TRANSFER_INSTEAD_BIT
+                              | VMA_ALLOCATION_CREATE_MAPPED_BIT;
+            allocInfo.usage = VMA_MEMORY_USAGE_AUTO;
+            break;
+        }
+
         default:
         {
             throw std::runtime_error("Unhandled buffer destination");
         }
     }
 
-    vmaCreateBuffer(g_vma, &bufferInfo, &allocInfo, &m_vkBuffer, &m_vmaAllocation, nullptr);
+    vmaCreateBuffer(
+        g_vma,
+        &bufferInfo,
+        &allocInfo,
+        &m_vkBuffer,
+        &m_vmaAllocation,
+        &m_vmaAllocationInfo
+    );
 }
 
 VulkanBuffer::~VulkanBuffer()
@@ -176,7 +198,7 @@ void VulkanBuffer::Bind(void* commandBuffer)
     }
 }
 
-void VulkanBuffer::Draw(void* commandBuffer)
+void VulkanBuffer::Draw(void* commandBuffer, uint32_t firstInstance, uint32_t instanceCount)
 {
     auto vkCommandBuffer = static_cast<VkCommandBuffer>(commandBuffer);
 
@@ -184,13 +206,13 @@ void VulkanBuffer::Draw(void* commandBuffer)
     {
         case VertexBuffer:
         {
-            vkCmdDraw(vkCommandBuffer, m_elementCount, 1, 0, 0);
+            vkCmdDraw(vkCommandBuffer, m_elementCount, instanceCount, 0, firstInstance);
             break;
         }
 
         case IndexBuffer:
         {
-            vkCmdDrawIndexed(vkCommandBuffer, m_elementCount, 1, 0, 0, 0);
+            vkCmdDrawIndexed(vkCommandBuffer, m_elementCount, instanceCount, 0, 0, firstInstance);
             break;
         }
 

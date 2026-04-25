@@ -137,12 +137,27 @@ VulkanPipeline<V>::VulkanPipeline(
     colorBlendState.attachmentCount = 1;
     colorBlendState.pAttachments    = &colorBlendAttachment;
 
+    std::array<VkPushConstantRange, 2> pushConstants {
+        // global data
+        VkPushConstantRange {
+                             .stageFlags = VK_SHADER_STAGE_VERTEX_BIT,
+                             .offset     = 0,
+                             .size       = sizeof(VkDeviceAddress)},
+        // object data
+        VkPushConstantRange {
+                             .stageFlags = VK_SHADER_STAGE_VERTEX_BIT,
+                             .offset     = sizeof(VkDeviceAddress),
+                             .size       = sizeof(VkDeviceAddress)}
+    };
+
     auto descriptorSetLayouts = descriptorSet->GetLayouts();
 
     VkPipelineLayoutCreateInfo pipelineLayoutInfo {};
-    pipelineLayoutInfo.sType          = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
-    pipelineLayoutInfo.setLayoutCount = static_cast<uint32_t>(descriptorSetLayouts.size());
-    pipelineLayoutInfo.pSetLayouts    = descriptorSetLayouts.data();
+    pipelineLayoutInfo.sType                  = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
+    pipelineLayoutInfo.setLayoutCount         = static_cast<uint32_t>(descriptorSetLayouts.size());
+    pipelineLayoutInfo.pSetLayouts            = descriptorSetLayouts.data();
+    pipelineLayoutInfo.pushConstantRangeCount = pushConstants.size();
+    pipelineLayoutInfo.pPushConstantRanges    = pushConstants.data();
 
     VK_CHECK(
         vkCreatePipelineLayout(

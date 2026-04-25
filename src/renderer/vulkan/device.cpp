@@ -69,6 +69,11 @@ void VulkanDevice::Begin()
         "Failed waiting for in flight fence"
     );
 
+    VK_CHECK(
+        vkResetFences(m_vkDevice, 1, &m_vkInFlightFences[m_currentFrame]),
+        "Failed to reset in flight fence"
+    );
+
     auto imageResult = vkAcquireNextImageKHR(
         m_vkDevice,
         m_vkSwapchain,
@@ -87,11 +92,6 @@ void VulkanDevice::Begin()
 
         throw std::runtime_error("Failed to acquire next swapchain image");
     }
-
-    VK_CHECK(
-        vkResetFences(m_vkDevice, 1, &m_vkInFlightFences[m_currentFrame]),
-        "Failed to reset in flight fence"
-    );
 
     VK_CHECK(
         vkResetCommandBuffer(m_vkCommandBuffers[m_currentFrame], 0),

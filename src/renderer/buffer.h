@@ -13,12 +13,14 @@ enum BufferType
     VertexBuffer,
     IndexBuffer,
     UniformBuffer,
+    ShaderDataBuffer,
 };
 
 enum BufferLocation
 {
     Host,
     Device,
+    SecretThirdOption,
 };
 
 class Buffer
@@ -74,7 +76,7 @@ class Buffer
 
     virtual void Bind(void* commandBuffer) = 0;
 
-    virtual void Draw(void* commandBuffer) = 0;
+    virtual void Draw(void* commandBuffer, uint32_t firstInstance, uint32_t instanceCount) = 0;
     virtual void Draw(
         void*    commandBuffer,
         uint32_t indexOffset,

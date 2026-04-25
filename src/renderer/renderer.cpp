@@ -1,5 +1,7 @@
-#include <imgui_impl_vulkan.h>
+#include <glm/ext/matrix_transform.hpp>
 #include <memory>
+
+#include <imgui_impl_vulkan.h>
 #include <vulkan/vulkan_core.h>
 
 #include "../log.h"
@@ -18,14 +20,30 @@ Renderer::Renderer(std::shared_ptr<Window> window) :
 {
     LOG_INFO("Creating Renderer");
 
-    auto uboBuffers = std::vector<std::shared_ptr<VulkanBuffer>>();
+    m_shaderDataBuffers.resize(MAX_FRAMES_IN_FLIGHT);
+    m_modelDataBuffers.resize(MAX_FRAMES_IN_FLIGHT);
     for (unsigned int i = 0; i < MAX_FRAMES_IN_FLIGHT; i++)
     {
-        uboBuffers.push_back(
-            std::make_shared<VulkanBuffer>(UniformBuffer, Host, sizeof(UniformBufferObject), 1)
+        m_shaderDataBuffers[i] = std::make_shared<VulkanBuffer>(
+            ShaderDataBuffer,
+            SecretThirdOption,
+            sizeof(ShaderGlobalData),
+            1
+        );
+        m_modelDataBuffers[i] = std::make_shared<VulkanBuffer>(
+            ShaderDataBuffer,
+            SecretThirdOption,
+            sizeof(ShaderObjectData),
+            MAX_MODELS
         );
     }
-    m_descriptorSet = std::make_shared<VulkanDescriptorSet>(m_device, uboBuffers);
+
+    for (unsigned int i = 0; i < MAX_MODELS; i++)
+    {
+        m_objectData[i].model = glm::identity<glm::mat4>();
+    }
+
+    m_descriptorSet = std::make_shared<VulkanDescriptorSet>(m_device, MAX_FRAMES_IN_FLIGHT);
 
     // TODO: abstract away all the shader + pipeline setup
     ShaderCompiler compiler;
@@ -109,9 +127,6 @@ void Renderer::Begin()
 void Renderer::Submit()
 {
     m_device.Submit();
-
-    // Not ideal but guarantees chunk buffers aren't freed too early.
-    m_device.WaitForGraphicsIdle();
     m_frameBuffers.clear();
 }
 
@@ -123,8 +138,19 @@ void Renderer::Present()
 void Renderer::UpdateUniforms(const std::shared_ptr<Camera> camera)
 {
     auto currentFrame = m_device.GetCurrentFrame();
-    auto ubo          = UniformBufferObject(camera);
-    m_descriptorSet->UpdateUBO(currentFrame, &ubo);
+
+    auto shaderData = ShaderGlobalData(camera);
+    std::memcpy(
+        m_shaderDataBuffers[currentFrame]->GetAllocationInfo().pMappedData,
+        &shaderData,
+        sizeof(ShaderGlobalData)
+    );
+
+    std::memcpy(
+        m_modelDataBuffers[currentFrame]->GetAllocationInfo().pMappedData,
+        m_objectData.data(),
+        sizeof(ShaderObjectData) * MAX_MODELS
+    );
 }
 
 void Renderer::WaitForIdle()

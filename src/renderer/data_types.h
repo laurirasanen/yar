@@ -1,5 +1,6 @@
 #pragma once
 
+#include <cstdint>
 #include <memory>
 
 #include <glm/ext/matrix_clip_space.hpp>
@@ -27,44 +28,39 @@ struct Vertex
 
 typedef uint32_t Index;
 
-struct UniformBufferObject
+struct ShaderGlobalData
 {
-    alignas(16) glm::mat4 model;
     alignas(16) glm::mat4 view;
     alignas(16) glm::mat4 proj;
-    alignas(16) glm::mat4 mvp;
-    alignas(16) glm::mat4 invModel;
+    alignas(16) glm::mat4 viewProj;
+
     alignas(16) glm::mat4 invView;
     alignas(16) glm::mat4 invProj;
-    alignas(16) glm::mat4 clipToWorld;
-    alignas(16) glm::vec3 eye;
+    alignas(16) glm::mat4 invViewProj;
 
     alignas(16) glm::vec4 viewport;
 
-    alignas(16) glm::vec3 sunDir;
-    alignas(16) glm::vec3 sunColor;
+    alignas(16) glm::vec3 eye;
 
-    UniformBufferObject(const std::shared_ptr<Camera> cam)
+    ShaderGlobalData(const std::shared_ptr<Camera> cam)
     {
-        model       = glm::identity<glm::mat4>();
-        view        = cam->view;
-        proj        = cam->proj;
-        mvp         = proj * view * model;
-        invModel    = glm::inverse(model);
+        view     = cam->view;
+        proj     = cam->proj;
+        viewProj = proj * view;
+
         invView     = glm::inverse(view);
         invProj     = glm::inverse(proj);
-        clipToWorld = glm::inverse(proj * view);
-        eye         = cam->transform.position;
+        invViewProj = glm::inverse(proj * view);
 
         viewport = cam->viewport;
 
-        const auto degreesPerSecond = 0.5;
-        auto       sunRotation      = glm::angleAxis(
-            glm::radians(degreesPerSecond * Time::Uptime()),
-            glm::normalize(glm::dvec3 {1.0, 0.3, 0.2})
-        );
-        sunDir   = glm::normalize(sunRotation * glm::dvec3(0.1, 0.2, 1.0));
-        sunColor = glm::vec3(0.5, 0.5, 0.5);
+        eye = cam->transform.position;
     }
+};
+
+struct ShaderObjectData
+{
+    alignas(16) glm::mat4 model;
+    alignas(16) uint32_t materialID;
 };
 } // namespace yar
