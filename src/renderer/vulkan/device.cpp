@@ -755,7 +755,8 @@ void VulkanDevice::CreateLogicalDevice()
 
     // 1.0
     VkPhysicalDeviceFeatures2 deviceFeatures {};
-    deviceFeatures.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_FEATURES_2;
+    deviceFeatures.features.samplerAnisotropy = VK_TRUE;
+    deviceFeatures.sType                      = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_FEATURES_2;
 
     // 1.1
     VkPhysicalDeviceVulkan11Features vk11Features {};
