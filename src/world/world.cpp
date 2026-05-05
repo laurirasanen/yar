@@ -1,5 +1,6 @@
 #include "world.h"
 #include "../log.h"
+#include "../components/mesh.h"
 #include "../renderer/renderer.h"
 
 namespace yar
@@ -32,6 +33,9 @@ World::World(std::shared_ptr<Renderer> renderer) : m_renderer(renderer)
         sizeof(Index),
         static_cast<uint32_t>(planeIndices.size())
     );
+
+    // test mesh
+    auto mesh = Mesh("assets/models/DamagedHelmet.glb");
 }
 
 World::~World()

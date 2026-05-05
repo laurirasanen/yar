@@ -1,5 +1,8 @@
 #pragma once
 
+#include <format>
+#include <string>
+
 #if POSIX
 #include <sys/resource.h>
 #include <sys/time.h>
@@ -8,6 +11,14 @@
 #include <Psapi.h>
 #include <windows.h>
 #endif
+
+#define KILO 1024
+#define MEGA (1024 * 1024)
+#define GIGA (1024 * 1024 * 1024)
+
+#define TO_KB(B) (static_cast<double>(B) / KILO)
+#define TO_MB(B) (static_cast<double>(B) / MEGA)
+#define TO_GB(B) (static_cast<double>(B) / GIGA)
 
 namespace yar
 {
@@ -26,7 +37,7 @@ class Memory
             usage = static_cast<unsigned long long int>(ru.ru_maxrss);
         }
 
-#elif _WIN
+#elif WIN64
         PROCESS_MEMORY_COUNTERS counters = {};
         if (K32GetProcessMemoryInfo(GetCurrentProcess(), &counters, sizeof(counters)))
         {
@@ -35,6 +46,24 @@ class Memory
 #endif
 
         return usage;
+    }
+
+    static std::string Pretty(size_t bytes)
+    {
+        if (bytes >= GIGA)
+        {
+            return std::format("{:.2f} GB", TO_GB(bytes));
+        }
+        else if (bytes >= MEGA)
+        {
+            return std::format("{:.2f} MB", TO_MB(bytes));
+        }
+        else if (bytes >= KILO)
+        {
+            return std::format("{:.2f} KB", TO_KB(bytes));
+        }
+
+        return std::format("{} B", bytes);
     }
 };
 }; // namespace yar

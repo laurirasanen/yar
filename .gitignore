@@ -1,3 +1,5 @@
 src/Generated/
 Subprojects/**/*
 !Subprojects/*.wrap
+
+assets/models/DamagedHelmet.glb

@@ -14,10 +14,21 @@ namespace yar
 bool fs_exists(const char* path)
 {
     std::filesystem::path p = {path};
+    return fs_exists(path);
+}
+
+bool fs_exists(const std::filesystem::path path)
+{
     return std::filesystem::exists(path);
 }
 
 std::string fs_read_text(const char* path)
+{
+    std::filesystem::path p = {path};
+    return fs_read_text(p);
+}
+
+std::string fs_read_text(const std::filesystem::path path)
 {
     std::ifstream ifs(path);
     return std::string(std::istreambuf_iterator<char>(ifs), std::istreambuf_iterator<char>());
@@ -54,6 +65,12 @@ std::vector<std::filesystem::path> fs_iter(const char* path, const char* ext, bo
 
 std::filesystem::path fs_program_root()
 {
+    static std::filesystem::path root {};
+    if (!root.empty())
+    {
+        return root;
+    }
+
     const size_t sz = 256;
     char         buf[sz];
     std::memset(buf, '\0', sz);
@@ -77,6 +94,18 @@ std::filesystem::path fs_program_root()
     {
         throw std::runtime_error("Couldn't get program parent path");
     }
-    return p.parent_path();
+    root = p.parent_path();
+    return root;
+}
+
+std::filesystem::path fs_relative_path(const char* path)
+{
+    auto root = fs_program_root();
+    return root.append(path);
+}
+
+std::filesystem::path fs_relative_path(const std::filesystem::path path)
+{
+    return fs_relative_path(path.c_str());
 }
 } // namespace yar

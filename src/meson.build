@@ -7,6 +7,8 @@ slang_dep = declare_dependency(
 )
 
 yar_src = files([
+  'components/mesh.cpp',
+
   'platform/fs.cpp',
 
   'renderer/vulkan/vma.cpp',

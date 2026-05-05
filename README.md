@@ -4,6 +4,7 @@ Yet another renderer.
 
 ## Third-party code / Acknowledgments
 
+- [cgltf](https://github.com/jkuhlmann/cgltf)
 - [glm](https://github.com/g-truc/glm)
 - [imgui](https://github.com/ocornut/imgui)
 - [VulkanMemoryAllocator](https://github.com/GPUOpen-LibrariesAndSDKs/VulkanMemoryAllocator)

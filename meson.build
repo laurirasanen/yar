@@ -66,13 +66,15 @@ add_project_arguments(cpp.get_supported_arguments(compiler_args), language: 'cpp
 add_project_link_arguments(cpp.get_supported_link_arguments(linker_args), language: 'cpp')
 
 includes = include_directories(
-  'thirdparty/vulkan-headers/include',
-  'thirdparty/VulkanMemoryAllocator/include',
+  'thirdparty/cgltf',
 
   'thirdparty/glm',
 
   'thirdparty/imgui',
   'thirdparty/imgui/backends',
+
+  'thirdparty/vulkan-headers/include',
+  'thirdparty/VulkanMemoryAllocator/include',
 
   is_system: true,
 )

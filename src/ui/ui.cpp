@@ -7,7 +7,7 @@
 #include <SDL3/SDL_events.h>
 
 #include "../log.h"
-#include "../memory.h"
+#include "../platform/memory.h"
 #include "ui.h"
 
 namespace yar

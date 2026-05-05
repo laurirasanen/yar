@@ -20,16 +20,6 @@ namespace yar
 {
 #define MAX_MODELS 64
 
-struct Vertex
-{
-    glm::vec3 position;
-    glm::vec3 normal;
-    glm::vec2 uv;
-    glm::vec3 color;
-};
-
-typedef uint32_t Index;
-
 struct ShaderGlobalData
 {
     alignas(16) glm::mat4 view;
