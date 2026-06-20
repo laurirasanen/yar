@@ -2,6 +2,7 @@
 #include <memory>
 #include <stdexcept>
 #include <stop_token>
+#include <system_error>
 #include <thread>
 
 #include <imgui.h>
@@ -81,7 +82,6 @@ Engine::~Engine()
     m_threadFrameSemaphore.release();
     m_renderThread.join();
 
-    // Must be idle before destroy.
     LOG_DEBUG("Waiting for renderer idle");
     m_renderer->WaitForIdle();
 }
@@ -184,12 +184,18 @@ void Engine::TickThread(const std::stop_token token)
     {
         // Wait for main thread.
         m_threadTickSemaphore.acquire();
+        if (token.stop_requested())
+        {
+            break;
+        }
 
         m_world->Tick(m_camera);
 
         // Let main thread know we are done.
         m_mainTickSemaphore.release();
     }
+
+    LOG_INFO("Exit TickThread");
 }
 
 void Engine::RenderThread(const std::stop_token token)
@@ -200,6 +206,10 @@ void Engine::RenderThread(const std::stop_token token)
     {
         // Wait for main thread.
         m_threadFrameSemaphore.acquire();
+        if (token.stop_requested())
+        {
+            break;
+        }
 
         Time::StartRender();
 
