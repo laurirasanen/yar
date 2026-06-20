@@ -25,7 +25,7 @@ Engine::Engine()
 
     m_renderer = std::make_shared<Renderer>(m_window);
 
-    m_ui    = std::make_unique<UI>(m_window, m_renderer);
+    m_ui    = std::make_unique<UI>(m_window, m_renderer, m_camera);
     m_world = std::make_shared<World>(m_renderer);
 
     m_frameInput.Clear();

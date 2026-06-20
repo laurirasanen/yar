@@ -11,13 +11,13 @@ namespace yar
 {
 struct Transform
 {
-    glm::mat4 matrix;
+    glm::mat4 matrix = glm::identity<glm::mat4>();
 
     void SetPosition(glm::vec3 pos)
     {
         matrix[3][0] = pos.x;
-        matrix[3][1] = pos.x;
-        matrix[3][2] = pos.x;
+        matrix[3][1] = pos.y;
+        matrix[3][2] = pos.z;
     }
 
     glm::vec3 GetPosition() const
@@ -28,8 +28,8 @@ struct Transform
     void SetScale(glm::vec3 scale)
     {
         matrix[0][0] = scale.x;
-        matrix[1][1] = scale.x;
-        matrix[2][2] = scale.x;
+        matrix[1][1] = scale.y;
+        matrix[2][2] = scale.z;
     }
 
     glm::vec3 GetScale() const

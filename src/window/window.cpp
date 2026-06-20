@@ -153,7 +153,6 @@ void Window::GetFramebufferSize(int* width, int* height)
 
 bool Window::CreateVulkanSurface(VkInstance instance, VkSurfaceKHR* surface)
 {
-    // TODO alloc cb
     return SDL_Vulkan_CreateSurface(m_window, instance, nullptr, surface);
 }
 

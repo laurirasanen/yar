@@ -31,7 +31,9 @@ class UI
     UI& operator=(const UI&) = delete;
     UI& operator=(UI&&)      = delete;
 
-    UI(std::shared_ptr<Window> window, std::shared_ptr<Renderer> renderer);
+    UI(std::shared_ptr<Window>   window,
+       std::shared_ptr<Renderer> renderer,
+       std::shared_ptr<Camera>   camera);
     ~UI();
 
     void ToggleWindow(UIWindow window)
@@ -48,6 +50,7 @@ class UI
 
     std::shared_ptr<Window>   m_window;
     std::shared_ptr<Renderer> m_renderer;
+    std::shared_ptr<Camera>   m_camera;
     VulkanImGuiCreationInfo   m_info;
     UIState                   m_state;
 };

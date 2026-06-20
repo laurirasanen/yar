@@ -13,9 +13,14 @@
 namespace yar
 {
 
-UI::UI(std::shared_ptr<Window> window, std::shared_ptr<Renderer> renderer) :
+UI::UI(
+    std::shared_ptr<Window>   window,
+    std::shared_ptr<Renderer> renderer,
+    std::shared_ptr<Camera>   camera
+) :
     m_window(window),
     m_renderer(renderer),
+    m_camera(camera),
     m_state({})
 {
     LOG_INFO("Creating UI");
@@ -73,22 +78,29 @@ void UI::DebugWindow()
                 | ImGuiWindowFlags_NoDecoration
         ))
     {
-        auto fps = std::format(
+        const auto fps = std::format(
             "FPS: {:.0f} ({:.2f} ms)",
             1.0 / Time::DeltaFrame,
             Time::DeltaFrame * 1000.0
         );
         ImGui::Text("%s", fps.c_str());
 
-        auto ren = std::format("  Render: {:.2f} ms", Time::DeltaRender * 1000.0);
+        const auto ren = std::format("  Render: {:.2f} ms", Time::DeltaRender * 1000.0);
         ImGui::Text("%s", ren.c_str());
 
-        auto tps =
+        const auto tps =
             std::format("TPS: {:.0f} ({:.2f} ms)", 1.0 / Time::DeltaTick, Time::DeltaTick * 1000.0);
         ImGui::Text("%s", tps.c_str());
 
-        auto mem = std::format("MEM: {:d} MB", Memory::GetUsage() / 1024);
+        const auto mem = std::format("MEM: {:d} MB", Memory::GetUsage() / 1024);
         ImGui::Text("%s", mem.c_str());
+
+        const auto pos     = m_camera->transform.GetPosition();
+        const auto ang     = m_camera->transform.GetEulerRotation();
+        const auto posText = std::format("pos: [{:.2f}, {:.2f}, {:.2f}]", pos.x, pos.y, pos.z);
+        const auto angText = std::format("ang: [{:.2f}, {:.2f}, {:.2f}]", ang.x, ang.y, ang.z);
+        ImGui::Text("%s", posText.c_str());
+        ImGui::Text("%s", angText.c_str());
 
         ImGui::End();
     }

@@ -16,6 +16,7 @@ enum VertexType
 struct VertexUnlit
 {
     glm::vec3 position;
+    glm::vec3 color;
 };
 
 struct VertexShaded
