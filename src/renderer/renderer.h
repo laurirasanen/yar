@@ -10,6 +10,7 @@
 #include <vulkan/vulkan_core.h>
 
 #include "../components/camera.h"
+#include "../components/mesh.h"
 #include "../components/rect.h"
 #include "../window/window.h"
 #include "buffer.h"
@@ -28,7 +29,6 @@ namespace yar
 enum RenderPipeline
 {
     TEST,
-    SKY,
 };
 
 class Renderer
@@ -134,20 +134,6 @@ class Renderer
                 break;
             }
 
-            case SKY:
-            {
-                m_skyPipeline->Bind(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, currentFrame);
-                vkCmdPushConstants(
-                    commandBuffer,
-                    m_skyPipeline->GetVkPipelineLayout(),
-                    VK_SHADER_STAGE_VERTEX_BIT,
-                    0,
-                    sizeof(VkDeviceAddress),
-                    m_shaderGlobalBuffers[currentFrame]->GetDeviceAddress()
-                );
-                break;
-            }
-
             default:
             {
                 throw std::runtime_error("unknown pipeline");
@@ -184,8 +170,7 @@ class Renderer
     std::vector<std::shared_ptr<VulkanBuffer>>     m_shaderGlobalBuffers;
     std::vector<std::shared_ptr<ShaderGlobalData>> m_shaderGlobalData;
 
-    std::shared_ptr<VulkanPipeline<Vertex>> m_testPipeline;
-    std::shared_ptr<VulkanPipeline<Vertex>> m_skyPipeline;
+    std::shared_ptr<VulkanPipeline<VertexUnlit>> m_testPipeline;
 
     // Hold so we don't call Buffer destructor
     // while still in use by command buffer.

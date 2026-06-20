@@ -3,8 +3,7 @@
 #include <memory>
 #include <mutex>
 
-#include "icosphere.h"
-#include "sky.h"
+#include "../renderer/renderer.h"
 
 namespace yar
 {
@@ -28,8 +27,6 @@ class World
     std::mutex m_worldMutex;
 
     std::shared_ptr<Renderer> m_renderer;
-
-    std::unique_ptr<Sky>     m_sky;
 
     std::shared_ptr<Buffer> m_testPlaneVertexBuffer;
     std::shared_ptr<Buffer> m_testPlaneIndexBuffer;

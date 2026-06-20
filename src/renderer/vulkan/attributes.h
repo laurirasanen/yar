@@ -5,6 +5,7 @@
 
 #include <vulkan/vulkan_core.h>
 
+#include "../../components/mesh.h"
 #include "../data_types.h"
 
 namespace yar
@@ -32,24 +33,22 @@ constexpr std::vector<VkVertexInputAttributeDescription> GetVulkanAttributeDescr
         .format   = VK_FORMAT_R32G32B32_SFLOAT,
         .offset   = offsetof(T, position),
     });
-    desc.push_back({
-        .location = 1,
-        .binding  = 0,
-        .format   = VK_FORMAT_R32G32B32_SFLOAT,
-        .offset   = offsetof(T, normal),
-    });
-    desc.push_back({
-        .location = 2,
-        .binding  = 0,
-        .format   = VK_FORMAT_R32G32_SFLOAT,
-        .offset   = offsetof(T, uv),
-    });
-    desc.push_back({
-        .location = 3,
-        .binding  = 0,
-        .format   = VK_FORMAT_R32G32B32_SFLOAT,
-        .offset   = offsetof(T, color),
-    });
+
+    if constexpr (std::is_same_v<T, VertexShaded>)
+    {
+        desc.push_back({
+            .location = 1,
+            .binding  = 0,
+            .format   = VK_FORMAT_R32G32B32_SFLOAT,
+            .offset   = offsetof(T, normal),
+        });
+        desc.push_back({
+            .location = 2,
+            .binding  = 0,
+            .format   = VK_FORMAT_R32G32_SFLOAT,
+            .offset   = offsetof(T, uv),
+        });
+    }
 
     return desc;
 }

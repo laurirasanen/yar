@@ -25,7 +25,7 @@ struct Transform
         return glm::vec3(matrix[3][0], matrix[3][1], matrix[3][2]);
     }
 
-    glm::vec3 SetScale(glm::vec3 scale)
+    void SetScale(glm::vec3 scale)
     {
         matrix[0][0] = scale.x;
         matrix[1][1] = scale.x;
@@ -39,24 +39,43 @@ struct Transform
 
     glm::vec3 GetEulerRotation() const
     {
-        // todo
-        return glm::vec3 {};
+        const auto quat  = GetRotation();
+        const auto euler = glm::eulerAngles(quat);
+        return glm::degrees(euler);
     }
 
     void SetEulerRotation(const glm::vec3 angles)
     {
-        // todo
+        SetRotation(
+            glm::angleAxis(glm::radians(angles.z), glm::vec3 {0.0f, 0.0f, 1.0f})
+            * glm::angleAxis(glm::radians(angles.x), glm::vec3 {1.0f, 0.0f, 0.0f})
+        );
     }
 
     glm::quat GetRotation() const
     {
-        // todo
-        return glm::identity<glm::quat>();
+        return glm::quat_cast(matrix);
     }
 
     void SetRotation(glm::quat rotation)
     {
-        // todo
+        matrix /= glm::mat4_cast(GetRotation());
+        matrix *= glm::mat4_cast(rotation);
+    }
+
+    glm::vec3 Forward()
+    {
+        return GetRotation() * glm::vec3(0.0f, 1.0f, 0.0f);
+    }
+
+    glm::vec3 Right()
+    {
+        return GetRotation() * glm::vec3(1.0f, 0.0f, 0.0f);
+    }
+
+    glm::vec3 Up()
+    {
+        return GetRotation() * glm::vec3(0.0f, 0.0f, 1.0f);
     }
 };
 } // namespace yar

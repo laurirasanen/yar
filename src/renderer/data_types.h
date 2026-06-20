@@ -52,7 +52,7 @@ struct ShaderGlobalData
 
         viewport = cam->viewport;
 
-        eye = glm::vec4(cam->transform.position, 0);
+        eye = glm::vec4(cam->transform.GetPosition(), 0);
     }
 };
 

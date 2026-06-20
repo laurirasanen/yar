@@ -7,6 +7,7 @@
 #include "../log.h"
 #include "../shader/compiler.h"
 #include "data_types.h"
+#include "src/components/mesh.h"
 #include "renderer.h"
 
 namespace yar
@@ -58,25 +59,7 @@ Renderer::Renderer(std::shared_ptr<Window> window) :
     std::vector simpleStages {stageSimpleFrag, stageSimpleVert};
 
     m_testPipeline =
-        std::make_shared<VulkanPipeline<Vertex>>(m_device, m_descriptorSet, simpleStages);
-
-    spirv = compiler.GetSpirv("sky.slang", SHADER_ENTRY_PIXEL, size);
-    if (!spirv)
-    {
-        throw std::runtime_error("failed to load shader 3");
-    }
-    auto moduleSkyFrag = GetVulkanCreateInfo(spirv, size);
-    spirv              = compiler.GetSpirv("sky.slang", SHADER_ENTRY_VERTEX, size);
-    if (!spirv)
-    {
-        throw std::runtime_error("failed to load shader 4");
-    }
-    auto moduleSkyVert = GetVulkanCreateInfo(spirv, size);
-    auto stageSkyFrag  = FillShaderStageCreateInfo(&moduleSkyFrag, VK_SHADER_STAGE_FRAGMENT_BIT);
-    auto stageSkyVert  = FillShaderStageCreateInfo(&moduleSkyVert, VK_SHADER_STAGE_VERTEX_BIT);
-    std::vector skyStages {stageSkyFrag, stageSkyVert};
-
-    m_skyPipeline = std::make_shared<VulkanPipeline<Vertex>>(m_device, m_descriptorSet, skyStages);
+        std::make_shared<VulkanPipeline<VertexUnlit>>(m_device, m_descriptorSet, simpleStages);
 }
 
 Renderer::~Renderer()
@@ -86,7 +69,6 @@ Renderer::~Renderer()
     vkDeviceWaitIdle(m_device.GetVkDevice());
 
     m_testPipeline.reset();
-    m_skyPipeline.reset();
 
     m_descriptorSet.reset();
 
