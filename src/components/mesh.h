@@ -3,6 +3,7 @@
 #include <glm/vec2.hpp>
 #include <glm/vec3.hpp>
 
+#include "../log.h"
 #include "../renderer/buffer.h"
 
 namespace yar
@@ -46,6 +47,25 @@ class Mesh
         m_vertexBuffer(vertexBuffer),
         m_indexBuffer(indexBuffer)
     {
+        for (const auto& vert : vertices)
+        {
+            m_min.x = std::min(m_min.x, vert.position.x);
+            m_min.y = std::min(m_min.y, vert.position.y);
+            m_min.z = std::min(m_min.z, vert.position.z);
+
+            m_max.x = std::max(m_max.x, vert.position.x);
+            m_max.y = std::max(m_max.y, vert.position.y);
+            m_max.z = std::max(m_max.z, vert.position.z);
+        }
+        LOG_DEBUG(
+            "Mesh min: [{:.2f}, {:.2f}, {:.2f}], max: [{:.2f}, {:.2f}, {:.2f}]",
+            m_min.x,
+            m_min.y,
+            m_min.z,
+            m_max.x,
+            m_max.y,
+            m_max.z
+        );
     }
 
     ~Mesh()

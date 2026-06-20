@@ -1,7 +1,5 @@
 #include "world.h"
-#include "../components/model.h"
 #include "../log.h"
-#include "../renderer/renderer.h"
 
 namespace yar
 {
@@ -12,10 +10,10 @@ World::World(std::shared_ptr<Renderer> renderer) : m_renderer(renderer)
 
     // test plane
     std::vector<VertexUnlit> planeVertices = {
-        {.position = {-0.5, -0.5, 0.0}, .color = {1.0f, 0.0f, 0.0f}},
-        { .position = {0.5, -0.5, 0.0}, .color = {0.0f, 1.0f, 0.0f}},
-        {  .position = {0.5, 0.5, 0.0}, .color = {0.0f, 0.0f, 1.0f}},
-        { .position = {-0.5, 0.5, 0.0}, .color = {1.0f, 1.0f, 1.0f}},
+        {.position = {-5.0, -5.0, -2.0}, .color = {1.0f, 0.0f, 0.0f}},
+        { .position = {5.0, -5.0, -2.0}, .color = {0.0f, 1.0f, 0.0f}},
+        {  .position = {5.0, 5.0, -2.0}, .color = {0.0f, 0.0f, 1.0f}},
+        { .position = {-5.0, 5.0, -2.0}, .color = {1.0f, 1.0f, 1.0f}},
     };
     std::vector<Index> planeIndices = {0, 1, 2, 2, 3, 0};
     renderer->CreateBuffer(
@@ -34,7 +32,7 @@ World::World(std::shared_ptr<Renderer> renderer) : m_renderer(renderer)
     );
 
     // test model
-    auto model = Model(renderer, "assets/models/DamagedHelmet.glb");
+    m_models.push_back(std::make_shared<Model>(renderer, "assets/models/DamagedHelmet.glb"));
 }
 
 World::~World()
@@ -57,5 +55,10 @@ void World::Render()
 {
     m_renderer->BindPipeline(RenderPipeline::TEST);
     m_renderer->DrawWithBuffers(m_testPlaneVertexBuffer, m_testPlaneIndexBuffer);
+
+    for (const auto& model : m_models)
+    {
+        model->Render(m_renderer);
+    }
 }
 } // namespace yar
