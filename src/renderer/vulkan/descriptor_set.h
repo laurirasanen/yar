@@ -8,7 +8,7 @@
 
 namespace yar
 {
-#define MAX_OBJECTS 64
+#define MAX_OBJECTS 128
 
 class VulkanDescriptorSet
 {
