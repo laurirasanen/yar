@@ -104,7 +104,7 @@ VulkanBuffer::VulkanBuffer(
         &m_vmaAllocationInfo
     );
 
-    if (m_bufferLocation == Device || m_bufferLocation == SecretThirdOption)
+    if (m_bufferLocation == SecretThirdOption)
     {
         VkBufferDeviceAddressInfo addressInfo {};
         addressInfo.sType  = VK_STRUCTURE_TYPE_BUFFER_DEVICE_ADDRESS_INFO;

@@ -125,10 +125,11 @@ constexpr static void TransitionImageLayout(
                                .subresourceRange    = colorRange,
                                },
         VkImageMemoryBarrier2 {
-                               .sType               = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER_2,
-                               .pNext               = nullptr,
-                               .srcStageMask        = VK_PIPELINE_STAGE_2_LATE_FRAGMENT_TESTS_BIT,
-                               .srcAccessMask       = GetAccessFlags(oldDepthLayout),
+                               .sType        = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER_2,
+                               .pNext        = nullptr,
+                               .srcStageMask = VK_PIPELINE_STAGE_2_LATE_FRAGMENT_TESTS_BIT,
+                               .srcAccessMask =
+                               GetAccessFlags(oldDepthLayout) | VK_ACCESS_2_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT,
                                .dstStageMask        = VK_PIPELINE_STAGE_2_EARLY_FRAGMENT_TESTS_BIT,
                                .dstAccessMask       = GetAccessFlags(newDepthLayout),
                                .oldLayout           = oldDepthLayout,

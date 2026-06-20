@@ -53,7 +53,7 @@ class VulkanBuffer : public Buffer
 
     VkDeviceAddress* GetDeviceAddress()
     {
-        if (m_bufferLocation != Device && m_bufferLocation != SecretThirdOption)
+        if (m_bufferLocation != SecretThirdOption)
         {
             throw std::runtime_error("Unhandled buffer type");
         }
