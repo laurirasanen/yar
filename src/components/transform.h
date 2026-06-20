@@ -26,16 +26,25 @@ struct Transform
         return glm::vec3(matrix[3][0], matrix[3][1], matrix[3][2]);
     }
 
-    void SetScale(glm::vec3 scale)
+    void Scale(const glm::vec3 scale)
     {
-        matrix[0][0] = scale.x;
-        matrix[1][1] = scale.y;
-        matrix[2][2] = scale.z;
+        matrix[0] *= scale.x;
+        matrix[1] *= scale.y;
+        matrix[2] *= scale.z;
+    }
+
+    void SetScale(const glm::vec3 scale)
+    {
+        Scale(scale / GetScale());
     }
 
     glm::vec3 GetScale() const
     {
-        return glm::vec3(matrix[0][0], matrix[1][1], matrix[2][2]);
+        return glm::vec3(
+            glm::length(glm::vec3(matrix[0])),
+            glm::length(glm::vec3(matrix[1])),
+            glm::length(glm::vec3(matrix[2]))
+        );
     }
 
     glm::vec3 GetEulerRotation() const
