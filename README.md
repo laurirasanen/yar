@@ -12,3 +12,14 @@ Yet another renderer.
 - [Vulkan-Headers](https://github.com/KhronosGroup/Vulkan-Headers)
 - [slang](https://github.com/shader-slang/slang)
 
+### Assets
+
+- [glTF-Sample-Assets](https://github.com/KhronosGroup/glTF-Sample-Assets)
+
+**assets/models/DamagedHelmet.glb**  
+(c) 2018, ctxwing. CC BY 4.0 International  
+    ctxwing for Rebuild and conversion to glTF  
+(c) 2016, theblueturtle_. CC BY-NC 4.0 International  
+    theblueturtle_ for Earlier version of model
+
+
