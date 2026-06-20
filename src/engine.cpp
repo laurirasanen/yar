@@ -220,6 +220,7 @@ void Engine::RenderThread(const std::stop_token token)
             continue;
         }
 
+        m_renderer->ResetFrameStats();
         m_renderer->Begin();
         m_renderer->UpdateUniforms(m_camera);
 

@@ -95,6 +95,11 @@ void UI::DebugWindow()
         const auto mem = std::format("MEM: {:d} MB", Memory::GetUsage() / 1024);
         ImGui::Text("%s", mem.c_str());
 
+        const auto stats = m_renderer->GetStats();
+        ImGui::Text("Meshes: %zu", stats.MeshCount);
+        ImGui::Text("Indices: %zu", stats.IndexCount);
+        ImGui::Text("Vertices: %zu", stats.VertexCount);
+
         const auto pos     = m_camera->transform.GetPosition();
         const auto ang     = m_camera->transform.GetEulerRotation();
         const auto posText = std::format("pos: [{:.2f}, {:.2f}, {:.2f}]", pos.x, pos.y, pos.z);

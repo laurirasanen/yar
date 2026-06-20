@@ -26,6 +26,13 @@ namespace yar
 {
 #define MAX_FRAMES_IN_FLIGHT 2
 
+struct RenderStats
+{
+    size_t MeshCount;
+    size_t VertexCount;
+    size_t IndexCount;
+};
+
 enum RenderPipeline
 {
     TEST,
@@ -147,11 +154,29 @@ class Renderer
         if (commandBuffer != nullptr)
         {
             vertexBuffer->Bind(commandBuffer);
+
             indexBuffer->Bind(commandBuffer);
             indexBuffer->Draw(commandBuffer, 0, 1);
+
             m_frameBuffers.push_back(vertexBuffer);
             m_frameBuffers.push_back(indexBuffer);
+
+            m_stats.MeshCount++;
+            m_stats.IndexCount += indexBuffer->GetElementCount();
+            m_stats.VertexCount += vertexBuffer->GetElementCount();
         }
+    }
+
+    RenderStats GetStats()
+    {
+        return m_stats;
+    }
+
+    void ResetFrameStats()
+    {
+        m_stats.MeshCount   = 0;
+        m_stats.IndexCount  = 0;
+        m_stats.VertexCount = 0;
     }
 
   private:
@@ -175,5 +200,7 @@ class Renderer
     // Hold so we don't call Buffer destructor
     // while still in use by command buffer.
     std::vector<std::shared_ptr<Buffer>> m_frameBuffers;
+
+    RenderStats m_stats;
 };
 } // namespace yar

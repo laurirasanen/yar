@@ -5,6 +5,7 @@
 #include "../log.h"
 #include "../platform/fs.h"
 #include "../platform/memory.h"
+#include "../util.h"
 #include "model.h"
 
 namespace yar
@@ -47,6 +48,9 @@ Model::Model(std::shared_ptr<Renderer> renderer, std::string path) : m_path(path
     }
 
     LOG_DEBUG("Loaded {} from model {}", Memory::Pretty(data->file_size), cpath);
+
+    size_t totalIndexCount  = 0;
+    size_t totalVertexCount = 0;
 
     for (size_t i = 0; i < data->meshes_count; i++)
     {
@@ -151,9 +155,9 @@ Model::Model(std::shared_ptr<Renderer> renderer, std::string path) : m_path(path
                 vertices[vertIdx].position.y = vertPositions[vertIdx * 3 + 1];
                 vertices[vertIdx].position.z = vertPositions[vertIdx * 3 + 2];
 
-                vertices[vertIdx].color.r = 0.5f;
-                vertices[vertIdx].color.g = 0.5f;
-                vertices[vertIdx].color.b = 0.5f;
+                vertices[vertIdx].color.r = RANDF(1.0f);
+                vertices[vertIdx].color.g = RANDF(1.0f);
+                vertices[vertIdx].color.b = RANDF(1.0f);
             }
 
             std::shared_ptr<Buffer> vertexBuffer;
@@ -176,8 +180,19 @@ Model::Model(std::shared_ptr<Renderer> renderer, std::string path) : m_path(path
             auto mesh =
                 std::make_shared<Mesh<VertexUnlit>>(vertices, indices, vertexBuffer, indexBuffer);
             m_meshes.push_back(mesh);
+
+            totalIndexCount += indexCount;
+            totalVertexCount += vertexCount;
         }
     }
+
+    LOG_DEBUG(
+        "Parsed {} meshes, {} verts, {} indices from {}",
+        m_meshes.size(),
+        totalVertexCount,
+        totalIndexCount,
+        cpath
+    );
 
     cgltf_free(data);
 }
