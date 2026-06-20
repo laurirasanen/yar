@@ -1,12 +1,14 @@
 #pragma once
 
+#include <string>
+
 namespace yar
 {
 class Material
 {
   public:
     Material() = delete;
-    Material(std::string path);
+    Material(std::string name);
     ~Material();
 
     Material(const Material&)            = delete;
@@ -15,6 +17,6 @@ class Material
     Material& operator=(Material&&)      = delete;
 
   private:
-    std::string m_path;
+    std::string m_name;
 };
 }; // namespace yar

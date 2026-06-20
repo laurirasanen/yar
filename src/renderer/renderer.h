@@ -35,7 +35,8 @@ struct RenderStats
 
 enum RenderPipeline
 {
-    TEST,
+    UNLIT,
+    SHADED,
 };
 
 class Renderer
@@ -127,13 +128,28 @@ class Renderer
 
         switch (pipe)
         {
-            case TEST:
+            case UNLIT:
             {
-                m_testPipeline->Bind(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, currentFrame);
+                m_pipelineUnlit->Bind(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, currentFrame);
                 vkCmdPushConstants(
                     commandBuffer,
-                    m_testPipeline->GetVkPipelineLayout(),
+                    m_pipelineUnlit->GetVkPipelineLayout(),
                     VK_SHADER_STAGE_VERTEX_BIT,
+                    0,
+                    sizeof(VkDeviceAddress),
+                    m_shaderGlobalBuffers[currentFrame]->GetDeviceAddress()
+                );
+                break;
+            }
+
+            case SHADED:
+            {
+                m_pipelineShaded
+                    ->Bind(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, currentFrame);
+                vkCmdPushConstants(
+                    commandBuffer,
+                    m_pipelineShaded->GetVkPipelineLayout(),
+                    VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT,
                     0,
                     sizeof(VkDeviceAddress),
                     m_shaderGlobalBuffers[currentFrame]->GetDeviceAddress()
@@ -195,7 +211,8 @@ class Renderer
     std::vector<std::shared_ptr<VulkanBuffer>>     m_shaderGlobalBuffers;
     std::vector<std::shared_ptr<ShaderGlobalData>> m_shaderGlobalData;
 
-    std::shared_ptr<VulkanPipeline<VertexUnlit>> m_testPipeline;
+    std::shared_ptr<VulkanPipeline<VertexUnlit>>  m_pipelineUnlit;
+    std::shared_ptr<VulkanPipeline<VertexShaded>> m_pipelineShaded;
 
     // Hold so we don't call Buffer destructor
     // while still in use by command buffer.

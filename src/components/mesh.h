@@ -5,6 +5,7 @@
 
 #include "../log.h"
 #include "../renderer/buffer.h"
+#include "material.h"
 
 namespace yar
 {
@@ -105,6 +106,8 @@ class Mesh
 
     std::shared_ptr<Buffer> m_vertexBuffer;
     std::shared_ptr<Buffer> m_indexBuffer;
+
+    std::shared_ptr<Material> m_material;
 
     glm::vec3 m_min;
     glm::vec3 m_max;

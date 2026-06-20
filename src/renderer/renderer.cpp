@@ -7,8 +7,8 @@
 #include "../log.h"
 #include "../shader/compiler.h"
 #include "data_types.h"
-#include "src/components/mesh.h"
 #include "renderer.h"
+#include "src/components/mesh.h"
 
 namespace yar
 {
@@ -38,28 +38,61 @@ Renderer::Renderer(std::shared_ptr<Window> window) :
 
     m_descriptorSet = std::make_shared<VulkanDescriptorSet>(m_device, MAX_FRAMES_IN_FLIGHT);
 
-    // TODO: abstract away all the shader + pipeline setup
+    // TODO: abstract away to materials?
     ShaderCompiler compiler;
     size_t         size;
-    const void*    spirv = compiler.GetSpirv("unlit.slang", SHADER_ENTRY_PIXEL, size);
-    if (!spirv)
-    {
-        throw std::runtime_error("failed to load shader 1");
-    }
-    auto moduleSimpleFrag = GetVulkanCreateInfo(spirv, size);
-    spirv                 = compiler.GetSpirv("unlit.slang", SHADER_ENTRY_VERTEX, size);
-    if (!spirv)
-    {
-        throw std::runtime_error("failed to load shader 2");
-    }
-    auto moduleSimpleVert = GetVulkanCreateInfo(spirv, size);
-    auto stageSimpleFrag =
-        FillShaderStageCreateInfo(&moduleSimpleFrag, VK_SHADER_STAGE_FRAGMENT_BIT);
-    auto stageSimpleVert = FillShaderStageCreateInfo(&moduleSimpleVert, VK_SHADER_STAGE_VERTEX_BIT);
-    std::vector simpleStages {stageSimpleFrag, stageSimpleVert};
 
-    m_testPipeline =
-        std::make_shared<VulkanPipeline<VertexUnlit>>(m_device, m_descriptorSet, simpleStages);
+    {
+        const void* spirv = compiler.GetSpirv("unlit.slang", SHADER_ENTRY_PIXEL, size);
+        if (!spirv)
+        {
+            throw std::runtime_error("failed to load unlit fragment shader");
+        }
+
+        auto moduleUnlitFrag = GetVulkanCreateInfo(spirv, size);
+
+        spirv = compiler.GetSpirv("unlit.slang", SHADER_ENTRY_VERTEX, size);
+        if (!spirv)
+        {
+            throw std::runtime_error("failed to load unlit vertex shader");
+        }
+
+        auto moduleUnlitVert = GetVulkanCreateInfo(spirv, size);
+        auto stageUnlitFrag =
+            FillShaderStageCreateInfo(&moduleUnlitFrag, VK_SHADER_STAGE_FRAGMENT_BIT);
+        auto stageUnlitVert =
+            FillShaderStageCreateInfo(&moduleUnlitVert, VK_SHADER_STAGE_VERTEX_BIT);
+        std::vector unlitStages {stageUnlitFrag, stageUnlitVert};
+
+        m_pipelineUnlit =
+            std::make_shared<VulkanPipeline<VertexUnlit>>(m_device, m_descriptorSet, unlitStages);
+    }
+
+    {
+        const void* spirv = compiler.GetSpirv("shaded.slang", SHADER_ENTRY_PIXEL, size);
+        if (!spirv)
+        {
+            throw std::runtime_error("failed to load shaded fragment shader");
+        }
+
+        auto moduleShadedFrag = GetVulkanCreateInfo(spirv, size);
+
+        spirv = compiler.GetSpirv("shaded.slang", SHADER_ENTRY_VERTEX, size);
+        if (!spirv)
+        {
+            throw std::runtime_error("failed to load shaded vertex shader");
+        }
+
+        auto moduleShadedVert = GetVulkanCreateInfo(spirv, size);
+        auto stageShadedFrag =
+            FillShaderStageCreateInfo(&moduleShadedFrag, VK_SHADER_STAGE_FRAGMENT_BIT);
+        auto stageShadedVert =
+            FillShaderStageCreateInfo(&moduleShadedVert, VK_SHADER_STAGE_VERTEX_BIT);
+        std::vector shadedStages {stageShadedFrag, stageShadedVert};
+
+        m_pipelineShaded =
+            std::make_shared<VulkanPipeline<VertexShaded>>(m_device, m_descriptorSet, shadedStages);
+    }
 }
 
 Renderer::~Renderer()
@@ -68,7 +101,8 @@ Renderer::~Renderer()
 
     vkDeviceWaitIdle(m_device.GetVkDevice());
 
-    m_testPipeline.reset();
+    m_pipelineUnlit.reset();
+    m_pipelineShaded.reset();
 
     m_descriptorSet.reset();
 

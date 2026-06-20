@@ -1,12 +1,10 @@
-#include "src/renderer/renderer.h"
 #define CGLTF_IMPLEMENTATION
-#include "cgltf.h"
 
+#include "model.h"
 #include "../log.h"
 #include "../platform/fs.h"
 #include "../platform/memory.h"
 #include "../util.h"
-#include "model.h"
 
 namespace yar
 {
@@ -58,8 +56,7 @@ Model::Model(std::shared_ptr<Renderer> renderer, std::string path) : m_path(path
         {
             const auto& primitive = data->meshes[i].primitives[primIdx];
 
-            std::vector<Index>       indices  = {};
-            std::vector<VertexUnlit> vertices = {};
+            std::vector<Index> indices = {};
 
             const auto indexCount =
                 cgltf_accessor_unpack_indices(primitive.indices, nullptr, sizeof(Index), 0);
@@ -86,38 +83,42 @@ Model::Model(std::shared_ptr<Renderer> renderer, std::string path) : m_path(path
             }
 
             std::vector<float> vertPositions = {};
+            std::vector<float> vertNormals   = {};
+            std::vector<float> vertUVs       = {};
             for (size_t attrIdx = 0; attrIdx < primitive.attributes_count; attrIdx++)
             {
                 switch (primitive.attributes[attrIdx].type)
                 {
                     case cgltf_attribute_type_position:
                     {
-                        const auto vertCount = cgltf_accessor_unpack_floats(
-                            primitive.attributes[attrIdx].data,
-                            nullptr,
-                            0
-                        );
-
-                        vertPositions.resize(vertCount);
-
-                        readCount = cgltf_accessor_unpack_floats(
-                            primitive.attributes[attrIdx].data,
-                            vertPositions.data(),
-                            vertCount
-                        );
-
-                        if (readCount != vertCount)
+                        if (!ReadFloats(primitive.attributes[attrIdx].data, vertPositions))
                         {
-                            LOG_ERROR(
-                                "Failed to read gltf vertices ({} != {}): {}",
-                                readCount,
-                                indexCount,
-                                cpath
-                            );
+                            LOG_ERROR("Failed to read gltf normals: {}", cpath);
                             cgltf_free(data);
                             return;
                         }
+                        break;
+                    }
 
+                    case cgltf_attribute_type_normal:
+                    {
+                        if (!ReadFloats(primitive.attributes[attrIdx].data, vertNormals))
+                        {
+                            LOG_ERROR("Failed to read gltf normals: {}", cpath);
+                            cgltf_free(data);
+                            return;
+                        }
+                        break;
+                    }
+
+                    case cgltf_attribute_type_texcoord:
+                    {
+                        if (!ReadFloats(primitive.attributes[attrIdx].data, vertUVs))
+                        {
+                            LOG_ERROR("Failed to read gltf UVs: {}", cpath);
+                            cgltf_free(data);
+                            return;
+                        }
                         break;
                     }
 
@@ -134,6 +135,18 @@ Model::Model(std::shared_ptr<Renderer> renderer, std::string path) : m_path(path
                 cgltf_free(data);
                 return;
             }
+            if (vertNormals.size() <= 0)
+            {
+                LOG_ERROR("gltf has no vertex normals: {}", cpath);
+                cgltf_free(data);
+                return;
+            }
+            if (vertUVs.size() <= 0)
+            {
+                LOG_ERROR("gltf has no vertex UVs: {}", cpath);
+                cgltf_free(data);
+                return;
+            }
 
             if (vertPositions.size() % 3 != 0)
             {
@@ -145,8 +158,32 @@ Model::Model(std::shared_ptr<Renderer> renderer, std::string path) : m_path(path
                 cgltf_free(data);
                 return;
             }
+            if (vertNormals.size() != vertPositions.size())
+            {
+                LOG_ERROR(
+                    "gltf vertex normals invalid size ({}/{}): {}",
+                    vertNormals.size(),
+                    vertPositions.size(),
+                    cpath
+                );
+                cgltf_free(data);
+                return;
+            }
+            if (vertUVs.size() != 2 * vertPositions.size() / 3)
+            {
+                LOG_ERROR(
+                    "gltf vertex UVs invalid size ({}/{}): {}",
+                    vertUVs.size(),
+                    vertPositions.size(),
+                    cpath
+                );
+                cgltf_free(data);
+                return;
+            }
 
             const size_t vertexCount = vertPositions.size() / 3;
+
+            std::vector<VertexShaded> vertices = {};
             vertices.resize(vertexCount);
 
             for (size_t vertIdx = 0; vertIdx < vertexCount; vertIdx++)
@@ -155,9 +192,12 @@ Model::Model(std::shared_ptr<Renderer> renderer, std::string path) : m_path(path
                 vertices[vertIdx].position.y = vertPositions[vertIdx * 3 + 1];
                 vertices[vertIdx].position.z = vertPositions[vertIdx * 3 + 2];
 
-                vertices[vertIdx].color.r = RANDF(1.0f);
-                vertices[vertIdx].color.g = RANDF(1.0f);
-                vertices[vertIdx].color.b = RANDF(1.0f);
+                vertices[vertIdx].normal.x = vertNormals[vertIdx * 3 + 0];
+                vertices[vertIdx].normal.y = vertNormals[vertIdx * 3 + 1];
+                vertices[vertIdx].normal.z = vertNormals[vertIdx * 3 + 2];
+
+                vertices[vertIdx].uv.x = vertUVs[vertIdx * 2 + 0];
+                vertices[vertIdx].uv.y = vertUVs[vertIdx * 2 + 1];
             }
 
             std::shared_ptr<Buffer> vertexBuffer;
@@ -178,7 +218,7 @@ Model::Model(std::shared_ptr<Renderer> renderer, std::string path) : m_path(path
             );
 
             auto mesh =
-                std::make_shared<Mesh<VertexUnlit>>(vertices, indices, vertexBuffer, indexBuffer);
+                std::make_shared<Mesh<VertexShaded>>(vertices, indices, vertexBuffer, indexBuffer);
             m_meshes.push_back(mesh);
 
             totalIndexCount += indexCount;
@@ -205,8 +245,16 @@ void Model::Render(std::shared_ptr<Renderer> renderer)
 {
     for (const auto& mesh : m_meshes)
     {
-        renderer->BindPipeline(RenderPipeline::TEST);
+        renderer->BindPipeline(RenderPipeline::SHADED);
         renderer->DrawWithBuffers(mesh->GetVertexBuffer(), mesh->GetIndexBuffer());
     }
+}
+
+bool Model::ReadFloats(cgltf_accessor* accessor, std::vector<float>& floats)
+{
+    const auto floatCount = cgltf_accessor_unpack_floats(accessor, nullptr, 0);
+    floats.resize(floatCount);
+    const auto readCount = cgltf_accessor_unpack_floats(accessor, floats.data(), floatCount);
+    return readCount == floatCount;
 }
 }; // namespace yar

@@ -53,7 +53,7 @@ void World::Tick(std::shared_ptr<Camera> camera)
 
 void World::Render()
 {
-    m_renderer->BindPipeline(RenderPipeline::TEST);
+    m_renderer->BindPipeline(RenderPipeline::UNLIT);
     m_renderer->DrawWithBuffers(m_testPlaneVertexBuffer, m_testPlaneIndexBuffer);
 
     for (const auto& model : m_models)
