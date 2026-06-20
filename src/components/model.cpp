@@ -205,7 +205,7 @@ Model::Model(std::shared_ptr<Renderer> renderer, std::string path) : m_path(path
                 vertexBuffer,
                 VertexBuffer,
                 vertices.data(),
-                sizeof(VertexUnlit),
+                sizeof(VertexShaded),
                 static_cast<uint32_t>(vertices.size())
             );
             std::shared_ptr<Buffer> indexBuffer;
