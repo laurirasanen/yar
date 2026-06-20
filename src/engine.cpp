@@ -42,7 +42,6 @@ Engine::Engine()
     LOG_DEBUG("Setting framerate to {}", fps);
     Time::SetFrameRate(fps);
 
-    // Allow main thread to run.
     m_mainFrameSemaphore.release();
     m_mainTickSemaphore.release();
 
@@ -89,7 +88,6 @@ Engine::~Engine()
 
 void Engine::Frame()
 {
-    // Renderer still busy?
     auto acquired = m_mainFrameSemaphore.try_acquire();
     if (!acquired)
     {
@@ -134,7 +132,6 @@ void Engine::Frame()
 
     m_frameInput.Clear();
 
-    // Allow render thread to run.
     m_threadFrameSemaphore.release();
 }
 
@@ -149,7 +146,6 @@ bool Engine::Tick()
 
     m_tickInput.Clear();
 
-    // Tick thread still busy?
     auto acquired = m_mainTickSemaphore.try_acquire();
     if (!acquired)
     {
@@ -165,7 +161,6 @@ bool Engine::Tick()
 
     Time::UpdateTickDelta();
 
-    // Allow tick thread to run.
     m_threadTickSemaphore.release();
 
     return true;
@@ -183,7 +178,6 @@ void Engine::TickThread(const std::stop_token token)
 
     while (!token.stop_requested())
     {
-        // Wait for main thread.
         m_threadTickSemaphore.acquire();
         if (token.stop_requested())
         {
@@ -192,7 +186,6 @@ void Engine::TickThread(const std::stop_token token)
 
         m_world->Tick();
 
-        // Let main thread know we are done.
         m_mainTickSemaphore.release();
     }
 
@@ -205,7 +198,6 @@ void Engine::RenderThread(const std::stop_token token)
 
     while (!token.stop_requested())
     {
-        // Wait for main thread.
         m_threadFrameSemaphore.acquire();
         if (token.stop_requested())
         {
@@ -235,7 +227,6 @@ void Engine::RenderThread(const std::stop_token token)
 
         Time::StopRender();
 
-        // Let main thread know we are done.
         m_mainFrameSemaphore.release();
     }
 

@@ -143,7 +143,7 @@ constexpr static void TransitionImageLayout(
 
     VkDependencyInfo dep {};
     dep.sType                   = VK_STRUCTURE_TYPE_DEPENDENCY_INFO;
-    dep.dependencyFlags         = 0; // TODO: the docs on this suck
+    dep.dependencyFlags         = 0;
     dep.pImageMemoryBarriers    = barriers.data();
     dep.imageMemoryBarrierCount = barriers.size();
 
@@ -181,7 +181,7 @@ constexpr static void TransitionImageLayout(
 
     VkDependencyInfo dep {};
     dep.sType                   = VK_STRUCTURE_TYPE_DEPENDENCY_INFO;
-    dep.dependencyFlags         = 0; // TODO: the docs on this suck
+    dep.dependencyFlags         = 0;
     dep.pImageMemoryBarriers    = &barrier;
     dep.imageMemoryBarrierCount = 1;
 
