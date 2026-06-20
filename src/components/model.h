@@ -2,6 +2,7 @@
 
 #include <memory>
 
+#include "../renderer/renderer.h"
 #include "material.h"
 #include "mesh.h"
 
@@ -11,7 +12,7 @@ class Model
 {
   public:
     Model() = delete;
-    Model(std::string path);
+    Model(std::shared_ptr<Renderer> renderer, std::string path);
     ~Model();
 
     Model(const Model&)            = delete;
@@ -19,10 +20,12 @@ class Model
     Model& operator=(const Model&) = delete;
     Model& operator=(Model&&)      = delete;
 
+    void Render(std::shared_ptr<Renderer> renderer);
+
   private:
     std::string m_path;
 
-    std::shared_ptr<Mesh>     m_mesh;
-    std::shared_ptr<Material> m_material;
+    std::vector<std::shared_ptr<Mesh<VertexUnlit>>> m_meshes;
+    std::vector<std::shared_ptr<Material>>          m_materials;
 };
 }; // namespace yar

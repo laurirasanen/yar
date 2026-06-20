@@ -1,5 +1,5 @@
 #include "world.h"
-#include "../components/mesh.h"
+#include "../components/model.h"
 #include "../log.h"
 #include "../renderer/renderer.h"
 
@@ -33,8 +33,8 @@ World::World(std::shared_ptr<Renderer> renderer) : m_renderer(renderer)
         static_cast<uint32_t>(planeIndices.size())
     );
 
-    // test mesh
-    auto mesh = Mesh("assets/models/DamagedHelmet.glb");
+    // test model
+    auto model = Model(renderer, "assets/models/DamagedHelmet.glb");
 }
 
 World::~World()
