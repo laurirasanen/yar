@@ -33,6 +33,13 @@ struct RenderStats
     size_t IndexCount;
 };
 
+struct CullStats
+{
+    size_t MeshCount;
+    size_t VertexCount;
+    size_t IndexCount;
+};
+
 enum RenderPipeline
 {
     UNLIT,
@@ -177,22 +184,37 @@ class Renderer
             m_frameBuffers.push_back(vertexBuffer);
             m_frameBuffers.push_back(indexBuffer);
 
-            m_stats.MeshCount++;
-            m_stats.IndexCount += indexBuffer->GetElementCount();
-            m_stats.VertexCount += vertexBuffer->GetElementCount();
+            m_renderStats.MeshCount++;
+            m_renderStats.IndexCount += indexBuffer->GetElementCount();
+            m_renderStats.VertexCount += vertexBuffer->GetElementCount();
         }
     }
 
-    RenderStats GetStats()
+    RenderStats GetRenderStats()
     {
-        return m_stats;
+        return m_renderStats;
+    }
+
+    CullStats GetCullStats()
+    {
+        return m_cullStats;
     }
 
     void ResetFrameStats()
     {
-        m_stats.MeshCount   = 0;
-        m_stats.IndexCount  = 0;
-        m_stats.VertexCount = 0;
+        m_renderStats.MeshCount   = 0;
+        m_renderStats.IndexCount  = 0;
+        m_renderStats.VertexCount = 0;
+        m_cullStats.MeshCount     = 0;
+        m_cullStats.IndexCount    = 0;
+        m_cullStats.VertexCount   = 0;
+    }
+
+    void AddCulledMesh(std::shared_ptr<Buffer> vertexBuffer, std::shared_ptr<Buffer> indexBuffer)
+    {
+        m_cullStats.MeshCount++;
+        m_cullStats.IndexCount += indexBuffer->GetElementCount();
+        m_cullStats.VertexCount += vertexBuffer->GetElementCount();
     }
 
   private:
@@ -218,6 +240,7 @@ class Renderer
     // while still in use by command buffer.
     std::vector<std::shared_ptr<Buffer>> m_frameBuffers;
 
-    RenderStats m_stats;
+    RenderStats m_renderStats;
+    CullStats   m_cullStats;
 };
 } // namespace yar

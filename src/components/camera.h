@@ -5,10 +5,14 @@
 #include <glm/ext/matrix_transform.hpp>
 #include <glm/ext/quaternion_float.hpp>
 #include <glm/ext/quaternion_transform.hpp>
+#include <glm/geometric.hpp>
 #include <glm/gtc/constants.hpp>
+#include <glm/matrix.hpp>
 
+#include "../log.h"
 #include "../time.h"
 #include "../window/input.h"
+#include "geometry.h"
 #include "transform.h"
 
 namespace yar
@@ -28,6 +32,7 @@ class Camera
         far  = CAM_FAR;
         UpdateViewport(1920.0f, 1080.0f);
         UpdateMatrices();
+        UpdateFrustum();
     }
 
     virtual ~Camera() {};
@@ -45,8 +50,65 @@ class Camera
         aspect     = static_cast<float>(width) / static_cast<float>(height);
         viewport.x = static_cast<float>(width);
         viewport.y = static_cast<float>(height);
-        viewport.z = CAM_NEAR;
-        viewport.w = CAM_FAR;
+        viewport.z = near;
+        viewport.w = far;
+    }
+
+    void UpdatePlane(Plane& plane, glm::vec4 row)
+    {
+        plane.normal   = glm::vec3(row);
+        plane.distance = -row.w;
+    }
+
+    void UpdateFrustum()
+    {
+        const auto trans = glm::transpose(proj * view);
+        UpdatePlane(frustum.left, trans[3] + trans[0]);
+        UpdatePlane(frustum.right, trans[3] - trans[0]);
+        UpdatePlane(frustum.bottom, trans[3] + trans[1]);
+        UpdatePlane(frustum.top, trans[3] - trans[1]);
+        UpdatePlane(frustum.near, trans[3] + trans[2]);
+        UpdatePlane(frustum.far, trans[3] - trans[2]);
+    }
+
+    bool IsInFrustum(const glm::vec3 pos, float margin = 0.0f)
+    {
+        // clang-format off
+        if (  frustum.near.SignedDistance(pos) < margin) return false;
+        if (   frustum.far.SignedDistance(pos) < margin) return false;
+        if (   frustum.top.SignedDistance(pos) < margin) return false;
+        if (frustum.bottom.SignedDistance(pos) < margin) return false;
+        if (  frustum.left.SignedDistance(pos) < margin) return false;
+        if ( frustum.right.SignedDistance(pos) < margin) return false;
+        // clang-format on
+        return true;
+    }
+
+    bool IsInFrustum(const Sphere& sphere)
+    {
+        return IsInFrustum(sphere.center, -sphere.radius);
+    }
+
+    bool IsInFrustum(const AABB& aabb)
+    {
+        const auto corners = {
+            glm::vec3(aabb.min.x, aabb.min.y, aabb.min.z),
+            glm::vec3(-aabb.min.x, aabb.min.y, aabb.min.z),
+            glm::vec3(aabb.min.x, -aabb.min.y, aabb.min.z),
+            glm::vec3(-aabb.min.x, -aabb.min.y, aabb.min.z),
+            glm::vec3(aabb.max.x, aabb.max.y, aabb.max.z),
+            glm::vec3(-aabb.max.x, aabb.max.y, aabb.max.z),
+            glm::vec3(aabb.max.x, -aabb.max.y, aabb.max.z),
+            glm::vec3(-aabb.max.x, -aabb.max.y, aabb.max.z)
+        };
+        for (const auto& corner : corners)
+        {
+            if (IsInFrustum(corner))
+            {
+                return true;
+            }
+        }
+        return false;
     }
 
     virtual void HandleInput(WindowInput) {};
@@ -59,6 +121,7 @@ class Camera
     glm::vec4 viewport;
     glm::mat4 view;
     glm::mat4 proj;
+    Frustum   frustum;
 };
 
 class NoclipCamera : public Camera
@@ -129,6 +192,7 @@ class NoclipCamera : public Camera
         transform.SetPosition(position);
 
         UpdateMatrices();
+        UpdateFrustum();
     }
 
     float MoveSpeed;

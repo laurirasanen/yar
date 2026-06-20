@@ -189,7 +189,7 @@ void Engine::TickThread(const std::stop_token token)
             break;
         }
 
-        m_world->Tick(m_camera);
+        m_world->Tick();
 
         // Let main thread know we are done.
         m_mainTickSemaphore.release();
@@ -224,7 +224,7 @@ void Engine::RenderThread(const std::stop_token token)
         m_renderer->Begin();
         m_renderer->UpdateUniforms(m_camera);
 
-        m_world->Render();
+        m_world->Render(m_camera);
 
         m_ui->Render();
 

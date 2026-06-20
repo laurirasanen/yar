@@ -33,6 +33,7 @@ World::World(std::shared_ptr<Renderer> renderer) : m_renderer(renderer)
 
     // test model
     m_models.push_back(std::make_shared<Model>(renderer, "assets/models/DamagedHelmet.glb"));
+    m_models[0]->GetTransform().SetEulerRotation({180, 0, 0});
 }
 
 World::~World()
@@ -44,20 +45,25 @@ void World::Frame()
 {
 }
 
-void World::Tick(std::shared_ptr<Camera> camera)
+void World::Tick()
 {
     {
         std::scoped_lock worldLock {m_worldMutex};
     }
 }
 
-void World::Render()
+void World::Render(std::shared_ptr<Camera> camera)
 {
     m_renderer->BindPipeline(RenderPipeline::UNLIT);
     m_renderer->DrawWithBuffers(m_testPlaneVertexBuffer, m_testPlaneIndexBuffer);
 
     for (const auto& model : m_models)
     {
+        if (model->FrustumCull(camera))
+        {
+            model->MarkAsCulled(m_renderer);
+            continue;
+        }
         model->Render(m_renderer);
     }
 }

@@ -21,8 +21,8 @@ class World
     World& operator=(World&&)      = delete;
 
     void Frame();
-    void Tick(std::shared_ptr<Camera> camera);
-    void Render();
+    void Tick();
+    void Render(std::shared_ptr<Camera> camera);
 
   private:
     std::mutex m_worldMutex;

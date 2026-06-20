@@ -3,6 +3,7 @@
 #include <cmath>
 
 #include <glm/ext/matrix_transform.hpp>
+#include <glm/ext/quaternion_common.hpp>
 #include <glm/gtc/quaternion.hpp>
 #include <glm/mat4x4.hpp>
 #include <glm/vec3.hpp>
@@ -76,6 +77,18 @@ struct Transform
     glm::vec3 Up()
     {
         return GetRotation() * glm::vec3(0.0f, 0.0f, 1.0f);
+    }
+
+    glm::vec3 ToGlobalSpace(const glm::vec3 local)
+    {
+        const auto global = glm::vec4(local, 1.0) / matrix;
+        return glm::vec3(global);
+    }
+
+    glm::vec3 ToLocalSpace(const glm::vec3 global)
+    {
+        const auto local = glm::vec4(global, 1.0) * matrix;
+        return glm::vec3(local);
     }
 };
 } // namespace yar

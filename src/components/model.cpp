@@ -235,10 +235,25 @@ Model::Model(std::shared_ptr<Renderer> renderer, std::string path) : m_path(path
     );
 
     cgltf_free(data);
+
+    UpdateAABB();
 }
 
 Model::~Model()
 {
+}
+
+bool Model::FrustumCull(std::shared_ptr<Camera> camera)
+{
+    return !camera->IsInFrustum(m_aabb);
+}
+
+void Model::MarkAsCulled(std::shared_ptr<Renderer> renderer)
+{
+    for (const auto& mesh : m_meshes)
+    {
+        renderer->AddCulledMesh(mesh->GetVertexBuffer(), mesh->GetIndexBuffer());
+    }
 }
 
 void Model::Render(std::shared_ptr<Renderer> renderer)
@@ -250,11 +265,45 @@ void Model::Render(std::shared_ptr<Renderer> renderer)
     }
 }
 
+void Model::RenderBounds(std::shared_ptr<Renderer> renderer)
+{
+    // TODO need some debug draw utils
+}
+
 bool Model::ReadFloats(cgltf_accessor* accessor, std::vector<float>& floats)
 {
     const auto floatCount = cgltf_accessor_unpack_floats(accessor, nullptr, 0);
     floats.resize(floatCount);
     const auto readCount = cgltf_accessor_unpack_floats(accessor, floats.data(), floatCount);
     return readCount == floatCount;
+}
+
+void Model::UpdateAABB()
+{
+    m_aabb.min = {};
+    m_aabb.max = {};
+
+    for (const auto& mesh : m_meshes)
+    {
+        const auto min = m_transform.ToGlobalSpace(mesh->GetMin());
+        const auto max = m_transform.ToGlobalSpace(mesh->GetMax());
+        // clang-format off
+        if (min.x < m_aabb.min.x) m_aabb.min.x = min.x;
+        if (min.y < m_aabb.min.y) m_aabb.min.y = min.y;
+        if (min.z < m_aabb.min.z) m_aabb.min.z = min.z;
+        if (max.x > m_aabb.max.x) m_aabb.max.x = max.x;
+        if (max.y > m_aabb.max.y) m_aabb.max.y = max.y;
+        if (max.z > m_aabb.max.z) m_aabb.max.z = max.z;
+        // clang-format on
+    }
+    LOG_DEBUG(
+        "Model aabb min: [{:.2f}, {:.2f}, {:.2f}], max: [{:.2f}, {:.2f}, {:.2f}]",
+        m_aabb.min.x,
+        m_aabb.min.y,
+        m_aabb.min.z,
+        m_aabb.max.x,
+        m_aabb.max.y,
+        m_aabb.max.z
+    );
 }
 }; // namespace yar

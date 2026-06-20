@@ -98,6 +98,16 @@ class Mesh
         return m_indexBuffer;
     }
 
+    glm::vec3 GetMin() const
+    {
+        return m_min;
+    }
+
+    glm::vec3 GetMax() const
+    {
+        return m_max;
+    }
+
   private:
     VertexType m_vertexType;
 

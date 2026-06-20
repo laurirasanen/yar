@@ -95,17 +95,25 @@ void UI::DebugWindow()
         const auto mem = std::format("MEM: {:d} MB", Memory::GetUsage() / 1024);
         ImGui::Text("%s", mem.c_str());
 
-        const auto stats = m_renderer->GetStats();
-        ImGui::Text("Meshes: %zu", stats.MeshCount);
-        ImGui::Text("Indices: %zu", stats.IndexCount);
-        ImGui::Text("Vertices: %zu", stats.VertexCount);
+        const auto renderStats = m_renderer->GetRenderStats();
+        ImGui::Text("Visible:");
+        ImGui::Text("  Meshes: %zu", renderStats.MeshCount);
+        ImGui::Text("  Indices: %zu", renderStats.IndexCount);
+        ImGui::Text("  Vertices: %zu", renderStats.VertexCount);
+
+        const auto cullStats = m_renderer->GetCullStats();
+        ImGui::Text("Culled:");
+        ImGui::Text("  Meshes: %zu", cullStats.MeshCount);
+        ImGui::Text("  Indices: %zu", cullStats.IndexCount);
+        ImGui::Text("  Vertices: %zu", cullStats.VertexCount);
 
         const auto pos     = m_camera->transform.GetPosition();
         const auto ang     = m_camera->transform.GetEulerRotation();
         const auto posText = std::format("pos: [{:.2f}, {:.2f}, {:.2f}]", pos.x, pos.y, pos.z);
         const auto angText = std::format("ang: [{:.2f}, {:.2f}, {:.2f}]", ang.x, ang.y, ang.z);
-        ImGui::Text("%s", posText.c_str());
-        ImGui::Text("%s", angText.c_str());
+        ImGui::Text("Camera:");
+        ImGui::Text("  %s", posText.c_str());
+        ImGui::Text("  %s", angText.c_str());
 
         ImGui::End();
     }
