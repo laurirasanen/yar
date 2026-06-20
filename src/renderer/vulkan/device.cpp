@@ -860,7 +860,7 @@ void VulkanDevice::CreateSyncObjects()
 void VulkanDevice::CreateDescriptorPools()
 {
     VkDescriptorPoolSize uboPoolSize {};
-    uboPoolSize.type            = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+    uboPoolSize.type            = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC;
     uboPoolSize.descriptorCount = m_maxFramesInFlight;
 
     VkDescriptorPoolCreateInfo uboPoolInfo {};

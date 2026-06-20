@@ -261,6 +261,7 @@ void Model::Render(std::shared_ptr<Renderer> renderer)
     for (const auto& mesh : m_meshes)
     {
         renderer->BindPipeline(RenderPipeline::SHADED);
+        renderer->SetModelMatrix(m_transform);
         renderer->DrawWithBuffers(mesh->GetVertexBuffer(), mesh->GetIndexBuffer());
     }
 }

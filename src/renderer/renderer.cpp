@@ -30,10 +30,6 @@ Renderer::Renderer(std::shared_ptr<Window> window) :
             1
         );
         m_shaderGlobalData[i] = std::make_shared<ShaderGlobalData>();
-        for (unsigned int j = 0; j < MAX_MODELS; j++)
-        {
-            m_shaderGlobalData[i]->models[j] = glm::identity<glm::mat4>();
-        }
     }
 
     m_descriptorSet = std::make_shared<VulkanDescriptorSet>(m_device, MAX_FRAMES_IN_FLIGHT);
@@ -129,6 +125,8 @@ float Renderer::GetAspect()
 
 void Renderer::Begin()
 {
+    m_descriptorSet->NewFrame();
+    m_currentPipeline = RenderPipeline::NONE;
     m_device.Begin();
 }
 

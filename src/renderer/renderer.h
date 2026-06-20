@@ -42,6 +42,7 @@ struct CullStats
 
 enum RenderPipeline
 {
+    NONE,
     UNLIT,
     SHADED,
 };
@@ -130,6 +131,13 @@ class Renderer
 
     void BindPipeline(RenderPipeline pipe)
     {
+        if (m_currentPipeline == pipe)
+        {
+            return;
+        }
+
+        m_currentPipeline = pipe;
+
         auto commandBuffer = m_device.GetCommandBuffer();
         auto currentFrame  = m_device.GetCurrentFrame();
 
@@ -137,11 +145,11 @@ class Renderer
         {
             case UNLIT:
             {
-                m_pipelineUnlit->Bind(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, currentFrame);
+                m_pipelineUnlit->Bind(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS);
                 vkCmdPushConstants(
                     commandBuffer,
                     m_pipelineUnlit->GetVkPipelineLayout(),
-                    VK_SHADER_STAGE_VERTEX_BIT,
+                    VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT,
                     0,
                     sizeof(VkDeviceAddress),
                     m_shaderGlobalBuffers[currentFrame]->GetDeviceAddress()
@@ -151,8 +159,7 @@ class Renderer
 
             case SHADED:
             {
-                m_pipelineShaded
-                    ->Bind(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, currentFrame);
+                m_pipelineShaded->Bind(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS);
                 vkCmdPushConstants(
                     commandBuffer,
                     m_pipelineShaded->GetVkPipelineLayout(),
@@ -171,8 +178,52 @@ class Renderer
         }
     }
 
+    void SetModelMatrix(const Transform& trans)
+    {
+        const auto currentFrame  = m_device.GetCurrentFrame();
+        const auto data          = ShaderObjectData {.model = trans.matrix};
+        const auto objectIndex   = m_descriptorSet->AppendShaderObjectData(currentFrame, &data);
+        auto       commandBuffer = GetVkCommandBuffer();
+        switch (m_currentPipeline)
+        {
+            case UNLIT:
+            {
+                m_pipelineUnlit->BindDescriptor(
+                    commandBuffer,
+                    VK_PIPELINE_BIND_POINT_GRAPHICS,
+                    currentFrame,
+                    objectIndex
+                );
+                break;
+            }
+
+            case SHADED:
+            {
+                m_pipelineShaded->BindDescriptor(
+                    commandBuffer,
+                    VK_PIPELINE_BIND_POINT_GRAPHICS,
+                    currentFrame,
+                    objectIndex
+                );
+                break;
+            }
+
+            default:
+            {
+                LOG_ERROR("Tried to update descriptor with no pipeline");
+                break;
+            }
+        }
+    }
+
     void DrawWithBuffers(std::shared_ptr<Buffer> vertexBuffer, std::shared_ptr<Buffer> indexBuffer)
     {
+        if (m_currentPipeline == RenderPipeline::NONE)
+        {
+            LOG_ERROR("Tried to draw with no pipeline");
+            return;
+        }
+
         auto commandBuffer = GetCommandBuffer();
         if (commandBuffer != nullptr)
         {
@@ -229,6 +280,8 @@ class Renderer
     VulkanDevice   m_device;
 
     std::shared_ptr<VulkanDescriptorSet> m_descriptorSet;
+
+    RenderPipeline m_currentPipeline;
 
     std::vector<std::shared_ptr<VulkanBuffer>>     m_shaderGlobalBuffers;
     std::vector<std::shared_ptr<ShaderGlobalData>> m_shaderGlobalData;

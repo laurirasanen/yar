@@ -18,8 +18,6 @@
 
 namespace yar
 {
-#define MAX_MODELS 64
-
 struct ShaderGlobalData
 {
     alignas(16) glm::mat4 view;
@@ -33,8 +31,6 @@ struct ShaderGlobalData
     alignas(16) glm::vec4 viewport;
 
     alignas(16) glm::vec4 eye;
-
-    alignas(16) glm::mat4 models[MAX_MODELS];
 
     ShaderGlobalData()
     {
@@ -56,4 +52,8 @@ struct ShaderGlobalData
     }
 };
 
+struct ShaderObjectData
+{
+    alignas(16) glm::mat4 model;
+};
 } // namespace yar

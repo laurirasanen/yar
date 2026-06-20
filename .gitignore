@@ -4,3 +4,5 @@ Subprojects/**/*
 !Subprojects/*.wrap
 
 imgui.ini
+
+.gdb_history

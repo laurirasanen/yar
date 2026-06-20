@@ -30,7 +30,14 @@ class VulkanPipeline
     VulkanPipeline& operator=(const VulkanPipeline&) = delete;
     VulkanPipeline& operator=(VulkanPipeline&&)      = delete;
 
-    void Bind(VkCommandBuffer commandBuffer, VkPipelineBindPoint bindPoint, uint32_t frameIndex);
+    void Bind(VkCommandBuffer commandBuffer, VkPipelineBindPoint bindPoint);
+
+    void BindDescriptor(
+        VkCommandBuffer     commandBuffer,
+        VkPipelineBindPoint bindPoint,
+        uint32_t            frameIndex,
+        uint32_t            objectIndex
+    );
 
     VkPipelineLayout GetVkPipelineLayout() const
     {
@@ -143,7 +150,7 @@ VulkanPipeline<V>::VulkanPipeline(
     colorBlendState.pAttachments    = &colorBlendAttachment;
 
     VkPushConstantRange pushConstantRange {
-        .stageFlags = VK_SHADER_STAGE_VERTEX_BIT,
+        .stageFlags = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT,
         .offset     = 0,
         .size       = sizeof(VkDeviceAddress)
     };
@@ -229,13 +236,19 @@ VulkanPipeline<V>::~VulkanPipeline()
 }
 
 template<typename V>
-void VulkanPipeline<V>::Bind(
-    VkCommandBuffer     commandBuffer,
-    VkPipelineBindPoint bindPoint,
-    uint32_t            frameIndex
-)
+void VulkanPipeline<V>::Bind(VkCommandBuffer commandBuffer, VkPipelineBindPoint bindPoint)
 {
     vkCmdBindPipeline(commandBuffer, bindPoint, m_vkPipeline);
-    m_descriptorSet->Bind(commandBuffer, bindPoint, m_vkPipelineLayout, frameIndex);
+}
+
+template<typename V>
+void VulkanPipeline<V>::BindDescriptor(
+    VkCommandBuffer     commandBuffer,
+    VkPipelineBindPoint bindPoint,
+    uint32_t            frameIndex,
+    uint32_t            objectIndex
+)
+{
+    m_descriptorSet->Bind(commandBuffer, bindPoint, m_vkPipelineLayout, frameIndex, objectIndex);
 }
 } // namespace yar

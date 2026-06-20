@@ -78,10 +78,6 @@ VulkanBuffer::VulkanBuffer(
 
         case SecretThirdOption:
         {
-            if (m_bufferType != ShaderDataBuffer)
-            {
-                throw std::runtime_error("Unhandled buffer type");
-            }
             allocInfo.flags = VMA_ALLOCATION_CREATE_HOST_ACCESS_SEQUENTIAL_WRITE_BIT
                               | VMA_ALLOCATION_CREATE_HOST_ACCESS_ALLOW_TRANSFER_INSTEAD_BIT
                               | VMA_ALLOCATION_CREATE_MAPPED_BIT;
@@ -104,7 +100,7 @@ VulkanBuffer::VulkanBuffer(
         &m_vmaAllocationInfo
     );
 
-    if (m_bufferLocation == SecretThirdOption)
+    if (m_bufferType == ShaderDataBuffer && m_bufferLocation == SecretThirdOption)
     {
         VkBufferDeviceAddressInfo addressInfo {};
         addressInfo.sType  = VK_STRUCTURE_TYPE_BUFFER_DEVICE_ADDRESS_INFO;

@@ -26,10 +26,9 @@ class Camera
     Camera()
     {
         transform = {};
-        transform.SetPosition(glm::vec3(0, -3.0, 1.0));
-        fov  = 60.0f;
-        near = CAM_NEAR;
-        far  = CAM_FAR;
+        fov       = 60.0f;
+        near      = CAM_NEAR;
+        far       = CAM_FAR;
         UpdateViewport(1920.0f, 1080.0f);
         UpdateMatrices();
         UpdateFrustum();

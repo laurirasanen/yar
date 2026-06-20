@@ -1,4 +1,5 @@
 #include "world.h"
+#include "../components/transform.h"
 #include "../log.h"
 
 namespace yar
@@ -55,6 +56,8 @@ void World::Tick()
 void World::Render(std::shared_ptr<Camera> camera)
 {
     m_renderer->BindPipeline(RenderPipeline::UNLIT);
+    Transform trans = {};
+    m_renderer->SetModelMatrix(trans);
     m_renderer->DrawWithBuffers(m_testPlaneVertexBuffer, m_testPlaneIndexBuffer);
 
     for (const auto& model : m_models)
