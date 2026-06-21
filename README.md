@@ -2,8 +2,9 @@
 
 A renderer written in modern C++ and Vulkan.
 
-## Third-party code / Acknowledgments
+## Acknowledgments
 
+### Third-party code
 - [cgltf](https://github.com/jkuhlmann/cgltf)
 - [glm](https://github.com/g-truc/glm)
 - [imgui](https://github.com/ocornut/imgui)
@@ -25,6 +26,6 @@ A renderer written in modern C++ and Vulkan.
 - https://github.com/KhronosGroup/glTF-Sample-Assets/tree/main/Models/DamagedHelmet
 - (c) 2018 ctxwing, CC BY 4.0 International
   - ctxwing for Rebuild and conversion to glTF
-- (c) 2016 theblueturtle, CC BY-NC 4.0 International
+- (c) 2016 theblueturtle_, CC BY-NC 4.0 International
   - theblueturtle_ for Earlier version of model
 
