@@ -10,7 +10,8 @@ Texture::Texture(
     std::string               name,
     uint32_t                  size,
     const void*               data
-)
+) :
+    m_name(name)
 {
     if (size > INT_MAX)
     {
