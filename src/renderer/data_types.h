@@ -18,6 +18,28 @@
 
 namespace yar
 {
+enum VertexType
+{
+    Unlit,
+    Shaded,
+};
+
+struct VertexUnlit
+{
+    glm::vec3 position;
+    glm::vec3 color;
+};
+
+struct VertexShaded
+
+{
+    glm::vec3 position;
+    glm::vec3 normal;
+    glm::vec2 uv;
+};
+
+typedef uint32_t Index;
+
 struct ShaderGlobalData
 {
     alignas(16) glm::mat4 view;

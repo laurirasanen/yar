@@ -1,4 +1,5 @@
 #include "buffer.h"
+#include "src/renderer/buffer.h"
 
 namespace yar
 {
@@ -46,6 +47,11 @@ VulkanBuffer::VulkanBuffer(
             break;
         }
 
+        case ImageBuffer:
+        {
+            break;
+        }
+
         default:
         {
             std::runtime_error("Unhandled buffer type");
@@ -79,7 +85,6 @@ VulkanBuffer::VulkanBuffer(
         case SecretThirdOption:
         {
             allocInfo.flags = VMA_ALLOCATION_CREATE_HOST_ACCESS_SEQUENTIAL_WRITE_BIT
-                              | VMA_ALLOCATION_CREATE_HOST_ACCESS_ALLOW_TRANSFER_INSTEAD_BIT
                               | VMA_ALLOCATION_CREATE_MAPPED_BIT;
             allocInfo.usage = VMA_MEMORY_USAGE_AUTO;
             break;

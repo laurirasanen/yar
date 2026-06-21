@@ -10,7 +10,6 @@
 #include <vulkan/vulkan_core.h>
 
 #include "../components/camera.h"
-#include "../components/mesh.h"
 #include "../components/rect.h"
 #include "../window/window.h"
 #include "buffer.h"
@@ -266,6 +265,11 @@ class Renderer
         m_cullStats.MeshCount++;
         m_cullStats.IndexCount += indexBuffer->GetElementCount();
         m_cullStats.VertexCount += vertexBuffer->GetElementCount();
+    }
+
+    VulkanDevice& GetDevice()
+    {
+        return m_device;
     }
 
   private:

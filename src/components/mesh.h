@@ -6,32 +6,11 @@
 
 #include "../log.h"
 #include "../renderer/buffer.h"
+#include "../renderer/data_types.h"
 #include "material.h"
 
 namespace yar
 {
-enum VertexType
-{
-    Unlit,
-    Shaded,
-};
-
-struct VertexUnlit
-{
-    glm::vec3 position;
-    glm::vec3 color;
-};
-
-struct VertexShaded
-
-{
-    glm::vec3 position;
-    glm::vec3 normal;
-    glm::vec2 uv;
-};
-
-typedef uint32_t Index;
-
 template<class T>
 class Mesh
 {
@@ -39,15 +18,17 @@ class Mesh
     Mesh() = delete;
 
     Mesh(
-        std::vector<T>          vertices,
-        std::vector<Index>      indices,
-        std::shared_ptr<Buffer> vertexBuffer,
-        std::shared_ptr<Buffer> indexBuffer
+        std::vector<T>            vertices,
+        std::vector<Index>        indices,
+        std::shared_ptr<Buffer>   vertexBuffer,
+        std::shared_ptr<Buffer>   indexBuffer,
+        std::shared_ptr<Material> material
     ) :
         m_vertices(vertices),
         m_indices(indices),
         m_vertexBuffer(vertexBuffer),
-        m_indexBuffer(indexBuffer)
+        m_indexBuffer(indexBuffer),
+        m_material(material)
     {
         for (const auto& vert : vertices)
         {
@@ -74,24 +55,29 @@ class Mesh
     Mesh& operator=(const Mesh&) = delete;
     Mesh& operator=(Mesh&&)      = delete;
 
-    const std::vector<T>& GetVertices()
+    const std::vector<T>& GetVertices() const
     {
         return m_vertices;
     }
 
-    const std::vector<Index>& GetIndices()
+    const std::vector<Index>& GetIndices() const
     {
         return m_indices;
     }
 
-    std::shared_ptr<Buffer> GetVertexBuffer()
+    std::shared_ptr<Buffer> GetVertexBuffer() const
     {
         return m_vertexBuffer;
     }
 
-    std::shared_ptr<Buffer> GetIndexBuffer()
+    std::shared_ptr<Buffer> GetIndexBuffer() const
     {
         return m_indexBuffer;
+    }
+
+    std::shared_ptr<Material> GetMaterial() const
+    {
+        return m_material;
     }
 
     glm::vec3 GetMin() const

@@ -15,6 +15,7 @@ enum BufferType
     IndexBuffer,
     UniformBuffer,
     ShaderDataBuffer,
+    ImageBuffer,
 };
 
 enum BufferLocation

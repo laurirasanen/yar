@@ -1,16 +1,17 @@
-# yar
+# Yet Another Renderer
 
-Yet another renderer.
+A renderer written in modern C++ and Vulkan.
 
 ## Third-party code / Acknowledgments
 
 - [cgltf](https://github.com/jkuhlmann/cgltf)
 - [glm](https://github.com/g-truc/glm)
 - [imgui](https://github.com/ocornut/imgui)
-- [VulkanMemoryAllocator](https://github.com/GPUOpen-LibrariesAndSDKs/VulkanMemoryAllocator)
 - [SDL](https://github.com/libsdl-org/SDL)
-- [Vulkan-Headers](https://github.com/KhronosGroup/Vulkan-Headers)
 - [slang](https://github.com/shader-slang/slang)
+- [stb](https://github.com/nothings/stb)
+- [VulkanMemoryAllocator](https://github.com/GPUOpen-LibrariesAndSDKs/VulkanMemoryAllocator)
+- [Vulkan-Headers](https://github.com/KhronosGroup/Vulkan-Headers)
 
 ### Assets
 

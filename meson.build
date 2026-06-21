@@ -73,8 +73,10 @@ includes = include_directories(
   'thirdparty/imgui',
   'thirdparty/imgui/backends',
 
-  'thirdparty/vulkan-headers/include',
+  'thirdparty/stb',
+
   'thirdparty/VulkanMemoryAllocator/include',
+  'thirdparty/vulkan-headers/include',
 
   is_system: true,
 )

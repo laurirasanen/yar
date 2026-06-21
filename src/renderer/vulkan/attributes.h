@@ -5,7 +5,6 @@
 
 #include <vulkan/vulkan_core.h>
 
-#include "../../components/mesh.h"
 #include "../data_types.h"
 
 namespace yar

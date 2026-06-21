@@ -2,8 +2,9 @@
 
 #include <memory>
 
-#include "../renderer/renderer.h"
 #include "cgltf.h"
+
+#include "../renderer/renderer.h"
 #include "geometry.h"
 #include "material.h"
 #include "mesh.h"
@@ -43,6 +44,16 @@ class Model
     bool ReadIndices(const cgltf_primitive& primitive, std::vector<Index>& indices);
     bool ReadVertices(const cgltf_primitive& primitive, std::vector<VertexShaded>& vertices);
     bool ReadFloats(cgltf_accessor* accessor, std::vector<float>& floats);
+
+    std::shared_ptr<Material> ReadMaterial(
+        std::shared_ptr<Renderer> renderer,
+        const cgltf_primitive&    primitive
+    );
+
+    std::shared_ptr<Texture> ReadTexture(
+        std::shared_ptr<Renderer> renderer,
+        const cgltf_texture_view* view
+    );
 
     std::string m_path;
 

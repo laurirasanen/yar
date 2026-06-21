@@ -272,7 +272,7 @@ VkCommandBuffer VulkanDevice::GetTemporaryCommandBuffer()
     VkCommandBufferAllocateInfo allocInfo {};
     allocInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
     allocInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
-    // TODO: use separate pool
+    // TODO: use separate pool?
     allocInfo.commandPool        = m_vkCommandPool;
     allocInfo.commandBufferCount = 1;
 
@@ -311,7 +311,7 @@ void VulkanDevice::SubmitTemporaryCommandBuffer(VkCommandBuffer commandBuffer)
         vkQueueSubmit2(m_vkGraphicsQueue, 1, &submitInfo, VK_NULL_HANDLE),
         "Failed to submit temporary command buffer"
     );
-    // TODO: wait all copies with fences?
+    // FIXME: very unoptimal
     WaitForGraphicsIdle();
 
     vkFreeCommandBuffers(m_vkDevice, m_vkCommandPool, 1, &commandBuffer);

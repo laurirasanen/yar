@@ -89,8 +89,15 @@ Model::Model(std::shared_ptr<Renderer> renderer, std::string path) : m_path(path
                 static_cast<uint32_t>(indices.size())
             );
 
-            auto mesh =
-                std::make_shared<Mesh<VertexShaded>>(vertices, indices, vertexBuffer, indexBuffer);
+            std::shared_ptr<Material> material = ReadMaterial(renderer, primitive);
+
+            auto mesh = std::make_shared<Mesh<VertexShaded>>(
+                vertices,
+                indices,
+                vertexBuffer,
+                indexBuffer,
+                material
+            );
             m_meshes.push_back(mesh);
 
             totalIndexCount += indices.size();
@@ -99,11 +106,18 @@ Model::Model(std::shared_ptr<Renderer> renderer, std::string path) : m_path(path
     }
 
     LOG_DEBUG(
-        "Parsed {} meshes, {} verts, {} indices from {}",
+        "Parsed {}:\n"
+        "  meshes: {}\n"
+        "  verts: {}\n"
+        "  indices: {}\n"
+        "  materials: {}\n"
+        "  textures: {}",
+        cpath,
         m_meshes.size(),
         totalVertexCount,
         totalIndexCount,
-        cpath
+        m_materials.size(),
+        m_textures.size()
     );
 
     cgltf_free(data);
@@ -141,6 +155,29 @@ void Model::Render(std::shared_ptr<Renderer> renderer)
 void Model::RenderBounds(std::shared_ptr<Renderer> renderer)
 {
     // TODO need some debug draw utils
+}
+
+void Model::UpdateAABB()
+{
+    m_aabb.min = {};
+    m_aabb.max = {};
+
+    for (const auto& mesh : m_meshes)
+    {
+        const auto min = m_transform.ToGlobalSpace(mesh->GetMin());
+        const auto max = m_transform.ToGlobalSpace(mesh->GetMax());
+        m_aabb.min     = glm::min(m_aabb.min, min);
+        m_aabb.max     = glm::max(m_aabb.max, max);
+    }
+    LOG_DEBUG(
+        "Model aabb min: [{:.2f}, {:.2f}, {:.2f}], max: [{:.2f}, {:.2f}, {:.2f}]",
+        m_aabb.min.x,
+        m_aabb.min.y,
+        m_aabb.min.z,
+        m_aabb.max.x,
+        m_aabb.max.y,
+        m_aabb.max.z
+    );
 }
 
 bool Model::ReadIndices(const cgltf_primitive& primitive, std::vector<Index>& indices)
@@ -268,26 +305,125 @@ bool Model::ReadFloats(cgltf_accessor* accessor, std::vector<float>& floats)
     return readCount == floatCount;
 }
 
-void Model::UpdateAABB()
+std::shared_ptr<Material> Model::ReadMaterial(
+    std::shared_ptr<Renderer> renderer,
+    const cgltf_primitive&    primitive
+)
 {
-    m_aabb.min = {};
-    m_aabb.max = {};
-
-    for (const auto& mesh : m_meshes)
+    if (!primitive.material)
     {
-        const auto min = m_transform.ToGlobalSpace(mesh->GetMin());
-        const auto max = m_transform.ToGlobalSpace(mesh->GetMax());
-        m_aabb.min     = glm::min(m_aabb.min, min);
-        m_aabb.max     = glm::max(m_aabb.max, max);
+        LOG_ERROR("Primitive has no material");
+        return nullptr;
     }
-    LOG_DEBUG(
-        "Model aabb min: [{:.2f}, {:.2f}, {:.2f}], max: [{:.2f}, {:.2f}, {:.2f}]",
-        m_aabb.min.x,
-        m_aabb.min.y,
-        m_aabb.min.z,
-        m_aabb.max.x,
-        m_aabb.max.y,
-        m_aabb.max.z
-    );
+
+    std::string name;
+    if (primitive.material->name)
+    {
+        name = std::string {primitive.material->name};
+    }
+    else
+    {
+        RAND_STR(16, name);
+        LOG_WARNING("Material has no name, rand: {}", name);
+    };
+
+    for (const auto& mat : m_materials)
+    {
+        if (mat->Name() == name)
+        {
+            return mat;
+        }
+    }
+
+    LOG_DEBUG("Loading material {}", name);
+
+    cgltf_texture_view* albedoView = nullptr;
+
+    if (primitive.material->has_pbr_metallic_roughness)
+    {
+        albedoView = &primitive.material->pbr_metallic_roughness.base_color_texture;
+    }
+    else if (primitive.material->has_pbr_specular_glossiness)
+    {
+        albedoView = &primitive.material->pbr_specular_glossiness.diffuse_texture;
+    }
+
+    if (!albedoView)
+    {
+        LOG_ERROR("Material has no albedo view");
+        return nullptr;
+    }
+
+    auto albedoTex = ReadTexture(renderer, albedoView);
+    if (!albedoTex)
+    {
+        LOG_ERROR("Material has no albedo texture");
+        return nullptr;
+    }
+
+    m_materials.push_back(std::make_shared<Material>(name, albedoTex));
+    return m_materials.back();
+}
+
+std::shared_ptr<Texture> Model::ReadTexture(
+    std::shared_ptr<Renderer> renderer,
+    const cgltf_texture_view* view
+)
+{
+    if (!view)
+    {
+        LOG_ERROR("Null texture view");
+        return nullptr;
+    }
+
+    if (!view->texture)
+    {
+        LOG_ERROR("Texture view has no texture");
+        return nullptr;
+    }
+
+    if (!view->texture->image)
+    {
+        LOG_ERROR("Texture has no image");
+        return nullptr;
+    }
+
+    if (!view->texture->image->buffer_view)
+    {
+        LOG_ERROR("Image has no buffer view");
+        return nullptr;
+    }
+
+    std::string name;
+    if (view->texture->name)
+    {
+        name = std::string {view->texture->name};
+    }
+    else if (view->texture->image->name)
+    {
+        name = std::string {view->texture->image->name};
+    }
+    else
+    {
+        RAND_STR(16, name);
+        LOG_WARNING("Texture has no name, rand: {}", name);
+    }
+
+    for (const auto& tex : m_textures)
+    {
+        if (tex->Name() == name)
+        {
+            return tex;
+        }
+    }
+
+    LOG_DEBUG("Loading texture {}", name);
+
+    const auto data =
+        static_cast<const void*>(cgltf_buffer_view_data(view->texture->image->buffer_view));
+    const auto size = static_cast<size_t>(view->texture->image->buffer_view->size);
+
+    m_textures.push_back(std::make_shared<Texture>(renderer, name, size, data));
+    return m_textures.back();
 }
 }; // namespace yar
