@@ -41,14 +41,14 @@ World::World(std::shared_ptr<Renderer> renderer, std::shared_ptr<UI> ui) :
     };
     // clang-format on
     renderer->CreateBuffer(
-        m_testPlaneVertexBuffer,
+        m_skyVertexBuffer,
         VertexBuffer,
         skyVertices.data(),
         sizeof(VertexUnlit),
         static_cast<uint32_t>(skyVertices.size())
     );
     renderer->CreateBuffer(
-        m_testPlaneIndexBuffer,
+        m_skyIndexBuffer,
         IndexBuffer,
         skyIndices.data(),
         sizeof(Index),
@@ -89,7 +89,7 @@ void World::Render(std::shared_ptr<Camera> camera)
     m_renderer->BindPipeline(RenderPipeline::UNLIT);
     Transform trans = {};
     m_renderer->SetModelMatrix(trans);
-    m_renderer->DrawWithBuffers(m_testPlaneVertexBuffer, m_testPlaneIndexBuffer);
+    m_renderer->DrawWithBuffers(m_skyVertexBuffer, m_skyIndexBuffer);
 
     for (const auto& scene : m_scenes)
     {

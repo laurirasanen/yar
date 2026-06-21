@@ -31,8 +31,8 @@ class World
     std::shared_ptr<Renderer> m_renderer;
     std::shared_ptr<UI>       m_ui;
 
-    std::shared_ptr<Buffer> m_testPlaneVertexBuffer;
-    std::shared_ptr<Buffer> m_testPlaneIndexBuffer;
+    std::shared_ptr<Buffer> m_skyVertexBuffer;
+    std::shared_ptr<Buffer> m_skyIndexBuffer;
 
     std::vector<std::shared_ptr<Scene>> m_scenes;
 };
