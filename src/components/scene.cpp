@@ -78,11 +78,23 @@ Scene::Scene(std::shared_ptr<Renderer> renderer, std::shared_ptr<UI> ui, std::st
                 return;
             }
 
+            if (indices.size() <= 0)
+            {
+                LOG_WARN("gltf has a primitive with no indices");
+                continue;
+            }
+
             if (!ReadVertices(primitive, vertices))
             {
                 LOG_ERROR("Failed to read gltf vertices: {}", cpath);
                 cgltf_free(data);
                 return;
+            }
+
+            if (vertices.size() <= 0)
+            {
+                LOG_WARN("gltf has a primitive with no vertices");
+                continue;
             }
 
             std::shared_ptr<Buffer> vertexBuffer;

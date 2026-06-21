@@ -91,8 +91,12 @@ struct Transform
 
     glm::vec3 ToGlobalSpace(const glm::vec3 local) const
     {
-        // FIXME breaks culling somehow
         return glm::vec3(matrix * glm::vec4(local, 1.0));
+    }
+
+    glm::vec4 ToGlobalSpace(const glm::vec4 local) const
+    {
+        return matrix * local;
     }
 
     glm::vec3 ToLocalSpace(const glm::vec3 global) const

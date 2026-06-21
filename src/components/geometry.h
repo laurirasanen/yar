@@ -4,6 +4,7 @@
 
 #include <glm/geometric.hpp>
 #include <glm/vec3.hpp>
+#include <glm/vec4.hpp>
 
 namespace yar
 {
@@ -12,20 +13,30 @@ struct Plane
     glm::vec3 normal;
     float     distance;
 
-    float SignedDistance(const glm::vec3& pos)
+    float SignedDistance(const glm::vec3& pos) const
     {
         return glm::dot(normal, pos) - distance;
     }
 };
 
+struct FrustumPlane
+{
+    glm::vec4 clip;
+
+    float SignedDistance(const glm::vec3& pos) const
+    {
+        return glm::dot(clip, glm::vec4(pos, 1.0f));
+    }
+};
+
 struct Frustum
 {
-    Plane near;
-    Plane far;
-    Plane top;
-    Plane bottom;
-    Plane left;
-    Plane right;
+    FrustumPlane near;
+    FrustumPlane far;
+    FrustumPlane top;
+    FrustumPlane bottom;
+    FrustumPlane left;
+    FrustumPlane right;
 };
 
 struct AABB

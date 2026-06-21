@@ -53,33 +53,28 @@ class Camera
         viewport.w = far;
     }
 
-    void UpdatePlane(Plane& plane, glm::vec4 row)
-    {
-        plane.normal   = glm::vec3(row);
-        plane.distance = -row.w;
-    }
-
     void UpdateFrustum()
     {
-        const auto trans = glm::transpose(proj * view);
-        UpdatePlane(frustum.left, trans[3] + trans[0]);
-        UpdatePlane(frustum.right, trans[3] - trans[0]);
-        UpdatePlane(frustum.bottom, trans[3] + trans[1]);
-        UpdatePlane(frustum.top, trans[3] - trans[1]);
-        UpdatePlane(frustum.near, trans[3] + trans[2]);
-        UpdatePlane(frustum.far, trans[3] - trans[2]);
+        const auto trans    = glm::transpose(proj * view);
+        frustum.left.clip   = trans[3] + trans[0];
+        frustum.right.clip  = trans[3] - trans[0];
+        frustum.bottom.clip = trans[3] + trans[1];
+        frustum.top.clip    = trans[3] - trans[1];
+        frustum.near.clip   = trans[3] + trans[2];
+        frustum.far.clip    = trans[3] - trans[2];
     }
 
     bool IsInFrustum(const glm::vec3 pos, float margin = 0.0f)
     {
         // clang-format off
-        if (  frustum.near.SignedDistance(pos) < margin) return false;
-        if (   frustum.far.SignedDistance(pos) < margin) return false;
-        if (   frustum.top.SignedDistance(pos) < margin) return false;
+        if (frustum.left.SignedDistance(pos)   < margin) return false;
+        if (frustum.right.SignedDistance(pos)  < margin) return false;
+        if (frustum.far.SignedDistance(pos)    < margin) return false;
+        if (frustum.near.SignedDistance(pos)   < margin) return false;
+        if (frustum.top.SignedDistance(pos)    < margin) return false;
         if (frustum.bottom.SignedDistance(pos) < margin) return false;
-        if (  frustum.left.SignedDistance(pos) < margin) return false;
-        if ( frustum.right.SignedDistance(pos) < margin) return false;
         // clang-format on
+
         return true;
     }
 
@@ -88,26 +83,48 @@ class Camera
         return IsInFrustum(sphere.center, -sphere.radius);
     }
 
+    // special case for AABB since it may cover the whole frustum,
+    // with all corners being outside it.
     bool IsInFrustum(const AABB& aabb)
     {
-        const auto corners = {
-            glm::vec3(aabb.min.x, aabb.min.y, aabb.min.z),
-            glm::vec3(-aabb.min.x, aabb.min.y, aabb.min.z),
-            glm::vec3(aabb.min.x, -aabb.min.y, aabb.min.z),
-            glm::vec3(-aabb.min.x, -aabb.min.y, aabb.min.z),
-            glm::vec3(aabb.max.x, aabb.max.y, aabb.max.z),
-            glm::vec3(-aabb.max.x, aabb.max.y, aabb.max.z),
-            glm::vec3(aabb.max.x, -aabb.max.y, aabb.max.z),
-            glm::vec3(-aabb.max.x, -aabb.max.y, aabb.max.z)
+        const FrustumPlane planes[] = {
+            frustum.left,
+            frustum.right,
+            frustum.far,
+            frustum.near,
+            frustum.top,
+            frustum.bottom,
         };
-        for (const auto& corner : corners)
+        const glm::vec3 corners[] = {
+            glm::vec3(aabb.min.x, aabb.min.y, aabb.min.z),
+            glm::vec3(aabb.max.x, aabb.min.y, aabb.min.z),
+            glm::vec3(aabb.min.x, aabb.max.y, aabb.min.z),
+            glm::vec3(aabb.max.x, aabb.max.y, aabb.min.z),
+            glm::vec3(aabb.min.x, aabb.min.y, aabb.max.z),
+            glm::vec3(aabb.max.x, aabb.min.y, aabb.max.z),
+            glm::vec3(aabb.min.x, aabb.max.y, aabb.max.z),
+            glm::vec3(aabb.max.x, aabb.max.y, aabb.max.z),
+        };
+
+        for (const auto& plane : planes)
         {
-            if (IsInFrustum(corner))
+            // clang-format off
+            if (plane.SignedDistance(corners[0]) < 0 &&
+                plane.SignedDistance(corners[1]) < 0 &&
+                plane.SignedDistance(corners[2]) < 0 &&
+                plane.SignedDistance(corners[3]) < 0 &&
+                plane.SignedDistance(corners[4]) < 0 &&
+                plane.SignedDistance(corners[5]) < 0 &&
+                plane.SignedDistance(corners[6]) < 0 &&
+                plane.SignedDistance(corners[7]) < 0
+            )
             {
-                return true;
+                return false;
             }
+            //clang-format on
         }
-        return false;
+
+        return true;
     }
 
     virtual void HandleInput(WindowInput) {};

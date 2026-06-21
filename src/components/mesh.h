@@ -31,12 +31,16 @@ class Mesh
         m_indexBuffer(indexBuffer),
         m_material(material)
     {
-        m_aabb = {};
-        for (const auto& vert : vertices)
+        m_aabb = {
+            .min = vertices[0].position,
+            .max = vertices[0].position,
+        };
+        for (size_t i = 1; i < vertices.size(); i++)
         {
-            m_aabb.min = glm::min(m_aabb.min, vert.position);
-            m_aabb.max = glm::max(m_aabb.max, vert.position);
+            m_aabb.min = glm::min(m_aabb.min, vertices[i].position);
+            m_aabb.max = glm::max(m_aabb.max, vertices[i].position);
         }
+        m_globalAABB = m_aabb;
     }
 
     ~Mesh()
@@ -75,8 +79,25 @@ class Mesh
 
     void UpdateAABB(const Transform& transform)
     {
-        m_globalAABB.min = transform.ToGlobalSpace(m_aabb.min);
-        m_globalAABB.max = transform.ToGlobalSpace(m_aabb.min);
+        const glm::vec3 corners[8] = {
+            transform.ToGlobalSpace(glm::vec4(m_aabb.min.x, m_aabb.min.y, m_aabb.min.z, 1.0f)),
+            transform.ToGlobalSpace(glm::vec4(m_aabb.max.x, m_aabb.min.y, m_aabb.min.z, 1.0f)),
+            transform.ToGlobalSpace(glm::vec4(m_aabb.min.x, m_aabb.max.y, m_aabb.min.z, 1.0f)),
+            transform.ToGlobalSpace(glm::vec4(m_aabb.max.x, m_aabb.max.y, m_aabb.min.z, 1.0f)),
+            transform.ToGlobalSpace(glm::vec4(m_aabb.min.x, m_aabb.min.y, m_aabb.max.z, 1.0f)),
+            transform.ToGlobalSpace(glm::vec4(m_aabb.max.x, m_aabb.min.y, m_aabb.max.z, 1.0f)),
+            transform.ToGlobalSpace(glm::vec4(m_aabb.min.x, m_aabb.max.y, m_aabb.max.z, 1.0f)),
+            transform.ToGlobalSpace(glm::vec4(m_aabb.max.x, m_aabb.max.y, m_aabb.max.z, 1.0f)),
+        };
+
+        m_globalAABB.min = corners[0];
+        m_globalAABB.max = corners[0];
+
+        for (uint8_t i = 1; i < 8; i++)
+        {
+            m_globalAABB.min = glm::min(m_globalAABB.min, corners[i]);
+            m_globalAABB.max = glm::max(m_globalAABB.max, corners[i]);
+        }
 
         /*
         LOG_DEBUG(
@@ -87,8 +108,7 @@ class Mesh
             m_globalAABB.max.x,
             m_globalAABB.max.y,
             m_globalAABB.max.z
-        );
-        */
+        );*/
     }
 
     void FrustumCull(std::shared_ptr<Camera> camera)
@@ -108,7 +128,7 @@ class Mesh
         renderer->DrawWithBuffers(m_vertexBuffer, m_indexBuffer);
     }
 
-    void RenderBounds(std::shared_ptr<Renderer> renderer)
+    void RenderBounds(std::shared_ptr<Renderer> /*renderer*/)
     {
     }
 
