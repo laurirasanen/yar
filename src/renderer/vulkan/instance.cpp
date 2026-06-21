@@ -22,10 +22,10 @@ constexpr static VKAPI_ATTR VkBool32 VKAPI_CALL _VkDebugMessengerCallback(
             level = LogLevel::Debug;
             break;
         case VK_DEBUG_UTILS_MESSAGE_SEVERITY_INFO_BIT_EXT:
-            level = LogLevel::Info;
+            level = LogLevel::Debug;
             break;
         case VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT:
-            level = LogLevel::Warning;
+            level = LogLevel::Warn;
             break;
         default:
         case VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT:
@@ -200,9 +200,9 @@ void constexpr VulkanInstance::PopulateDebugMessengerCreateInfo(
                                  | VK_DEBUG_UTILS_MESSAGE_SEVERITY_INFO_BIT_EXT
                                  | VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT
                                  | VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT;
-    createInfo.messageType = VK_DEBUG_UTILS_MESSAGE_TYPE_GENERAL_BIT_EXT
-                             | VK_DEBUG_UTILS_MESSAGE_TYPE_VALIDATION_BIT_EXT
-                             | VK_DEBUG_UTILS_MESSAGE_TYPE_PERFORMANCE_BIT_EXT;
+    createInfo.messageType     = VK_DEBUG_UTILS_MESSAGE_TYPE_GENERAL_BIT_EXT
+                                 | VK_DEBUG_UTILS_MESSAGE_TYPE_VALIDATION_BIT_EXT
+                                 | VK_DEBUG_UTILS_MESSAGE_TYPE_PERFORMANCE_BIT_EXT;
     createInfo.pfnUserCallback = _VkDebugMessengerCallback;
     createInfo.pUserData       = nullptr;
     createInfo.flags           = 0;

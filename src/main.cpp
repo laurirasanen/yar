@@ -23,13 +23,40 @@ bool HasLaunchArg(const char* name, const char* value, int argc, char** argv)
     return false;
 }
 
-int main(/*int argc, char** argv*/)
+char* GetLaunchArg(const char* name, int argc, char** argv)
+{
+    for (int i = 0; i < argc - 1; i++)
+    {
+        if (std::strcmp(name, argv[i]) == 0)
+        {
+            return argv[i + 1];
+        }
+    }
+    return nullptr;
+}
+
+int main(int argc, char** argv)
 {
 #if NDEBUG
-    yar::Log::SetLogLevel(yar::LogLevel::Warning);
+    auto logLevel = yar::LogLevel::Warning;
 #else
-    yar::Log::SetLogLevel(yar::LogLevel::Debug);
+    auto logLevel = yar::LogLevel::Debug;
 #endif
+
+    auto logLevelArg = GetLaunchArg("-loglevel", argc, argv);
+    if (logLevelArg)
+    {
+        for (int i = 0; i < yar::LogLevel::MAX; i++)
+        {
+            if (std::strcmp(logLevelArg, yar::Log::SeverityStrings[i]) == 0)
+            {
+                logLevel = static_cast<yar::LogLevel>(i);
+                break;
+            }
+        }
+    }
+
+    yar::Log::SetLogLevel(logLevel);
 
     try
     {
@@ -37,7 +64,7 @@ int main(/*int argc, char** argv*/)
     }
     catch (std::exception& ex)
     {
-        LOG_EXCEPTION("Unhandled exception: {}", ex.what());
+        LOG_FATAL("Unhandled exception: {}", ex.what());
         yar::Log::Flush();
         return -1;
     }

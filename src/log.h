@@ -14,9 +14,9 @@ enum LogLevel
 {
     Debug,
     Info,
-    Warning,
+    Warn,
     Error,
-    Exception,
+    Fatal,
     MAX,
 };
 
@@ -53,7 +53,7 @@ class Log
             "[{}:{}@{}()] " // Location
             "{}",           // Message
             Time::Now(),
-            m_severityStrings[static_cast<int>(level)],
+            SeverityStrings[static_cast<int>(level)],
             file,
             line,
             func,
@@ -72,27 +72,26 @@ class Log
         std::flush(std::cout);
     }
 
+    static constexpr const char* SeverityStrings[static_cast<int>(LogLevel::MAX)] = {
+        "debug",
+        "info",
+        "warn",
+        "error",
+        "fatal",
+    };
+
   private:
     static inline LogLevel m_logLevel;
-
-    static constexpr const char* m_severityStrings[static_cast<int>(LogLevel::MAX)] = {
-        "Debug",
-        "Info",
-        "Warning",
-        "Error",
-        "Exception",
-    };
 
     static inline std::mutex m_logMutex;
 };
 
-#define _LOG(L, F, ...) \
-    yar::Log::Print(__FILE__, __LINE__, __func__, L, F, ##__VA_ARGS__)
+#define _LOG(L, F, ...) yar::Log::Print(__FILE__, __LINE__, __func__, L, F, ##__VA_ARGS__)
 
-#define LOG_DEBUG(F, ...)     _LOG(yar::LogLevel::Debug, F, ##__VA_ARGS__)
-#define LOG_INFO(F, ...)      _LOG(yar::LogLevel::Info, F, ##__VA_ARGS__)
-#define LOG_WARNING(F, ...)   _LOG(yar::LogLevel::Warning, F, ##__VA_ARGS__)
-#define LOG_ERROR(F, ...)     _LOG(yar::LogLevel::Error, F, ##__VA_ARGS__)
-#define LOG_EXCEPTION(F, ...) _LOG(yar::LogLevel::Exception, F, ##__VA_ARGS__)
+#define LOG_DEBUG(F, ...) _LOG(yar::LogLevel::Debug, F, ##__VA_ARGS__)
+#define LOG_INFO(F, ...)  _LOG(yar::LogLevel::Info, F, ##__VA_ARGS__)
+#define LOG_WARN(F, ...)  _LOG(yar::LogLevel::Warn, F, ##__VA_ARGS__)
+#define LOG_ERROR(F, ...) _LOG(yar::LogLevel::Error, F, ##__VA_ARGS__)
+#define LOG_FATAL(F, ...) _LOG(yar::LogLevel::Fatal, F, ##__VA_ARGS__)
 
 } // namespace yar

@@ -157,7 +157,7 @@ bool Engine::Tick()
     const auto slowThreshold = Time::TickInterval * 2.0;
     if (delta > slowThreshold)
     {
-        LOG_WARNING("Tick thread ran slow: {:.2f}ms", 1000 * Time::TimeSinceEngineTick());
+        LOG_WARN("Tick thread ran slow: {:.2f}ms", 1000 * Time::TimeSinceEngineTick());
     }
 
     Time::UpdateTickDelta();

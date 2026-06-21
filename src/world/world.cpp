@@ -7,7 +7,7 @@ namespace yar
 
 World::World(std::shared_ptr<Renderer> renderer) : m_renderer(renderer)
 {
-    LOG_DEBUG("Creating World");
+    LOG_INFO("Creating World");
 
     // test plane
     std::vector<VertexUnlit> planeVertices = {
@@ -46,7 +46,7 @@ World::World(std::shared_ptr<Renderer> renderer) : m_renderer(renderer)
 
 World::~World()
 {
-    LOG_DEBUG("Destroying World");
+    LOG_INFO("Destroying World");
 }
 
 void World::Frame()

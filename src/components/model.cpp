@@ -324,7 +324,7 @@ std::shared_ptr<Material> Model::ReadMaterial(
     else
     {
         RAND_STR(16, name);
-        LOG_WARNING("Material has no name, rand: {}", name);
+        LOG_WARN("Material has no name, rand: {}", name);
     };
 
     for (const auto& mat : m_materials)
@@ -406,7 +406,7 @@ std::shared_ptr<Texture> Model::ReadTexture(
     else
     {
         RAND_STR(16, name);
-        LOG_WARNING("Texture has no name, rand: {}", name);
+        LOG_WARN("Texture has no name, rand: {}", name);
     }
 
     for (const auto& tex : m_textures)
