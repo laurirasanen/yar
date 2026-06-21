@@ -22,6 +22,7 @@ class VulkanImage
         uint32_t                  height,
         size_t                    size
     ) :
+        m_renderer(renderer),
         m_width(width),
         m_height(height)
     {
@@ -95,10 +96,62 @@ class VulkanImage
         vkCmdPipelineBarrier2(commandBuffer, &dep);
 
         renderer->SubmitTemporaryCommandBuffer(commandBuffer);
+
+        VkImageViewCreateInfo viewInfo           = {};
+        viewInfo.sType                           = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
+        viewInfo.image                           = m_image;
+        viewInfo.viewType                        = VK_IMAGE_VIEW_TYPE_2D;
+        viewInfo.format                          = VK_FORMAT_R8G8B8A8_SRGB;
+        viewInfo.subresourceRange.aspectMask     = VK_IMAGE_ASPECT_COLOR_BIT;
+        viewInfo.subresourceRange.baseMipLevel   = 0;
+        viewInfo.subresourceRange.levelCount     = 1;
+        viewInfo.subresourceRange.baseArrayLayer = 1;
+        viewInfo.subresourceRange.layerCount     = 1;
+
+        VK_CHECK(
+            vkCreateImageView(
+                renderer->GetDevice().GetVkDevice(),
+                &viewInfo,
+                nullptr,
+                &m_imageView
+            ),
+            "Failed to create image view"
+        );
+
+        VkSamplerCreateInfo samplerInfo = {};
+        samplerInfo.sType               = VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO;
+        samplerInfo.minFilter           = VK_FILTER_LINEAR;
+        samplerInfo.magFilter           = VK_FILTER_LINEAR;
+        samplerInfo.addressModeU        = VK_SAMPLER_ADDRESS_MODE_REPEAT;
+        samplerInfo.addressModeV        = VK_SAMPLER_ADDRESS_MODE_REPEAT;
+        samplerInfo.addressModeW        = VK_SAMPLER_ADDRESS_MODE_REPEAT;
+        samplerInfo.anisotropyEnable    = VK_TRUE;
+        samplerInfo.maxAnisotropy =
+            m_renderer->GetDevice().GetProperties().limits.maxSamplerAnisotropy;
+        samplerInfo.borderColor             = VK_BORDER_COLOR_INT_OPAQUE_BLACK;
+        samplerInfo.unnormalizedCoordinates = VK_FALSE;
+        samplerInfo.compareEnable           = VK_FALSE;
+        samplerInfo.compareOp               = VK_COMPARE_OP_ALWAYS;
+        samplerInfo.mipmapMode              = VK_SAMPLER_MIPMAP_MODE_LINEAR;
+        samplerInfo.mipLodBias              = 0.0f;
+        samplerInfo.minLod                  = 0.0f;
+        samplerInfo.maxLod                  = 0.0f;
+
+        VK_CHECK(
+            vkCreateSampler(
+                m_renderer->GetDevice().GetVkDevice(),
+                &samplerInfo,
+                nullptr,
+                &m_sampler
+            ),
+            "Failed to create image sampler"
+        );
     }
 
     ~VulkanImage()
     {
+        vkDestroySampler(m_renderer->GetDevice().GetVkDevice(), m_sampler, nullptr);
+        vkDestroyImageView(m_renderer->GetDevice().GetVkDevice(), m_imageView, nullptr);
         vmaDestroyImage(g_vma, m_image, m_vmaAllocation);
     }
 
@@ -108,6 +161,8 @@ class VulkanImage
     VulkanImage& operator=(VulkanImage&&)      = delete;
 
   private:
+    std::shared_ptr<Renderer> m_renderer;
+
     uint32_t m_width;
     uint32_t m_height;
 

@@ -114,6 +114,11 @@ class VulkanDevice
         return m_vkGraphicsQueue;
     }
 
+    VkPhysicalDeviceProperties GetProperties() const
+    {
+        return m_vkPhysicalDeviceProperties;
+    }
+
   private:
     void RecreateSwapchain();
     void DestroySwapchain();
@@ -163,6 +168,8 @@ class VulkanDevice
 
     VkPhysicalDevice m_vkPhysicalDevice;
     VkDevice         m_vkDevice;
+
+    VkPhysicalDeviceProperties m_vkPhysicalDeviceProperties;
 
     uint32_t m_vkGraphicsQueueIndex;
     uint32_t m_vkPresentQueueIndex;
