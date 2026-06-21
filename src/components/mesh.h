@@ -35,15 +35,6 @@ class Mesh
             m_min = glm::min(m_min, vert.position);
             m_max = glm::max(m_max, vert.position);
         }
-        LOG_DEBUG(
-            "Mesh min: [{:.2f}, {:.2f}, {:.2f}], max: [{:.2f}, {:.2f}, {:.2f}]",
-            m_min.x,
-            m_min.y,
-            m_min.z,
-            m_max.x,
-            m_max.y,
-            m_max.z
-        );
     }
 
     ~Mesh()
