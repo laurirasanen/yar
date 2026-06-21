@@ -11,38 +11,61 @@ World::World(std::shared_ptr<Renderer> renderer, std::shared_ptr<UI> ui) :
 {
     LOG_INFO("Creating World");
 
-    // test plane
-    std::vector<VertexUnlit> planeVertices = {
-        {.position = {-5.0, -5.0, -2.0}, .color = {1.0f, 0.0f, 0.0f}},
-        { .position = {5.0, -5.0, -2.0}, .color = {0.0f, 1.0f, 0.0f}},
-        {  .position = {5.0, 5.0, -2.0}, .color = {0.0f, 0.0f, 1.0f}},
-        { .position = {-5.0, 5.0, -2.0}, .color = {1.0f, 1.0f, 1.0f}},
+    // clang-format off
+    const float skyExtent = 100.0f;
+    std::vector<VertexUnlit> skyVertices = {
+        // bottom
+        {.position = {-skyExtent, -skyExtent, -skyExtent}, .color = {0.15f, 0.5f, 1.0f}},
+        {.position = { skyExtent, -skyExtent, -skyExtent}, .color = {0.15f, 0.5f, 1.0f}},
+        {.position = { skyExtent,  skyExtent, -skyExtent}, .color = {0.15f, 0.5f, 1.0f}},
+        {.position = {-skyExtent,  skyExtent, -skyExtent}, .color = {0.15f, 0.5f, 1.0f}},
+        // top
+        {.position = {-skyExtent, -skyExtent, skyExtent}, .color = {0.15f, 0.5f, 1.0f}},
+        {.position = { skyExtent, -skyExtent, skyExtent}, .color = {0.15f, 0.5f, 1.0f}},
+        {.position = { skyExtent,  skyExtent, skyExtent}, .color = {0.15f, 0.5f, 1.0f}},
+        {.position = {-skyExtent,  skyExtent, skyExtent}, .color = {0.15f, 0.5f, 1.0f}},
     };
-    std::vector<Index> planeIndices = {0, 1, 2, 2, 3, 0};
+    std::vector<Index> skyIndices = {
+        // bottom (-Z)
+        0, 1, 2, 2, 3, 0,
+        // top (+Z)
+        6, 5, 4, 4, 7, 6,
+        // left (-X)
+        0, 3, 4, 4, 3, 7,
+        // right (+X)
+        5, 2, 1, 6, 2, 5,
+        // front (+Y)
+        7, 3, 2, 2, 6, 7,
+        // back (-Y)
+        1, 0, 4, 4, 5, 1,
+    };
+    // clang-format on
     renderer->CreateBuffer(
         m_testPlaneVertexBuffer,
         VertexBuffer,
-        planeVertices.data(),
+        skyVertices.data(),
         sizeof(VertexUnlit),
-        static_cast<uint32_t>(planeVertices.size())
+        static_cast<uint32_t>(skyVertices.size())
     );
     renderer->CreateBuffer(
         m_testPlaneIndexBuffer,
         IndexBuffer,
-        planeIndices.data(),
+        skyIndices.data(),
         sizeof(Index),
-        static_cast<uint32_t>(planeIndices.size())
+        static_cast<uint32_t>(skyIndices.size())
     );
 
-    m_scenes.push_back(std::make_shared<Scene>(renderer, ui, "assets/scenes/bistro.glb"));
-    m_scenes[0]->GetTransform().SetScale({0.01, 0.01, 0.01});
-    m_scenes[0]->UpdateAABB();
+    auto bistro = std::make_shared<Scene>(renderer, ui, "assets/scenes/bistro.glb");
+    bistro->GetTransform().SetScale({0.01, 0.01, 0.01});
+    bistro->UpdateAABB();
+    m_scenes.push_back(bistro);
 
-    m_scenes.push_back(std::make_shared<Scene>(renderer, ui, "assets/scenes/DamagedHelmet.glb"));
-    m_scenes[1]->GetTransform().SetEulerRotation({180, 0, -90});
-    m_scenes[1]->GetTransform().SetScale({0.25, 0.25, 0.25});
-    m_scenes[1]->GetTransform().SetPosition({-0.4, -3.3, 1.3});
-    m_scenes[1]->UpdateAABB();
+    auto helmet = std::make_shared<Scene>(renderer, ui, "assets/scenes/DamagedHelmet.glb");
+    helmet->GetTransform().SetEulerRotation({180, 0, -90});
+    helmet->GetTransform().SetScale({0.25, 0.25, 0.25});
+    helmet->GetTransform().SetPosition({-0.4, -3.3, 1.3});
+    helmet->UpdateAABB();
+    m_scenes.push_back(helmet);
 }
 
 World::~World()
