@@ -6,17 +6,17 @@ A renderer written in modern C++ and Vulkan.
 
 ### Resources
 
-- [Sascha Willems: Vulkan examples](https://github.com/SaschaWillems/Vulkan)
+- [Sascha Willems: Vulkan examples](https://github.com/SaschaWillems/Vulkan) (MIT)
 
 ### Third-party code
-- [cgltf](https://github.com/jkuhlmann/cgltf)
-- [glm](https://github.com/g-truc/glm)
-- [imgui](https://github.com/ocornut/imgui)
-- [SDL](https://github.com/libsdl-org/SDL)
-- [slang](https://github.com/shader-slang/slang)
-- [stb](https://github.com/nothings/stb)
-- [VulkanMemoryAllocator](https://github.com/GPUOpen-LibrariesAndSDKs/VulkanMemoryAllocator)
-- [Vulkan-Headers](https://github.com/KhronosGroup/Vulkan-Headers)
+- [cgltf](https://github.com/jkuhlmann/cgltf) (MIT)
+- [glm](https://github.com/g-truc/glm) (MIT)
+- [imgui](https://github.com/ocornut/imgui) (MIT)
+- [SDL](https://github.com/libsdl-org/SDL) (zlib)
+- [slang](https://github.com/shader-slang/slang) (Apache 2.0)
+- [stb](https://github.com/nothings/stb) (MIT / Public Domain)
+- [VulkanMemoryAllocator](https://github.com/GPUOpen-LibrariesAndSDKs/VulkanMemoryAllocator) (MIT)
+- [Vulkan-Headers](https://github.com/KhronosGroup/Vulkan-Headers) (Apache 2.0 / MIT)
 
 ### Assets
 
