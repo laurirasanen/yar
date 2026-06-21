@@ -65,5 +65,10 @@ class Memory
 
         return std::format("{} B", bytes);
     }
+
+    static std::string GetPrettyUsage()
+    {
+        return Pretty(GetUsage() * 1024);
+    }
 };
 }; // namespace yar

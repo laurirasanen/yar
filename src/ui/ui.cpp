@@ -1,3 +1,4 @@
+#include <cstdint>
 #include <stdexcept>
 
 #include <imgui.h>
@@ -92,8 +93,13 @@ void UI::DebugWindow()
             std::format("TPS: {:.0f} ({:.2f} ms)", 1.0 / Time::DeltaTick, Time::DeltaTick * 1000.0);
         ImGui::Text("%s", tps.c_str());
 
-        const auto mem = std::format("MEM: {:d} MB", Memory::GetUsage() / 1024);
-        ImGui::Text("%s", mem.c_str());
+        const auto mem     = std::format("Resident: {}", Memory::GetPrettyUsage());
+        const auto vkStats = GetVulkanAllocatorTotalStatistics();
+        const auto vkMem =
+            std::format("Vulkan: {}", Memory::Pretty(vkStats.total.statistics.allocationBytes));
+        ImGui::Text("Memory:");
+        ImGui::Text("  %s", mem.c_str());
+        ImGui::Text("  %s", vkMem.c_str());
 
         const auto renderStats = m_renderer->GetRenderStats();
         ImGui::Text("Visible:");
