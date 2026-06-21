@@ -7,7 +7,7 @@ A renderer written in modern C++ and Vulkan.
 - SDL3
 - Dear ImGui overlay
 - Slang shader compile at runtime
-- GLTF models
+- GLTF scenes
 - Frustum culling
 
 ## Acknowledgments
@@ -28,12 +28,12 @@ A renderer written in modern C++ and Vulkan.
 
 ### Assets
 
-**assets/models/bistro.glb**
+**assets/scenes/bistro.glb**
 - Amazon Lumberyard Bistro, Open Research Content Archive (ORCA)
 - http://developer.nvidia.com/orca/amazon-lumberyard-bistro
 - (c) 2017 Amazon Lumberyard, CC-BY 4.0
 
-**assets/models/DamagedHelmet.glb**
+**assets/scenes/DamagedHelmet.glb**
 - A fictional helmet with textured damage.
 - https://github.com/KhronosGroup/glTF-Sample-Assets/tree/main/Models/DamagedHelmet
 - (c) 2018 ctxwing, CC BY 4.0 International

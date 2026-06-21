@@ -14,17 +14,17 @@
 
 namespace yar
 {
-class Model
+class Scene
 {
   public:
-    Model() = delete;
-    Model(std::shared_ptr<Renderer> renderer, std::shared_ptr<UI> ui, std::string path);
-    ~Model();
+    Scene() = delete;
+    Scene(std::shared_ptr<Renderer> renderer, std::shared_ptr<UI> ui, std::string path);
+    ~Scene();
 
-    Model(const Model&)            = delete;
-    Model(Model&&)                 = delete;
-    Model& operator=(const Model&) = delete;
-    Model& operator=(Model&&)      = delete;
+    Scene(const Scene&)            = delete;
+    Scene(Scene&&)                 = delete;
+    Scene& operator=(const Scene&) = delete;
+    Scene& operator=(Scene&&)      = delete;
 
     void FrustumCull(std::shared_ptr<Camera> camera);
 

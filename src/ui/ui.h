@@ -55,9 +55,9 @@ class UI
         }
     }
 
-    void SetLoadingModel(std::string model)
+    void SetLoadingScene(std::string scene)
     {
-        m_loadingModel = model;
+        m_loadingScene = scene;
     }
 
     void SetLoadingMesh(std::string mesh)
@@ -90,7 +90,7 @@ class UI
 
     UIState m_state;
 
-    std::string m_loadingModel;
+    std::string m_loadingScene;
     std::string m_loadingMesh;
     std::string m_loadingMaterial;
     std::string m_loadingTexture;

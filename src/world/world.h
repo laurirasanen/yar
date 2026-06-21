@@ -3,7 +3,7 @@
 #include <memory>
 #include <mutex>
 
-#include "../components/model.h"
+#include "../components/scene.h"
 #include "../renderer/renderer.h"
 #include "../ui/ui.h"
 
@@ -34,6 +34,6 @@ class World
     std::shared_ptr<Buffer> m_testPlaneVertexBuffer;
     std::shared_ptr<Buffer> m_testPlaneIndexBuffer;
 
-    std::vector<std::shared_ptr<Model>> m_models;
+    std::vector<std::shared_ptr<Scene>> m_scenes;
 };
 } // namespace yar

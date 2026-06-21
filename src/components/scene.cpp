@@ -1,6 +1,6 @@
 #define CGLTF_IMPLEMENTATION
 
-#include "model.h"
+#include "scene.h"
 #include "../log.h"
 #include "../platform/fs.h"
 #include "../platform/memory.h"
@@ -8,17 +8,17 @@
 
 namespace yar
 {
-Model::Model(std::shared_ptr<Renderer> renderer, std::shared_ptr<UI> ui, std::string path) :
+Scene::Scene(std::shared_ptr<Renderer> renderer, std::shared_ptr<UI> ui, std::string path) :
     m_path(path)
 {
     const auto  full_path = fs_relative_path(path);
     const char* cpath     = full_path.c_str();
-    LOG_DEBUG("Loading model {}", cpath);
-    ui->SetLoadingModel(cpath);
+    LOG_DEBUG("Loading scene {}", cpath);
+    ui->SetLoadingScene(cpath);
 
     if (!fs_exists(full_path))
     {
-        LOG_ERROR("No model found: {}", cpath);
+        LOG_ERROR("No scene found: {}", cpath);
         return;
     }
 
@@ -48,7 +48,7 @@ Model::Model(std::shared_ptr<Renderer> renderer, std::shared_ptr<UI> ui, std::st
         return;
     }
 
-    LOG_DEBUG("Loaded {} from model {}", Memory::Pretty(data->file_size), cpath);
+    LOG_DEBUG("Loaded {} from scene {}", Memory::Pretty(data->file_size), cpath);
 
     size_t totalIndexCount  = 0;
     size_t totalVertexCount = 0;
@@ -136,11 +136,11 @@ Model::Model(std::shared_ptr<Renderer> renderer, std::shared_ptr<UI> ui, std::st
     cgltf_free(data);
 }
 
-Model::~Model()
+Scene::~Scene()
 {
 }
 
-void Model::FrustumCull(std::shared_ptr<Camera> camera)
+void Scene::FrustumCull(std::shared_ptr<Camera> camera)
 {
     for (const auto& mesh : m_meshes)
     {
@@ -148,7 +148,7 @@ void Model::FrustumCull(std::shared_ptr<Camera> camera)
     }
 }
 
-void Model::Render(std::shared_ptr<Renderer> renderer)
+void Scene::Render(std::shared_ptr<Renderer> renderer)
 {
     for (const auto& mesh : m_meshes)
     {
@@ -162,7 +162,7 @@ void Model::Render(std::shared_ptr<Renderer> renderer)
     }
 }
 
-void Model::RenderBounds(std::shared_ptr<Renderer> renderer)
+void Scene::RenderBounds(std::shared_ptr<Renderer> renderer)
 {
     for (const auto& mesh : m_meshes)
     {
@@ -170,7 +170,7 @@ void Model::RenderBounds(std::shared_ptr<Renderer> renderer)
     }
 }
 
-void Model::UpdateAABB()
+void Scene::UpdateAABB()
 {
     for (const auto& mesh : m_meshes)
     {
@@ -178,7 +178,7 @@ void Model::UpdateAABB()
     }
 }
 
-bool Model::ReadIndices(const cgltf_primitive& primitive, std::vector<Index>& indices)
+bool Scene::ReadIndices(const cgltf_primitive& primitive, std::vector<Index>& indices)
 {
     const auto indexCount =
         cgltf_accessor_unpack_indices(primitive.indices, nullptr, sizeof(Index), 0);
@@ -191,7 +191,7 @@ bool Model::ReadIndices(const cgltf_primitive& primitive, std::vector<Index>& in
     return readCount == indexCount;
 }
 
-bool Model::ReadVertices(const cgltf_primitive& primitive, std::vector<VertexShaded>& vertices)
+bool Scene::ReadVertices(const cgltf_primitive& primitive, std::vector<VertexShaded>& vertices)
 {
     std::vector<float> vertPositions = {};
     std::vector<float> vertNormals   = {};
@@ -295,7 +295,7 @@ bool Model::ReadVertices(const cgltf_primitive& primitive, std::vector<VertexSha
     return true;
 }
 
-bool Model::ReadFloats(cgltf_accessor* accessor, std::vector<float>& floats)
+bool Scene::ReadFloats(cgltf_accessor* accessor, std::vector<float>& floats)
 {
     const auto floatCount = cgltf_accessor_unpack_floats(accessor, nullptr, 0);
     floats.resize(floatCount);
@@ -303,7 +303,7 @@ bool Model::ReadFloats(cgltf_accessor* accessor, std::vector<float>& floats)
     return readCount == floatCount;
 }
 
-std::shared_ptr<Material> Model::ReadMaterial(
+std::shared_ptr<Material> Scene::ReadMaterial(
     std::shared_ptr<Renderer> renderer,
     std::shared_ptr<UI>       ui,
     const cgltf_primitive&    primitive
@@ -366,7 +366,7 @@ std::shared_ptr<Material> Model::ReadMaterial(
     return m_materials.back();
 }
 
-std::shared_ptr<Texture> Model::ReadTexture(
+std::shared_ptr<Texture> Scene::ReadTexture(
     std::shared_ptr<Renderer> renderer,
     std::shared_ptr<UI>       ui,
     const cgltf_texture_view* view

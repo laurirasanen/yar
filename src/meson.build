@@ -7,7 +7,7 @@ slang_dep = declare_dependency(
 )
 
 yar_src = files([
-  'components/model.cpp',
+  'components/scene.cpp',
   'components/texture.cpp',
 
   'platform/fs.cpp',
