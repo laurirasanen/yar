@@ -26,9 +26,7 @@ class Model
     Model& operator=(const Model&) = delete;
     Model& operator=(Model&&)      = delete;
 
-    bool FrustumCull(std::shared_ptr<Camera> camera);
-
-    void MarkAsCulled(std::shared_ptr<Renderer> renderer);
+    void FrustumCull(std::shared_ptr<Camera> camera);
 
     void Render(std::shared_ptr<Renderer> renderer);
 

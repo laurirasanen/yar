@@ -71,12 +71,7 @@ void World::Render(std::shared_ptr<Camera> camera)
 
     for (const auto& model : m_models)
     {
-        // FIXME
-        /*if (model->FrustumCull(camera))
-        {
-            model->MarkAsCulled(m_renderer);
-            continue;
-        }*/
+        model->FrustumCull(camera);
         model->Render(m_renderer);
     }
 }

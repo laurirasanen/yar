@@ -74,28 +74,28 @@ struct Transform
         matrix *= glm::mat4_cast(rotation);
     }
 
-    glm::vec3 Forward()
+    glm::vec3 Forward() const
     {
         return GetRotation() * glm::vec3(0.0f, 1.0f, 0.0f);
     }
 
-    glm::vec3 Right()
+    glm::vec3 Right() const
     {
         return GetRotation() * glm::vec3(1.0f, 0.0f, 0.0f);
     }
 
-    glm::vec3 Up()
+    glm::vec3 Up() const
     {
         return GetRotation() * glm::vec3(0.0f, 0.0f, 1.0f);
     }
 
-    glm::vec3 ToGlobalSpace(const glm::vec3 local)
+    glm::vec3 ToGlobalSpace(const glm::vec3 local) const
     {
         // FIXME breaks culling somehow
         return glm::vec3(matrix * glm::vec4(local, 1.0));
     }
 
-    glm::vec3 ToLocalSpace(const glm::vec3 global)
+    glm::vec3 ToLocalSpace(const glm::vec3 global) const
     {
         return glm::vec3(glm::inverse(matrix) * glm::vec4(global, 1.0));
     }

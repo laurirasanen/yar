@@ -134,24 +134,17 @@ Model::Model(std::shared_ptr<Renderer> renderer, std::shared_ptr<UI> ui, std::st
     );
 
     cgltf_free(data);
-
-    UpdateAABB();
 }
 
 Model::~Model()
 {
 }
 
-bool Model::FrustumCull(std::shared_ptr<Camera> camera)
-{
-    return !camera->IsInFrustum(m_aabb);
-}
-
-void Model::MarkAsCulled(std::shared_ptr<Renderer> renderer)
+void Model::FrustumCull(std::shared_ptr<Camera> camera)
 {
     for (const auto& mesh : m_meshes)
     {
-        renderer->AddCulledMesh(mesh->GetVertexBuffer(), mesh->GetIndexBuffer());
+        mesh->FrustumCull(camera);
     }
 }
 
@@ -159,38 +152,30 @@ void Model::Render(std::shared_ptr<Renderer> renderer)
 {
     for (const auto& mesh : m_meshes)
     {
-        renderer->BindPipeline(RenderPipeline::SHADED);
-        renderer->SetModelMatrix(m_transform);
-        renderer->DrawWithBuffers(mesh->GetVertexBuffer(), mesh->GetIndexBuffer());
+        if (mesh->Culled)
+        {
+            mesh->MarkAsCulled(renderer);
+            continue;
+        }
+
+        mesh->Render(renderer, m_transform);
     }
 }
 
 void Model::RenderBounds(std::shared_ptr<Renderer> renderer)
 {
-    // TODO need some debug draw utils
+    for (const auto& mesh : m_meshes)
+    {
+        mesh->RenderBounds(renderer);
+    }
 }
 
 void Model::UpdateAABB()
 {
-    m_aabb.min = {};
-    m_aabb.max = {};
-
     for (const auto& mesh : m_meshes)
     {
-        const auto min = m_transform.ToGlobalSpace(mesh->GetMin());
-        const auto max = m_transform.ToGlobalSpace(mesh->GetMax());
-        m_aabb.min     = glm::min(m_aabb.min, min);
-        m_aabb.max     = glm::max(m_aabb.max, max);
+        mesh->UpdateAABB(m_transform);
     }
-    LOG_DEBUG(
-        "Model aabb min: [{:.2f}, {:.2f}, {:.2f}], max: [{:.2f}, {:.2f}, {:.2f}]",
-        m_aabb.min.x,
-        m_aabb.min.y,
-        m_aabb.min.z,
-        m_aabb.max.x,
-        m_aabb.max.y,
-        m_aabb.max.z
-    );
 }
 
 bool Model::ReadIndices(const cgltf_primitive& primitive, std::vector<Index>& indices)

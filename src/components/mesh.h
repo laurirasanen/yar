@@ -8,6 +8,7 @@
 #include "../renderer/buffer.h"
 #include "../renderer/data_types.h"
 #include "material.h"
+#include "src/components/transform.h"
 
 namespace yar
 {
@@ -30,10 +31,11 @@ class Mesh
         m_indexBuffer(indexBuffer),
         m_material(material)
     {
+        m_aabb = {};
         for (const auto& vert : vertices)
         {
-            m_min = glm::min(m_min, vert.position);
-            m_max = glm::max(m_max, vert.position);
+            m_aabb.min = glm::min(m_aabb.min, vert.position);
+            m_aabb.max = glm::max(m_aabb.max, vert.position);
         }
     }
 
@@ -71,15 +73,46 @@ class Mesh
         return m_material;
     }
 
-    glm::vec3 GetMin() const
+    void UpdateAABB(const Transform& transform)
     {
-        return m_min;
+        m_globalAABB.min = transform.ToGlobalSpace(m_aabb.min);
+        m_globalAABB.max = transform.ToGlobalSpace(m_aabb.min);
+
+        /*
+        LOG_DEBUG(
+            "Mesh aabb min: [{:.2f}, {:.2f}, {:.2f}], max: [{:.2f}, {:.2f}, {:.2f}]",
+            m_globalAABB.min.x,
+            m_globalAABB.min.y,
+            m_globalAABB.min.z,
+            m_globalAABB.max.x,
+            m_globalAABB.max.y,
+            m_globalAABB.max.z
+        );
+        */
     }
 
-    glm::vec3 GetMax() const
+    void FrustumCull(std::shared_ptr<Camera> camera)
     {
-        return m_max;
+        Culled = !camera->IsInFrustum(m_globalAABB);
     }
+
+    void MarkAsCulled(std::shared_ptr<Renderer> renderer)
+    {
+        renderer->AddCulledMesh(m_vertexBuffer, m_indexBuffer);
+    }
+
+    void Render(std::shared_ptr<Renderer> renderer, Transform& transform)
+    {
+        renderer->BindPipeline(RenderPipeline::SHADED);
+        renderer->SetModelMatrix(transform);
+        renderer->DrawWithBuffers(m_vertexBuffer, m_indexBuffer);
+    }
+
+    void RenderBounds(std::shared_ptr<Renderer> renderer)
+    {
+    }
+
+    bool Culled;
 
   private:
     VertexType m_vertexType;
@@ -92,7 +125,7 @@ class Mesh
 
     std::shared_ptr<Material> m_material;
 
-    glm::vec3 m_min;
-    glm::vec3 m_max;
+    AABB m_aabb;
+    AABB m_globalAABB;
 };
 }; // namespace yar
