@@ -76,7 +76,7 @@ void UI::DebugWindow()
             "Debug info",
             &m_state.showWindow[static_cast<unsigned int>(UIWindow::DEBUG)],
             ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoNav
-                | ImGuiWindowFlags_NoDecoration
+                | ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoInputs
         ))
     {
         const auto fps = std::format(
