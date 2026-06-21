@@ -37,10 +37,10 @@ class Model
         return m_transform;
     }
 
+    void UpdateAABB();
+
   private:
     bool ReadFloats(cgltf_accessor* accessor, std::vector<float>& floats);
-
-    void UpdateAABB();
 
     std::string m_path;
 

@@ -288,14 +288,8 @@ void Model::UpdateAABB()
     {
         const auto min = m_transform.ToGlobalSpace(mesh->GetMin());
         const auto max = m_transform.ToGlobalSpace(mesh->GetMax());
-        // clang-format off
-        if (min.x < m_aabb.min.x) m_aabb.min.x = min.x;
-        if (min.y < m_aabb.min.y) m_aabb.min.y = min.y;
-        if (min.z < m_aabb.min.z) m_aabb.min.z = min.z;
-        if (max.x > m_aabb.max.x) m_aabb.max.x = max.x;
-        if (max.y > m_aabb.max.y) m_aabb.max.y = max.y;
-        if (max.z > m_aabb.max.z) m_aabb.max.z = max.z;
-        // clang-format on
+        m_aabb.min     = glm::min(m_aabb.min, min);
+        m_aabb.max     = glm::max(m_aabb.max, max);
     }
     LOG_DEBUG(
         "Model aabb min: [{:.2f}, {:.2f}, {:.2f}], max: [{:.2f}, {:.2f}, {:.2f}]",

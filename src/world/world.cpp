@@ -33,8 +33,15 @@ World::World(std::shared_ptr<Renderer> renderer) : m_renderer(renderer)
     );
 
     // test model
+    m_models.push_back(std::make_shared<Model>(renderer, "assets/models/bistro.glb"));
+    m_models[0]->GetTransform().SetScale({0.01, 0.01, 0.01});
+    m_models[0]->UpdateAABB();
+
     m_models.push_back(std::make_shared<Model>(renderer, "assets/models/DamagedHelmet.glb"));
-    m_models[0]->GetTransform().SetEulerRotation({180, 0, 0});
+    m_models[1]->GetTransform().SetEulerRotation({180, 0, -90});
+    m_models[1]->GetTransform().SetScale({0.25, 0.25, 0.25});
+    m_models[1]->GetTransform().SetPosition({-0.4, -3.3, 1.3});
+    m_models[1]->UpdateAABB();
 }
 
 World::~World()
@@ -62,11 +69,12 @@ void World::Render(std::shared_ptr<Camera> camera)
 
     for (const auto& model : m_models)
     {
-        if (model->FrustumCull(camera))
+        // FIXME
+        /*if (model->FrustumCull(camera))
         {
             model->MarkAsCulled(m_renderer);
             continue;
-        }
+        }*/
         model->Render(m_renderer);
     }
 }

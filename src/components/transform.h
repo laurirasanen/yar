@@ -6,6 +6,7 @@
 #include <glm/ext/quaternion_common.hpp>
 #include <glm/gtc/quaternion.hpp>
 #include <glm/mat4x4.hpp>
+#include <glm/matrix.hpp>
 #include <glm/vec3.hpp>
 
 namespace yar
@@ -90,14 +91,13 @@ struct Transform
 
     glm::vec3 ToGlobalSpace(const glm::vec3 local)
     {
-        const auto global = glm::vec4(local, 1.0) / matrix;
-        return glm::vec3(global);
+        // FIXME breaks culling somehow
+        return glm::vec3(matrix * glm::vec4(local, 1.0));
     }
 
     glm::vec3 ToLocalSpace(const glm::vec3 global)
     {
-        const auto local = glm::vec4(global, 1.0) * matrix;
-        return glm::vec3(local);
+        return glm::vec3(glm::inverse(matrix) * glm::vec4(global, 1.0));
     }
 };
 } // namespace yar

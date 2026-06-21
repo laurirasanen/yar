@@ -1,5 +1,6 @@
 #pragma once
 
+#include <glm/common.hpp>
 #include <glm/vec2.hpp>
 #include <glm/vec3.hpp>
 
@@ -50,13 +51,8 @@ class Mesh
     {
         for (const auto& vert : vertices)
         {
-            m_min.x = std::min(m_min.x, vert.position.x);
-            m_min.y = std::min(m_min.y, vert.position.y);
-            m_min.z = std::min(m_min.z, vert.position.z);
-
-            m_max.x = std::max(m_max.x, vert.position.x);
-            m_max.y = std::max(m_max.y, vert.position.y);
-            m_max.z = std::max(m_max.z, vert.position.z);
+            m_min = glm::min(m_min, vert.position);
+            m_max = glm::max(m_max, vert.position);
         }
         LOG_DEBUG(
             "Mesh min: [{:.2f}, {:.2f}, {:.2f}], max: [{:.2f}, {:.2f}, {:.2f}]",

@@ -23,7 +23,8 @@ Engine::Engine()
     m_inputSettings = std::make_shared<InputSettings>();
     m_window        = std::make_shared<Window>(m_inputSettings);
     m_camera        = std::make_shared<NoclipCamera>();
-    m_camera->transform.SetPosition(glm::vec3(0, -4.0, 0.0));
+    m_camera->transform.SetPosition({-3.25, -3.25, 2.0});
+    m_camera->transform.SetEulerRotation({-10, 0, -75});
 
     m_renderer = std::make_shared<Renderer>(m_window);
 
