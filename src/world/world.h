@@ -5,6 +5,7 @@
 
 #include "../components/model.h"
 #include "../renderer/renderer.h"
+#include "../ui/ui.h"
 
 namespace yar
 {
@@ -12,7 +13,7 @@ class World
 {
   public:
     World() = delete;
-    World(std::shared_ptr<Renderer> renderer);
+    World(std::shared_ptr<Renderer> renderer, std::shared_ptr<UI> ui);
     ~World();
 
     World(const World&)            = delete;
@@ -28,6 +29,7 @@ class World
     std::mutex m_worldMutex;
 
     std::shared_ptr<Renderer> m_renderer;
+    std::shared_ptr<UI>       m_ui;
 
     std::shared_ptr<Buffer> m_testPlaneVertexBuffer;
     std::shared_ptr<Buffer> m_testPlaneIndexBuffer;

@@ -13,6 +13,7 @@ namespace yar
 enum class UIWindow
 {
     DEBUG,
+    LOADING,
     DEMO,
     MAX
 };
@@ -42,16 +43,44 @@ class UI
         m_state.showWindow[index] = !m_state.showWindow[index];
     }
 
+    void SetLoadingModel(std::string model)
+    {
+        m_loadingModel = model;
+    }
+
+    void SetLoadingMesh(std::string mesh)
+    {
+        m_loadingMesh = mesh;
+    }
+
+    void SetLoadingMaterial(std::string material)
+    {
+        m_loadingMaterial = material;
+    }
+
+    void SetLoadingTexture(std::string texture)
+    {
+        m_loadingTexture = texture;
+    }
+
     void Render();
 
   private:
     void DebugWindow();
+    void LoadingWindow();
     void DemoWindow();
 
     std::shared_ptr<Window>   m_window;
     std::shared_ptr<Renderer> m_renderer;
     std::shared_ptr<Camera>   m_camera;
-    VulkanImGuiCreationInfo   m_info;
-    UIState                   m_state;
+
+    VulkanImGuiCreationInfo m_info;
+
+    UIState m_state;
+
+    std::string m_loadingModel;
+    std::string m_loadingMesh;
+    std::string m_loadingMaterial;
+    std::string m_loadingTexture;
 };
 }; // namespace yar

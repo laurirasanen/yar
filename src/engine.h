@@ -23,6 +23,7 @@ class Engine
     ~Engine();
 
   private:
+    void CreateWorld();
     void Frame();
     bool Tick();
 
@@ -36,7 +37,7 @@ class Engine
     std::shared_ptr<Camera>        m_camera;
     std::shared_ptr<Renderer>      m_renderer;
     std::shared_ptr<World>         m_world;
-    std::unique_ptr<UI>            m_ui;
+    std::shared_ptr<UI>            m_ui;
 
     WindowInput m_frameInput;
     WindowInput m_tickInput;

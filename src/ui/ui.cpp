@@ -55,6 +55,7 @@ void UI::Render()
     ImGui::NewFrame();
 
     DebugWindow();
+    LoadingWindow();
     DemoWindow();
 
     ImGui::Render();
@@ -72,6 +73,7 @@ void UI::DebugWindow()
     }
 
     ImGui::SetNextWindowBgAlpha(0.5f);
+
     if (ImGui::Begin(
             "Debug info",
             &m_state.showWindow[static_cast<unsigned int>(UIWindow::DEBUG)],
@@ -121,6 +123,35 @@ void UI::DebugWindow()
         ImGui::Text("  %s", posText.c_str());
         ImGui::Text("  %s", angText.c_str());
 
+        ImGui::End();
+    }
+}
+
+void UI::LoadingWindow()
+{
+    if (!m_state.showWindow[static_cast<unsigned int>(UIWindow::LOADING)])
+    {
+        return;
+    }
+
+    ImGui::SetNextWindowBgAlpha(0.0f);
+    const auto center = ImGui::GetMainViewport()->GetCenter();
+    ImGui::SetNextWindowPos(center, ImGuiCond_Appearing, ImVec2(0.5f, 0.5f));
+
+    if (ImGui::Begin(
+            "Loading info",
+            &m_state.showWindow[static_cast<unsigned int>(UIWindow::LOADING)],
+            ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoBackground
+                | ImGuiWindowFlags_NoNav | ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoInputs
+        ))
+    {
+        ImGui::SetWindowFontScale(3.0f);
+        ImGui::Text("Loading...");
+        ImGui::SetWindowFontScale(1.0f);
+        ImGui::Text("model: %s", m_loadingModel.c_str());
+        ImGui::Text("mesh: %s", m_loadingMesh.c_str());
+        ImGui::Text("material: %s", m_loadingMaterial.c_str());
+        ImGui::Text("texture: %s", m_loadingTexture.c_str());
         ImGui::End();
     }
 }

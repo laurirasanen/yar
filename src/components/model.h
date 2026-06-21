@@ -5,6 +5,7 @@
 #include "cgltf.h"
 
 #include "../renderer/renderer.h"
+#include "../ui/ui.h"
 #include "geometry.h"
 #include "material.h"
 #include "mesh.h"
@@ -17,7 +18,7 @@ class Model
 {
   public:
     Model() = delete;
-    Model(std::shared_ptr<Renderer> renderer, std::string path);
+    Model(std::shared_ptr<Renderer> renderer, std::shared_ptr<UI> ui, std::string path);
     ~Model();
 
     Model(const Model&)            = delete;
@@ -47,11 +48,13 @@ class Model
 
     std::shared_ptr<Material> ReadMaterial(
         std::shared_ptr<Renderer> renderer,
+        std::shared_ptr<UI>       ui,
         const cgltf_primitive&    primitive
     );
 
     std::shared_ptr<Texture> ReadTexture(
         std::shared_ptr<Renderer> renderer,
+        std::shared_ptr<UI>       ui,
         const cgltf_texture_view* view
     );
 

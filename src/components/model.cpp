@@ -8,11 +8,14 @@
 
 namespace yar
 {
-Model::Model(std::shared_ptr<Renderer> renderer, std::string path) : m_path(path)
+Model::Model(std::shared_ptr<Renderer> renderer, std::shared_ptr<UI> ui, std::string path) :
+    m_path(path)
 {
     const auto  full_path = fs_relative_path(path);
     const char* cpath     = full_path.c_str();
     LOG_DEBUG("Loading model {}", cpath);
+    ui->SetLoadingModel(cpath);
+
     if (!fs_exists(full_path))
     {
         LOG_ERROR("No model found: {}", cpath);
@@ -49,11 +52,21 @@ Model::Model(std::shared_ptr<Renderer> renderer, std::string path) : m_path(path
 
     size_t totalIndexCount  = 0;
     size_t totalVertexCount = 0;
+    size_t totalPrimCount   = 0;
+    size_t loadedPrimCount  = 0;
+
+    for (size_t i = 0; i < data->meshes_count; i++)
+    {
+        totalPrimCount += data->meshes[i].primitives_count;
+    }
 
     for (size_t i = 0; i < data->meshes_count; i++)
     {
         for (size_t primIdx = 0; primIdx < data->meshes[i].primitives_count; primIdx++)
         {
+            loadedPrimCount++;
+            ui->SetLoadingMesh(std::format("{}/{}", loadedPrimCount, totalPrimCount));
+
             const auto&               primitive = data->meshes[i].primitives[primIdx];
             std::vector<Index>        indices   = {};
             std::vector<VertexShaded> vertices  = {};
@@ -89,7 +102,7 @@ Model::Model(std::shared_ptr<Renderer> renderer, std::string path) : m_path(path
                 static_cast<uint32_t>(indices.size())
             );
 
-            std::shared_ptr<Material> material = ReadMaterial(renderer, primitive);
+            std::shared_ptr<Material> material = ReadMaterial(renderer, ui, primitive);
 
             auto mesh = std::make_shared<Mesh<VertexShaded>>(
                 vertices,
@@ -307,6 +320,7 @@ bool Model::ReadFloats(cgltf_accessor* accessor, std::vector<float>& floats)
 
 std::shared_ptr<Material> Model::ReadMaterial(
     std::shared_ptr<Renderer> renderer,
+    std::shared_ptr<UI>       ui,
     const cgltf_primitive&    primitive
 )
 {
@@ -326,6 +340,8 @@ std::shared_ptr<Material> Model::ReadMaterial(
         RAND_STR(16, name);
         LOG_WARN("Material has no name, rand: {}", name);
     };
+
+    ui->SetLoadingMaterial(name);
 
     for (const auto& mat : m_materials)
     {
@@ -354,7 +370,7 @@ std::shared_ptr<Material> Model::ReadMaterial(
         return nullptr;
     }
 
-    auto albedoTex = ReadTexture(renderer, albedoView);
+    auto albedoTex = ReadTexture(renderer, ui, albedoView);
     if (!albedoTex)
     {
         LOG_ERROR("Material has no albedo texture");
@@ -367,6 +383,7 @@ std::shared_ptr<Material> Model::ReadMaterial(
 
 std::shared_ptr<Texture> Model::ReadTexture(
     std::shared_ptr<Renderer> renderer,
+    std::shared_ptr<UI>       ui,
     const cgltf_texture_view* view
 )
 {
@@ -408,6 +425,8 @@ std::shared_ptr<Texture> Model::ReadTexture(
         RAND_STR(16, name);
         LOG_WARN("Texture has no name, rand: {}", name);
     }
+
+    ui->SetLoadingTexture(name);
 
     for (const auto& tex : m_textures)
     {
