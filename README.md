@@ -4,6 +4,10 @@ A renderer written in modern C++ and Vulkan.
 
 ## Acknowledgments
 
+### Resources
+
+- [Sascha Willems: Vulkan examples](https://github.com/SaschaWillems/Vulkan)
+
 ### Third-party code
 - [cgltf](https://github.com/jkuhlmann/cgltf)
 - [glm](https://github.com/g-truc/glm)
