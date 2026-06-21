@@ -148,6 +148,7 @@ void UI::LoadingWindow()
         ImGui::SetWindowFontScale(3.0f);
         ImGui::Text("Loading...");
         ImGui::SetWindowFontScale(1.0f);
+        ImGui::Text("elapsed: %.2fs", Time::Now() - m_loadingStartTime);
         ImGui::Text("model: %s", m_loadingModel.c_str());
         ImGui::Text("mesh: %s", m_loadingMesh.c_str());
         ImGui::Text("material: %s", m_loadingMaterial.c_str());

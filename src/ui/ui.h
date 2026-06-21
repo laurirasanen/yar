@@ -41,6 +41,18 @@ class UI
     {
         auto index                = static_cast<unsigned int>(window);
         m_state.showWindow[index] = !m_state.showWindow[index];
+
+        if (window == UIWindow::LOADING)
+        {
+            if (m_state.showWindow[static_cast<unsigned int>(UIWindow::LOADING)])
+            {
+                m_loadingStartTime = Time::Now();
+            }
+            else
+            {
+                LOG_INFO("Finished loading in {:.2f} seconds", Time::Now() - m_loadingStartTime);
+            }
+        }
     }
 
     void SetLoadingModel(std::string model)
@@ -82,5 +94,6 @@ class UI
     std::string m_loadingMesh;
     std::string m_loadingMaterial;
     std::string m_loadingTexture;
+    double      m_loadingStartTime;
 };
 }; // namespace yar
