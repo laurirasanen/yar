@@ -2,6 +2,14 @@
 
 A renderer written in modern C++ and Vulkan.
 
+- C++23
+- Vulkan 1.4
+- SDL3
+- Dear ImGui overlay
+- Slang shader compile at runtime
+- GLTF models
+- Frustum culling
+
 ## Acknowledgments
 
 ### Resources
