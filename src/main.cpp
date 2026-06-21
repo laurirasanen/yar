@@ -38,7 +38,7 @@ char* GetLaunchArg(const char* name, int argc, char** argv)
 int main(int argc, char** argv)
 {
 #if NDEBUG
-    auto logLevel = yar::LogLevel::Warning;
+    auto logLevel = yar::LogLevel::Warn;
 #else
     auto logLevel = yar::LogLevel::Debug;
 #endif
