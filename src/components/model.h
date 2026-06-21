@@ -63,6 +63,5 @@ class Model
     std::vector<std::shared_ptr<Texture>>            m_textures;
 
     Transform m_transform;
-    AABB      m_aabb;
 };
 }; // namespace yar
