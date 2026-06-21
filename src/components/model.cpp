@@ -54,150 +54,22 @@ Model::Model(std::shared_ptr<Renderer> renderer, std::string path) : m_path(path
     {
         for (size_t primIdx = 0; primIdx < data->meshes[i].primitives_count; primIdx++)
         {
-            const auto& primitive = data->meshes[i].primitives[primIdx];
+            const auto&               primitive = data->meshes[i].primitives[primIdx];
+            std::vector<Index>        indices   = {};
+            std::vector<VertexShaded> vertices  = {};
 
-            std::vector<Index> indices = {};
-
-            const auto indexCount =
-                cgltf_accessor_unpack_indices(primitive.indices, nullptr, sizeof(Index), 0);
-
-            indices.resize(indexCount);
-
-            auto readCount = cgltf_accessor_unpack_indices(
-                primitive.indices,
-                indices.data(),
-                sizeof(Index),
-                indexCount
-            );
-
-            if (readCount != indexCount)
+            if (!ReadIndices(primitive, indices))
             {
-                LOG_ERROR(
-                    "Failed to read gltf indices ({} != {}): {}",
-                    readCount,
-                    indexCount,
-                    cpath
-                );
+                LOG_ERROR("Failed to read gltf indices: {}", cpath);
                 cgltf_free(data);
                 return;
             }
 
-            std::vector<float> vertPositions = {};
-            std::vector<float> vertNormals   = {};
-            std::vector<float> vertUVs       = {};
-            for (size_t attrIdx = 0; attrIdx < primitive.attributes_count; attrIdx++)
+            if (!ReadVertices(primitive, vertices))
             {
-                switch (primitive.attributes[attrIdx].type)
-                {
-                    case cgltf_attribute_type_position:
-                    {
-                        if (!ReadFloats(primitive.attributes[attrIdx].data, vertPositions))
-                        {
-                            LOG_ERROR("Failed to read gltf normals: {}", cpath);
-                            cgltf_free(data);
-                            return;
-                        }
-                        break;
-                    }
-
-                    case cgltf_attribute_type_normal:
-                    {
-                        if (!ReadFloats(primitive.attributes[attrIdx].data, vertNormals))
-                        {
-                            LOG_ERROR("Failed to read gltf normals: {}", cpath);
-                            cgltf_free(data);
-                            return;
-                        }
-                        break;
-                    }
-
-                    case cgltf_attribute_type_texcoord:
-                    {
-                        if (!ReadFloats(primitive.attributes[attrIdx].data, vertUVs))
-                        {
-                            LOG_ERROR("Failed to read gltf UVs: {}", cpath);
-                            cgltf_free(data);
-                            return;
-                        }
-                        break;
-                    }
-
-                    default:
-                    {
-                        break;
-                    }
-                }
-            }
-
-            if (vertPositions.size() <= 0)
-            {
-                LOG_ERROR("gltf has no vertex positions: {}", cpath);
+                LOG_ERROR("Failed to read gltf vertices: {}", cpath);
                 cgltf_free(data);
                 return;
-            }
-            if (vertNormals.size() <= 0)
-            {
-                LOG_ERROR("gltf has no vertex normals: {}", cpath);
-                cgltf_free(data);
-                return;
-            }
-            if (vertUVs.size() <= 0)
-            {
-                LOG_ERROR("gltf has no vertex UVs: {}", cpath);
-                cgltf_free(data);
-                return;
-            }
-
-            if (vertPositions.size() % 3 != 0)
-            {
-                LOG_ERROR(
-                    "gltf vertex positions count not multiple of 3 ({}): {}",
-                    vertPositions.size(),
-                    cpath
-                );
-                cgltf_free(data);
-                return;
-            }
-            if (vertNormals.size() != vertPositions.size())
-            {
-                LOG_ERROR(
-                    "gltf vertex normals invalid size ({}/{}): {}",
-                    vertNormals.size(),
-                    vertPositions.size(),
-                    cpath
-                );
-                cgltf_free(data);
-                return;
-            }
-            if (vertUVs.size() != 2 * vertPositions.size() / 3)
-            {
-                LOG_ERROR(
-                    "gltf vertex UVs invalid size ({}/{}): {}",
-                    vertUVs.size(),
-                    vertPositions.size(),
-                    cpath
-                );
-                cgltf_free(data);
-                return;
-            }
-
-            const size_t vertexCount = vertPositions.size() / 3;
-
-            std::vector<VertexShaded> vertices = {};
-            vertices.resize(vertexCount);
-
-            for (size_t vertIdx = 0; vertIdx < vertexCount; vertIdx++)
-            {
-                vertices[vertIdx].position.x = vertPositions[vertIdx * 3 + 0];
-                vertices[vertIdx].position.y = vertPositions[vertIdx * 3 + 1];
-                vertices[vertIdx].position.z = vertPositions[vertIdx * 3 + 2];
-
-                vertices[vertIdx].normal.x = vertNormals[vertIdx * 3 + 0];
-                vertices[vertIdx].normal.y = vertNormals[vertIdx * 3 + 1];
-                vertices[vertIdx].normal.z = vertNormals[vertIdx * 3 + 2];
-
-                vertices[vertIdx].uv.x = vertUVs[vertIdx * 2 + 0];
-                vertices[vertIdx].uv.y = vertUVs[vertIdx * 2 + 1];
             }
 
             std::shared_ptr<Buffer> vertexBuffer;
@@ -221,8 +93,8 @@ Model::Model(std::shared_ptr<Renderer> renderer, std::string path) : m_path(path
                 std::make_shared<Mesh<VertexShaded>>(vertices, indices, vertexBuffer, indexBuffer);
             m_meshes.push_back(mesh);
 
-            totalIndexCount += indexCount;
-            totalVertexCount += vertexCount;
+            totalIndexCount += indices.size();
+            totalVertexCount += vertices.size();
         }
     }
 
@@ -269,6 +141,123 @@ void Model::Render(std::shared_ptr<Renderer> renderer)
 void Model::RenderBounds(std::shared_ptr<Renderer> renderer)
 {
     // TODO need some debug draw utils
+}
+
+bool Model::ReadIndices(const cgltf_primitive& primitive, std::vector<Index>& indices)
+{
+    const auto indexCount =
+        cgltf_accessor_unpack_indices(primitive.indices, nullptr, sizeof(Index), 0);
+
+    indices.resize(indexCount);
+
+    auto readCount =
+        cgltf_accessor_unpack_indices(primitive.indices, indices.data(), sizeof(Index), indexCount);
+
+    return readCount == indexCount;
+}
+
+bool Model::ReadVertices(const cgltf_primitive& primitive, std::vector<VertexShaded>& vertices)
+{
+    std::vector<float> vertPositions = {};
+    std::vector<float> vertNormals   = {};
+    std::vector<float> vertUVs       = {};
+
+    for (size_t attrIdx = 0; attrIdx < primitive.attributes_count; attrIdx++)
+    {
+        switch (primitive.attributes[attrIdx].type)
+        {
+            case cgltf_attribute_type_position:
+            {
+                if (!ReadFloats(primitive.attributes[attrIdx].data, vertPositions))
+                {
+                    LOG_ERROR("Failed to read gltf normals: {}");
+                    return false;
+                }
+                break;
+            }
+
+            case cgltf_attribute_type_normal:
+            {
+                if (!ReadFloats(primitive.attributes[attrIdx].data, vertNormals))
+                {
+                    LOG_ERROR("Failed to read gltf normals: {}");
+                    return false;
+                }
+                break;
+            }
+
+            case cgltf_attribute_type_texcoord:
+            {
+                if (!ReadFloats(primitive.attributes[attrIdx].data, vertUVs))
+                {
+                    LOG_ERROR("Failed to read gltf UVs: {}");
+                    return false;
+                }
+                break;
+            }
+
+            default:
+            {
+                break;
+            }
+        }
+    }
+
+    if (vertPositions.size() <= 0)
+    {
+        LOG_ERROR("gltf has no vertex positions: {}");
+        return false;
+    }
+    if (vertNormals.size() <= 0)
+    {
+        LOG_ERROR("gltf has no vertex normals: {}");
+        return false;
+    }
+    if (vertUVs.size() <= 0)
+    {
+        LOG_ERROR("gltf has no vertex UVs: {}");
+        return false;
+    }
+
+    if (vertPositions.size() % 3 != 0)
+    {
+        LOG_ERROR("gltf vertex positions count not multiple of 3 ({})", vertPositions.size());
+        return false;
+    }
+    if (vertNormals.size() != vertPositions.size())
+    {
+        LOG_ERROR(
+            "gltf vertex normals invalid size ({}/{}): {}",
+            vertNormals.size(),
+            vertPositions.size()
+        );
+        return false;
+    }
+    if (vertUVs.size() != 2 * vertPositions.size() / 3)
+    {
+        LOG_ERROR("gltf vertex UVs invalid size ({}/{}): {}", vertUVs.size(), vertPositions.size());
+        return false;
+    }
+
+    const size_t vertexCount = vertPositions.size() / 3;
+
+    vertices.resize(vertexCount);
+
+    for (size_t vertIdx = 0; vertIdx < vertexCount; vertIdx++)
+    {
+        vertices[vertIdx].position.x = vertPositions[vertIdx * 3 + 0];
+        vertices[vertIdx].position.y = vertPositions[vertIdx * 3 + 1];
+        vertices[vertIdx].position.z = vertPositions[vertIdx * 3 + 2];
+
+        vertices[vertIdx].normal.x = vertNormals[vertIdx * 3 + 0];
+        vertices[vertIdx].normal.y = vertNormals[vertIdx * 3 + 1];
+        vertices[vertIdx].normal.z = vertNormals[vertIdx * 3 + 2];
+
+        vertices[vertIdx].uv.x = vertUVs[vertIdx * 2 + 0];
+        vertices[vertIdx].uv.y = vertUVs[vertIdx * 2 + 1];
+    }
+
+    return true;
 }
 
 bool Model::ReadFloats(cgltf_accessor* accessor, std::vector<float>& floats)

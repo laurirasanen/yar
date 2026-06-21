@@ -40,6 +40,8 @@ class Model
     void UpdateAABB();
 
   private:
+    bool ReadIndices(const cgltf_primitive& primitive, std::vector<Index>& indices);
+    bool ReadVertices(const cgltf_primitive& primitive, std::vector<VertexShaded>& vertices);
     bool ReadFloats(cgltf_accessor* accessor, std::vector<float>& floats);
 
     std::string m_path;
