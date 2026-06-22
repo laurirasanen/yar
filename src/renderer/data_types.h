@@ -62,8 +62,8 @@ struct ShaderGlobalData
 
     ShaderGlobalData()
     {
-        lightDir     = glm::vec4(glm::normalize(glm::vec3(0.15f, 0.45, 1.0f)), 0);
-        lightColor   = glm::vec4(1.0f, 1.0f, 0.9f, 10.0f);
+        lightDir     = glm::vec4(glm::normalize(glm::vec3(-0.3f, -0.45f, 0.6f)), 0);
+        lightColor   = glm::vec4(1.0f, 1.0f, 0.9f, 15.0f);
         ambientLight = glm::vec4(0.6f, 0.85f, 1.0f, 0.05f);
     }
 

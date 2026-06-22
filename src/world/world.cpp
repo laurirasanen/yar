@@ -103,24 +103,41 @@ void World::Load()
         static_cast<uint32_t>(skyIndices.size())
     );
 
-    auto      bistro = std::make_shared<Scene>(m_renderer, m_ui, "assets/scenes/bistro.glb");
-    Transform trans  = {};
-    trans.SetEulerRotation({90, 0, 0});
-    trans.SetScale({0.01, 0.01, 0.01});
-    bistro->SetTransform(trans);
-    m_scenes.push_back(bistro);
+    Transform trans = {};
 
-    auto      helmet = std::make_shared<Scene>(m_renderer, m_ui, "assets/scenes/DamagedHelmet.glb");
-    Transform helmTrans = {};
-    helmTrans.SetEulerRotation({180, 0, -90});
-    helmTrans.SetScale({0.25, 0.25, 0.25});
-    helmTrans.SetPosition({-0.4, -3.3, 1.3});
-    helmet->SetTransform(helmTrans);
-    m_scenes.push_back(helmet);
+    auto flightHelmet = std::make_shared<Scene>(m_renderer, m_ui, "assets/scenes/FlightHelmet.glb");
+    trans.SetEulerRotation({90, 0, 0});
+    trans.SetPosition({-0.3, -0.1, -0.3});
+    flightHelmet->SetTransform(trans);
+    m_scenes.push_back(flightHelmet);
+
+    auto damagedHelmet =
+        std::make_shared<Scene>(m_renderer, m_ui, "assets/scenes/DamagedHelmet.glb");
+    trans = {};
+    trans.SetEulerRotation({180, 0, 0});
+    trans.SetScale({0.3, 0.3, 0.3});
+    trans.SetPosition({0.3, 0, 0});
+    damagedHelmet->SetTransform(trans);
+    m_scenes.push_back(damagedHelmet);
 }
 
 void World::Frame()
 {
+    if (!m_loaded)
+    {
+        return;
+    }
+
+    for (auto& scene : m_scenes)
+    {
+        for (auto& mesh : scene->GetMeshes())
+        {
+            auto angles = mesh->GetTransform()->GetEulerRotation();
+            angles.z += static_cast<float>(Time::DeltaFrame * 25.0);
+            mesh->GetTransform()->SetEulerRotation(angles);
+            mesh->UpdateAABB();
+        }
+    }
 }
 
 void World::Tick()

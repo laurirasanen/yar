@@ -24,7 +24,7 @@ class VulkanImage
         uint32_t                  height,
         uint32_t                  channels,
         size_t                    size,
-        TextureFormat               type
+        TextureFormat             type
     );
 
     ~VulkanImage();

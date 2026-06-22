@@ -73,6 +73,12 @@ Scene::Scene(std::shared_ptr<Renderer> renderer, std::shared_ptr<UI> ui, std::st
             std::vector<Index>        indices   = {};
             std::vector<VertexShaded> vertices  = {};
 
+            if (primitive.type != cgltf_primitive_type_triangles)
+            {
+                LOG_ERROR("Unhandled primitive type {}", static_cast<int>(primitive.type));
+                continue;
+            }
+
             if (!ReadIndices(primitive, indices))
             {
                 LOG_ERROR("Failed to read gltf indices: {}", cpath);
@@ -97,6 +103,35 @@ Scene::Scene(std::shared_ptr<Renderer> renderer, std::shared_ptr<UI> ui, std::st
             {
                 LOG_WARN("gltf has a primitive with no vertices");
                 continue;
+            }
+
+            for (size_t idx = 0; idx < indices.size(); idx += 3)
+            {
+                const auto idx0 = indices[idx];
+                const auto idx1 = indices[idx + 1];
+                const auto idx2 = indices[idx + 2];
+
+                const auto& v0 = vertices[idx0];
+                const auto& v1 = vertices[idx1];
+                const auto& v2 = vertices[idx2];
+
+                const auto deltaPos1 = v1.position - v0.position;
+                const auto deltaPos2 = v2.position - v0.position;
+
+                const auto deltaUv1 = v1.uv - v0.uv;
+                const auto deltaUv2 = v2.uv - v0.uv;
+
+                const auto radius = 1.0f / (deltaUv1.x * deltaUv2.y - deltaUv1.y * deltaUv2.x);
+
+                const auto tangent   = (deltaPos1 * deltaUv2.y - deltaPos2 * deltaUv1.y) * radius;
+                const auto bitangent = (deltaPos2 * deltaUv1.x - deltaPos1 * deltaUv2.x) * -radius;
+
+                vertices[idx0].tangent   = tangent;
+                vertices[idx1].tangent   = tangent;
+                vertices[idx2].tangent   = tangent;
+                vertices[idx0].bitangent = bitangent;
+                vertices[idx1].bitangent = bitangent;
+                vertices[idx2].bitangent = bitangent;
             }
 
             std::shared_ptr<Buffer> vertexBuffer;
@@ -169,11 +204,9 @@ bool Scene::ReadIndices(const cgltf_primitive& primitive, std::vector<Index>& in
 
 bool Scene::ReadVertices(const cgltf_primitive& primitive, std::vector<VertexShaded>& vertices)
 {
-    std::vector<float> vertPositions  = {};
-    std::vector<float> vertNormals    = {};
-    std::vector<float> vertTangents   = {};
-    std::vector<float> vertBitangents = {};
-    std::vector<float> vertUVs        = {};
+    std::vector<float> vertPositions = {};
+    std::vector<float> vertNormals   = {};
+    std::vector<float> vertUVs       = {};
 
     for (size_t attrIdx = 0; attrIdx < primitive.attributes_count; attrIdx++)
     {
@@ -194,16 +227,6 @@ bool Scene::ReadVertices(const cgltf_primitive& primitive, std::vector<VertexSha
                 if (!ReadFloats(primitive.attributes[attrIdx].data, vertNormals))
                 {
                     LOG_ERROR("Failed to read mesh normals");
-                    return false;
-                }
-                break;
-            }
-
-            case cgltf_attribute_type_tangent:
-            {
-                if (!ReadFloats(primitive.attributes[attrIdx].data, vertTangents))
-                {
-                    LOG_ERROR("Failed to read mesh tangents");
                     return false;
                 }
                 break;
@@ -236,17 +259,11 @@ bool Scene::ReadVertices(const cgltf_primitive& primitive, std::vector<VertexSha
         LOG_ERROR("mesh has no vertex normals");
         return false;
     }
-    if (vertTangents.size() <= 0)
-    {
-        LOG_ERROR("mesh has no vertex tangents");
-        return false;
-    }
     if (vertUVs.size() <= 0)
     {
         LOG_ERROR("mesh has no vertex UVs");
         return false;
     }
-
     if (vertPositions.size() % 3 != 0)
     {
         LOG_ERROR("mesh vertex positions count not multiple of 3 ({})", vertPositions.size());
@@ -257,15 +274,6 @@ bool Scene::ReadVertices(const cgltf_primitive& primitive, std::vector<VertexSha
         LOG_ERROR(
             "mesh vertex normals invalid size ({}/{})",
             vertNormals.size(),
-            vertPositions.size()
-        );
-        return false;
-    }
-    if (vertTangents.size() != 4 * vertPositions.size() / 3)
-    {
-        LOG_ERROR(
-            "mesh vertex tangents invalid size ({}/{})",
-            vertTangents.size(),
             vertPositions.size()
         );
         return false;
@@ -289,14 +297,6 @@ bool Scene::ReadVertices(const cgltf_primitive& primitive, std::vector<VertexSha
         vertices[vertIdx].normal.x = vertNormals[vertIdx * 3 + 0];
         vertices[vertIdx].normal.y = vertNormals[vertIdx * 3 + 1];
         vertices[vertIdx].normal.z = vertNormals[vertIdx * 3 + 2];
-
-        vertices[vertIdx].tangent.x = vertTangents[vertIdx * 3 + 0];
-        vertices[vertIdx].tangent.y = vertTangents[vertIdx * 3 + 1];
-        vertices[vertIdx].tangent.z = vertTangents[vertIdx * 3 + 2];
-        vertices[vertIdx].tangent *= vertTangents[vertIdx * 3 + 3];
-
-        vertices[vertIdx].bitangent =
-            glm::cross(vertices[vertIdx].normal, vertices[vertIdx].tangent);
 
         vertices[vertIdx].uv.x = vertUVs[vertIdx * 2 + 0];
         vertices[vertIdx].uv.y = vertUVs[vertIdx * 2 + 1];
@@ -398,13 +398,13 @@ std::shared_ptr<Texture> Scene::ReadTexture(
 {
     if (!view)
     {
-        LOG_ERROR("Null texture view");
+        LOG_DEBUG("Null texture view");
         return nullptr;
     }
 
     if (!view->texture)
     {
-        LOG_ERROR("Texture view has no texture");
+        LOG_DEBUG("Texture view has no texture");
         return nullptr;
     }
 
@@ -450,7 +450,17 @@ std::shared_ptr<Texture> Scene::ReadTexture(
     const auto mime = view->texture->image->mime_type;
     const auto data =
         static_cast<const void*>(cgltf_buffer_view_data(view->texture->image->buffer_view));
-    const auto size = static_cast<size_t>(view->texture->image->buffer_view->size);
+    const auto size   = static_cast<size_t>(view->texture->image->buffer_view->size);
+    glm::vec2  offset = {0.0f, 0.0f};
+    glm::vec2  scale  = {1.0f, 1.0f};
+
+    if (view->has_transform)
+    {
+        offset.x = view->transform.offset[0];
+        offset.y = view->transform.offset[1];
+        scale.x  = view->transform.scale[0];
+        scale.y  = view->transform.scale[1];
+    }
 
     TextureFormat type = TextureFormat::FMT_UNKNOWN;
     if (std::strcmp(mime, "image/jpeg") == 0)
