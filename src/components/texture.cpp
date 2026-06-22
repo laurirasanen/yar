@@ -53,6 +53,19 @@ Texture::Texture(
         );
     }
 
+    m_transparent = false;
+    if (m_originalChannels == 4)
+    {
+        for (size_t i = 0; i < size; i += 4)
+        {
+            if (m_pixels[i] < 255)
+            {
+                m_transparent = true;
+                break;
+            }
+        }
+    }
+
     m_image = std::make_shared<VulkanImage>(
         renderer,
         static_cast<const void*>(m_pixels),

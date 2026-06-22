@@ -57,7 +57,7 @@ class Texture
 
     bool HasTransparency()
     {
-        return m_originalChannels == 4;
+        return m_transparent;
     }
 
   private:
@@ -69,6 +69,8 @@ class Texture
     int m_originalChannels;
 
     stbi_uc* m_pixels;
+
+    bool m_transparent;
 
     std::shared_ptr<VulkanImage> m_image;
 };
