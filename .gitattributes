@@ -2,3 +2,5 @@
 /assets/models/bistro.glb filter=lfs diff=lfs merge=lfs -text
 /assets/scenes/DamagedHelmet.glb filter=lfs diff=lfs merge=lfs -text
 /assets/scenes/bistro.glb filter=lfs diff=lfs merge=lfs -text
+/assets/scenes/FlightHelmet.glb filter=lfs diff=lfs merge=lfs -text
+/assets/scenes/Sponza.glb filter=lfs diff=lfs merge=lfs -text
