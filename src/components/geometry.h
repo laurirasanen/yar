@@ -1,7 +1,5 @@
 #pragma once
 
-#include "../log.h"
-
 #include <glm/geometric.hpp>
 #include <glm/vec3.hpp>
 #include <glm/vec4.hpp>

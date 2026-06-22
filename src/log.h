@@ -2,7 +2,6 @@
 
 #include "time.h"
 
-#include <cstdio>
 #include <format>
 #include <iostream>
 #include <mutex>

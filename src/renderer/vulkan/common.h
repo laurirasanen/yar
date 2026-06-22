@@ -30,7 +30,6 @@ struct VulkanImGuiCreationInfo
     ImGui_ImplVulkan_InitInfo     imInit;
 };
 
-// TODO: relevant for 1.4 / synchronization2?
 constexpr static VkPipelineStageFlags2 GetPipelineStageFlags(const VkImageLayout imageLayout)
 {
     switch (imageLayout)

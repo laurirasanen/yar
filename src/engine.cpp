@@ -1,8 +1,6 @@
 #include <functional>
 #include <memory>
-#include <stdexcept>
 #include <stop_token>
-#include <system_error>
 #include <thread>
 
 #include <imgui.h>

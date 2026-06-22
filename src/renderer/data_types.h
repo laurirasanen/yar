@@ -1,7 +1,6 @@
 #pragma once
 
 #include <cstdint>
-#include <glm/geometric.hpp>
 #include <memory>
 
 #include <glm/ext/matrix_clip_space.hpp>
@@ -9,13 +8,13 @@
 #include <glm/ext/quaternion_common.hpp>
 #include <glm/ext/quaternion_float.hpp>
 #include <glm/ext/quaternion_transform.hpp>
+#include <glm/geometric.hpp>
 #include <glm/gtc/constants.hpp>
 #include <glm/mat4x4.hpp>
 #include <glm/matrix.hpp>
 #include <glm/vec3.hpp>
 
 #include "../components/camera.h"
-#include "../log.h"
 
 namespace yar
 {

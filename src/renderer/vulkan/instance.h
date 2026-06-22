@@ -4,7 +4,6 @@
 #include <vector>
 
 #include "../../window/window.h"
-#include "common.h"
 
 namespace yar
 {

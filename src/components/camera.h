@@ -10,7 +10,6 @@
 #include <glm/gtc/constants.hpp>
 #include <glm/matrix.hpp>
 
-#include "../log.h"
 #include "../time.h"
 #include "../window/input.h"
 #include "geometry.h"

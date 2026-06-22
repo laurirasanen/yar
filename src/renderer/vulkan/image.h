@@ -1,11 +1,8 @@
 #pragma once
 
 #include "../../components/texture.h"
-#include "buffer.h"
-#include "common.h"
 #include "vma.h"
 
-#include <vector>
 #include <vulkan/vulkan_core.h>
 
 namespace yar

@@ -1,10 +1,8 @@
 #pragma once
 
-#include <cstdint>
 #include <string>
 #include <vector>
 
-#include "slang-com-helper.h"
 #include "slang-com-ptr.h"
 #include "slang.h"
 

@@ -4,7 +4,6 @@
 
 #include "vulkan/vulkan_core.h"
 
-#include "../../components/material.h"
 #include "../../log.h"
 #include "attributes.h"
 #include "device.h"

@@ -1,5 +1,5 @@
 #define VMA_IMPLEMENTATION
-#define VMA_VULKAN_VERSION 1004000 // Vulkan 1.4
+#define VMA_VULKAN_VERSION 1004000
 
 #include <vk_mem_alloc.h>
 

@@ -1,5 +1,4 @@
 #include "buffer.h"
-#include "src/renderer/buffer.h"
 
 namespace yar
 {

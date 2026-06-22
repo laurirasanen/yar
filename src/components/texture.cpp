@@ -1,4 +1,3 @@
-#include <cstdlib>
 #define STB_IMAGE_IMPLEMENTATION
 #include "texture.h"
 
@@ -6,6 +5,7 @@
 #include "../renderer/vulkan/image.h"
 
 #include <climits>
+#include <cstdlib>
 
 namespace yar
 {
