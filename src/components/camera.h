@@ -1,6 +1,7 @@
 #pragma once
 
 #include <algorithm>
+#include <cfloat>
 
 #include <glm/ext/matrix_transform.hpp>
 #include <glm/ext/quaternion_float.hpp>
@@ -125,6 +126,26 @@ class Camera
         }
 
         return true;
+    }
+
+    float GetDistance(const AABB& aabb)
+    {
+        const glm::vec3 corners[] = {
+            glm::vec3(aabb.min.x, aabb.min.y, aabb.min.z),
+            glm::vec3(aabb.max.x, aabb.min.y, aabb.min.z),
+            glm::vec3(aabb.min.x, aabb.max.y, aabb.min.z),
+            glm::vec3(aabb.max.x, aabb.max.y, aabb.min.z),
+            glm::vec3(aabb.min.x, aabb.min.y, aabb.max.z),
+            glm::vec3(aabb.max.x, aabb.min.y, aabb.max.z),
+            glm::vec3(aabb.min.x, aabb.max.y, aabb.max.z),
+            glm::vec3(aabb.max.x, aabb.max.y, aabb.max.z),
+        };
+        float distance = FLT_MAX;
+        for (const auto& corner : corners)
+        {
+            distance = std::min(distance, glm::length(corner - transform.GetPosition()));
+        }
+        return distance;
     }
 
     virtual void HandleInput(WindowInput) {};

@@ -10,16 +10,17 @@
 #include <vulkan/vulkan_core.h>
 
 #include "../components/camera.h"
+#include "../components/mesh.h"
 #include "../components/rect.h"
 #include "../window/window.h"
 #include "buffer.h"
 #include "data_types.h"
 #include "vulkan/buffer.h"
 #include "vulkan/common.h"
-#include "vulkan/descriptor_set.h"
 #include "vulkan/device.h"
 #include "vulkan/instance.h"
 #include "vulkan/pipeline.h"
+#include "vulkan/ubo_descriptor_set.h"
 
 namespace yar
 {
@@ -30,6 +31,7 @@ struct RenderStats
     size_t MeshCount;
     size_t VertexCount;
     size_t IndexCount;
+    double SortTime;
 };
 
 struct CullStats
@@ -37,6 +39,7 @@ struct CullStats
     size_t MeshCount;
     size_t VertexCount;
     size_t IndexCount;
+    double CullTime;
 };
 
 enum RenderPipeline
@@ -94,9 +97,9 @@ class Renderer
         return m_device.GetTemporaryCommandBuffer();
     }
 
-    void SubmitTemporaryCommandBuffer(VkCommandBuffer buffer)
+    void SubmitTemporaryCommandBuffer(VkCommandBuffer commandBuffer)
     {
-        m_device.SubmitTemporaryCommandBuffer(buffer);
+        m_device.SubmitTemporaryCommandBuffer(commandBuffer);
     }
 
     void CreateBuffer(
@@ -107,25 +110,15 @@ class Renderer
         uint32_t                 elementCount
     )
     {
-        auto hostBuffer = std::make_shared<VulkanBuffer>(
+        auto vkBuffer = std::make_shared<VulkanBuffer>(
             m_device.GetVkDevice(),
             bufferType,
-            Host,
+            SecretThirdOption,
             elementSize,
             elementCount
         );
-        auto deviceBuffer = std::make_shared<VulkanBuffer>(
-            m_device.GetVkDevice(),
-            bufferType,
-            Device,
-            elementSize,
-            elementCount
-        );
-        hostBuffer->Write(data, elementSize * elementCount);
-        auto tempBuffer = GetTemporaryCommandBuffer();
-        hostBuffer->CopyToDevice(tempBuffer, static_pointer_cast<Buffer>(deviceBuffer));
-        SubmitTemporaryCommandBuffer(tempBuffer);
-        buffer = static_pointer_cast<Buffer>(deviceBuffer);
+        std::memcpy(vkBuffer->GetAllocationInfo().pMappedData, data, elementSize * elementCount);
+        buffer = static_pointer_cast<Buffer>(vkBuffer);
     }
 
     void BindPipeline(RenderPipeline pipe)
@@ -177,11 +170,76 @@ class Renderer
         }
     }
 
-    void SetModelMatrix(const Transform& trans)
+    void CullMeshes(
+        std::shared_ptr<Camera>                           camera,
+        std::vector<std::shared_ptr<Mesh<VertexShaded>>>& meshes
+    )
+    {
+        const auto                                       startTime = Time::Now();
+        std::vector<std::shared_ptr<Mesh<VertexShaded>>> visible   = {};
+        for (const auto& mesh : meshes)
+        {
+            mesh->FrustumCull(camera);
+            if (mesh->Culled)
+            {
+                AddCulledMesh(mesh->GetVertexBuffer(), mesh->GetIndexBuffer());
+            }
+            else
+            {
+                visible.push_back(mesh);
+            }
+        }
+        meshes               = visible;
+        m_cullStats.CullTime = Time::Now() - startTime;
+    }
+
+    void SortMeshes(
+        std::shared_ptr<Camera>                           camera,
+        std::vector<std::shared_ptr<Mesh<VertexShaded>>>& meshes
+    )
+    {
+        const auto startTime = Time::Now();
+
+        const auto cameraPos = camera->transform.GetPosition();
+
+        std::sort(
+            meshes.begin(),
+            meshes.end(),
+            [&cameraPos](
+                std::shared_ptr<Mesh<VertexShaded>> a,
+                std::shared_ptr<Mesh<VertexShaded>> b
+            ) {
+                const auto queueA = a->GetMaterial()->GetQueue();
+                const auto queueB = b->GetMaterial()->GetQueue();
+
+                if (queueA < queueB)
+                {
+                    return true;
+                }
+
+                if (queueA == queueB)
+                {
+                    const auto distA = glm::length(cameraPos - a->GetAABB().center);
+                    const auto distB = glm::length(cameraPos - b->GetAABB().center);
+                    return distA < distB;
+                }
+
+                return false;
+            }
+        );
+
+        m_renderStats.SortTime = Time::Now() - startTime;
+    }
+
+    void UpdateDescriptor(const std::vector<std::shared_ptr<Mesh<VertexShaded>>>& meshes)
+    {
+        const auto currentFrame = m_device.GetCurrentFrame();
+        m_uboDescriptorSet->Update(currentFrame, meshes);
+    }
+
+    void BindDescriptor(uint32_t objectIndex)
     {
         const auto currentFrame  = m_device.GetCurrentFrame();
-        const auto data          = ShaderObjectData {.model = trans.matrix};
-        const auto objectIndex   = m_descriptorSet->AppendShaderObjectData(currentFrame, &data);
         auto       commandBuffer = GetVkCommandBuffer();
         switch (m_currentPipeline)
         {
@@ -272,6 +330,11 @@ class Renderer
         return m_device;
     }
 
+    bool IsDrawing() const
+    {
+        return m_drawing;
+    }
+
   private:
     constexpr VkShaderModuleCreateInfo GetVulkanCreateInfo(const void* data, size_t size);
 
@@ -283,7 +346,7 @@ class Renderer
     VulkanInstance m_instance;
     VulkanDevice   m_device;
 
-    std::shared_ptr<VulkanDescriptorSet> m_descriptorSet;
+    std::shared_ptr<UboDescriptorSet> m_uboDescriptorSet;
 
     RenderPipeline m_currentPipeline;
 
@@ -299,5 +362,7 @@ class Renderer
 
     RenderStats m_renderStats;
     CullStats   m_cullStats;
+
+    bool m_drawing;
 };
 } // namespace yar

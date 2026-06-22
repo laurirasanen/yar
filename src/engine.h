@@ -23,7 +23,6 @@ class Engine
     ~Engine();
 
   private:
-    void CreateWorld();
     void Frame();
     bool Tick();
 

@@ -4,10 +4,11 @@
 
 #include "vulkan/vulkan_core.h"
 
+#include "../../components/material.h"
 #include "../../log.h"
 #include "attributes.h"
-#include "descriptor_set.h"
 #include "device.h"
+#include "ubo_descriptor_set.h"
 
 namespace yar
 {
@@ -18,7 +19,7 @@ class VulkanPipeline
     VulkanPipeline() = delete;
     VulkanPipeline(
         const VulkanDevice&                          device,
-        std::shared_ptr<VulkanDescriptorSet>         descriptorSet,
+        std::shared_ptr<UboDescriptorSet>            uboDescriptorSet,
         std::vector<VkPipelineShaderStageCreateInfo> shaderStages,
         bool                                         enableCulling = true,
         bool                                         enableDepth   = true
@@ -50,8 +51,8 @@ class VulkanPipeline
     }
 
   private:
-    const VulkanDevice&                  m_device;
-    std::shared_ptr<VulkanDescriptorSet> m_descriptorSet;
+    const VulkanDevice&               m_device;
+    std::shared_ptr<UboDescriptorSet> m_uboDescriptorSet;
 
     VkPipelineLayout m_vkPipelineLayout;
     VkPipeline       m_vkPipeline;
@@ -60,13 +61,13 @@ class VulkanPipeline
 template<typename V>
 VulkanPipeline<V>::VulkanPipeline(
     const VulkanDevice&                          device,
-    std::shared_ptr<VulkanDescriptorSet>         descriptorSet,
+    std::shared_ptr<UboDescriptorSet>            uboDescriptorSet,
     std::vector<VkPipelineShaderStageCreateInfo> shaderStages,
     bool                                         enableCulling,
     bool                                         enableDepth
 ) :
     m_device(device),
-    m_descriptorSet(descriptorSet)
+    m_uboDescriptorSet(uboDescriptorSet)
 {
     LOG_DEBUG("Creating VulkanPipeline");
 
@@ -155,7 +156,7 @@ VulkanPipeline<V>::VulkanPipeline(
         .size       = sizeof(VkDeviceAddress)
     };
 
-    auto descriptorSetLayouts = descriptorSet->GetLayouts();
+    const auto descriptorSetLayouts = uboDescriptorSet->GetLayouts();
 
     VkPipelineLayoutCreateInfo pipelineLayoutInfo {};
     pipelineLayoutInfo.sType                  = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
@@ -249,6 +250,6 @@ void VulkanPipeline<V>::BindDescriptor(
     uint32_t            objectIndex
 )
 {
-    m_descriptorSet->Bind(commandBuffer, bindPoint, m_vkPipelineLayout, frameIndex, objectIndex);
+    m_uboDescriptorSet->Bind(commandBuffer, bindPoint, m_vkPipelineLayout, frameIndex, objectIndex);
 }
 } // namespace yar

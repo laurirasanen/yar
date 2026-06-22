@@ -6,6 +6,8 @@
 #include "../platform/memory.h"
 #include "../util.h"
 
+#include <fstream>
+
 namespace yar
 {
 Scene::Scene(std::shared_ptr<Renderer> renderer, std::shared_ptr<UI> ui, std::string path) :
@@ -150,44 +152,6 @@ Scene::Scene(std::shared_ptr<Renderer> renderer, std::shared_ptr<UI> ui, std::st
 
 Scene::~Scene()
 {
-}
-
-void Scene::FrustumCull(std::shared_ptr<Camera> camera)
-{
-    for (const auto& mesh : m_meshes)
-    {
-        mesh->FrustumCull(camera);
-    }
-}
-
-void Scene::Render(std::shared_ptr<Renderer> renderer)
-{
-    for (const auto& mesh : m_meshes)
-    {
-        if (mesh->Culled)
-        {
-            mesh->MarkAsCulled(renderer);
-            continue;
-        }
-
-        mesh->Render(renderer, m_transform);
-    }
-}
-
-void Scene::RenderBounds(std::shared_ptr<Renderer> renderer)
-{
-    for (const auto& mesh : m_meshes)
-    {
-        mesh->RenderBounds(renderer);
-    }
-}
-
-void Scene::UpdateAABB()
-{
-    for (const auto& mesh : m_meshes)
-    {
-        mesh->UpdateAABB(m_transform);
-    }
 }
 
 bool Scene::ReadIndices(const cgltf_primitive& primitive, std::vector<Index>& indices)
@@ -435,11 +399,26 @@ std::shared_ptr<Texture> Scene::ReadTexture(
 
     LOG_DEBUG("Loading texture {}", name);
 
+    const auto mime = view->texture->image->mime_type;
     const auto data =
         static_cast<const void*>(cgltf_buffer_view_data(view->texture->image->buffer_view));
     const auto size = static_cast<size_t>(view->texture->image->buffer_view->size);
 
-    m_textures.push_back(std::make_shared<Texture>(renderer, name, size, data));
+    TextureType type = TextureType::UNKNOWN;
+    if (std::strcmp(mime, "image/jpeg") == 0)
+    {
+        type = TextureType::SRGB;
+    }
+    else if (std::strcmp(mime, "image/png") == 0)
+    {
+        type = TextureType::SRGB;
+    }
+    else
+    {
+        throw std::runtime_error(std::format("Unkown mime type {}", mime));
+    }
+
+    m_textures.push_back(std::make_shared<Texture>(renderer, name, size, data, type));
     return m_textures.back();
 }
 }; // namespace yar

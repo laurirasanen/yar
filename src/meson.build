@@ -14,9 +14,10 @@ yar_src = files([
 
   'renderer/vulkan/vma.cpp',
   'renderer/vulkan/buffer.cpp',
-  'renderer/vulkan/descriptor_set.cpp',
   'renderer/vulkan/device.cpp',
+  'renderer/vulkan/image.cpp',
   'renderer/vulkan/instance.cpp',
+  'renderer/vulkan/ubo_descriptor_set.cpp',
 
   'renderer/renderer.cpp',
 

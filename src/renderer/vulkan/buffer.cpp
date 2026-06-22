@@ -182,7 +182,7 @@ void VulkanBuffer::Clear()
 
 void VulkanBuffer::Bind(void* commandBuffer)
 {
-    if (m_bufferLocation != Device)
+    if (m_bufferLocation != Device && m_bufferLocation != SecretThirdOption)
     {
         throw std::runtime_error("Tried to bind a non-device buffer");
     }

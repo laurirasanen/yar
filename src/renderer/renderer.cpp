@@ -8,7 +8,6 @@
 #include "../shader/compiler.h"
 #include "data_types.h"
 #include "renderer.h"
-#include "src/components/mesh.h"
 
 namespace yar
 {
@@ -32,7 +31,8 @@ Renderer::Renderer(std::shared_ptr<Window> window) :
         m_shaderGlobalData[i] = std::make_shared<ShaderGlobalData>();
     }
 
-    m_descriptorSet = std::make_shared<VulkanDescriptorSet>(m_device, MAX_FRAMES_IN_FLIGHT);
+    m_uboDescriptorSet = std::make_shared<UboDescriptorSet>(m_device, MAX_FRAMES_IN_FLIGHT);
+    m_uboDescriptorSet->Alloc();
 
     // TODO: abstract away to materials?
     ShaderCompiler compiler;
@@ -60,8 +60,11 @@ Renderer::Renderer(std::shared_ptr<Window> window) :
             FillShaderStageCreateInfo(&moduleUnlitVert, VK_SHADER_STAGE_VERTEX_BIT);
         std::vector unlitStages {stageUnlitFrag, stageUnlitVert};
 
-        m_pipelineUnlit =
-            std::make_shared<VulkanPipeline<VertexUnlit>>(m_device, m_descriptorSet, unlitStages);
+        m_pipelineUnlit = std::make_shared<VulkanPipeline<VertexUnlit>>(
+            m_device,
+            m_uboDescriptorSet,
+            unlitStages
+        );
     }
 
     {
@@ -86,8 +89,11 @@ Renderer::Renderer(std::shared_ptr<Window> window) :
             FillShaderStageCreateInfo(&moduleShadedVert, VK_SHADER_STAGE_VERTEX_BIT);
         std::vector shadedStages {stageShadedFrag, stageShadedVert};
 
-        m_pipelineShaded =
-            std::make_shared<VulkanPipeline<VertexShaded>>(m_device, m_descriptorSet, shadedStages);
+        m_pipelineShaded = std::make_shared<VulkanPipeline<VertexShaded>>(
+            m_device,
+            m_uboDescriptorSet,
+            shadedStages
+        );
     }
 }
 
@@ -100,7 +106,7 @@ Renderer::~Renderer()
     m_pipelineUnlit.reset();
     m_pipelineShaded.reset();
 
-    m_descriptorSet.reset();
+    m_uboDescriptorSet.reset();
 
     m_frameBuffers.clear();
 }
@@ -125,7 +131,8 @@ float Renderer::GetAspect()
 
 void Renderer::Begin()
 {
-    m_descriptorSet->NewFrame();
+    m_drawing = true;
+    m_uboDescriptorSet->NewFrame();
     m_currentPipeline = RenderPipeline::NONE;
     m_device.Begin();
 }
@@ -139,6 +146,7 @@ void Renderer::Submit()
 void Renderer::Present()
 {
     m_device.Present();
+    m_drawing = false;
 }
 
 void Renderer::UpdateUniforms(const std::shared_ptr<Camera> camera)

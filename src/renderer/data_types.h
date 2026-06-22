@@ -77,5 +77,6 @@ struct ShaderGlobalData
 struct ShaderObjectData
 {
     alignas(16) glm::mat4 model;
+    alignas(16) uint32_t index;
 };
 } // namespace yar

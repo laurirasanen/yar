@@ -43,7 +43,6 @@ class VulkanDevice
     void SetViewport(Rect rect);
     void Submit();
     void Present();
-    void WaitForGraphicsIdle();
 
     VkCommandBuffer GetTemporaryCommandBuffer();
     void            SubmitTemporaryCommandBuffer(VkCommandBuffer commandBuffer);
@@ -106,7 +105,7 @@ class VulkanDevice
 
     uint32_t GetGraphicsQueueIndex() const
     {
-        return m_vkGraphicsQueueIndex;
+        return m_vkGraphicsFamilyIndex;
     }
 
     VkQueue GetGraphicsQueue() const
@@ -171,8 +170,8 @@ class VulkanDevice
 
     VkPhysicalDeviceProperties m_vkPhysicalDeviceProperties;
 
-    uint32_t m_vkGraphicsQueueIndex;
-    uint32_t m_vkPresentQueueIndex;
+    uint32_t m_vkGraphicsFamilyIndex;
+    uint32_t m_vkPresentFamilyIndex;
 
     VkQueue m_vkGraphicsQueue;
     VkQueue m_vkPresentQueue;

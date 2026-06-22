@@ -4,12 +4,22 @@
 
 namespace yar
 {
-
 World::World(std::shared_ptr<Renderer> renderer, std::shared_ptr<UI> ui) :
     m_renderer(renderer),
-    m_ui(ui)
+    m_ui(ui),
+    m_loaded(false)
 {
     LOG_INFO("Creating World");
+}
+
+World::~World()
+{
+    LOG_INFO("Destroying World");
+}
+
+void World::Load()
+{
+    LOG_INFO("Loading World");
 
     // clang-format off
     const float skyExtent = 100.0f;
@@ -40,14 +50,14 @@ World::World(std::shared_ptr<Renderer> renderer, std::shared_ptr<UI> ui) :
         1, 0, 4, 4, 5, 1,
     };
     // clang-format on
-    renderer->CreateBuffer(
+    m_renderer->CreateBuffer(
         m_skyVertexBuffer,
         VertexBuffer,
         skyVertices.data(),
         sizeof(VertexUnlit),
         static_cast<uint32_t>(skyVertices.size())
     );
-    renderer->CreateBuffer(
+    m_renderer->CreateBuffer(
         m_skyIndexBuffer,
         IndexBuffer,
         skyIndices.data(),
@@ -55,22 +65,19 @@ World::World(std::shared_ptr<Renderer> renderer, std::shared_ptr<UI> ui) :
         static_cast<uint32_t>(skyIndices.size())
     );
 
-    auto bistro = std::make_shared<Scene>(renderer, ui, "assets/scenes/bistro.glb");
-    bistro->GetTransform().SetScale({0.01, 0.01, 0.01});
-    bistro->UpdateAABB();
+    Transform trans = {};
+
+    auto bistro = std::make_shared<Scene>(m_renderer, m_ui, "assets/scenes/bistro.glb");
+    trans.SetScale({0.01, 0.01, 0.01});
+    bistro->SetTransform(trans);
     m_scenes.push_back(bistro);
 
-    auto helmet = std::make_shared<Scene>(renderer, ui, "assets/scenes/DamagedHelmet.glb");
-    helmet->GetTransform().SetEulerRotation({180, 0, -90});
-    helmet->GetTransform().SetScale({0.25, 0.25, 0.25});
-    helmet->GetTransform().SetPosition({-0.4, -3.3, 1.3});
-    helmet->UpdateAABB();
+    auto helmet = std::make_shared<Scene>(m_renderer, m_ui, "assets/scenes/DamagedHelmet.glb");
+    trans.SetEulerRotation({180, 0, -90});
+    trans.SetScale({0.25, 0.25, 0.25});
+    trans.SetPosition({-0.4, -3.3, 1.3});
+    helmet->SetTransform(trans);
     m_scenes.push_back(helmet);
-}
-
-World::~World()
-{
-    LOG_INFO("Destroying World");
 }
 
 void World::Frame()
@@ -79,22 +86,46 @@ void World::Frame()
 
 void World::Tick()
 {
+    std::scoped_lock worldLock {m_worldMutex};
+
+    if (!m_loaded)
     {
-        std::scoped_lock worldLock {m_worldMutex};
+        m_ui->ToggleWindow(UIWindow::LOADING);
+        Load();
+        m_ui->ToggleWindow(UIWindow::LOADING);
+        m_loaded = true;
     }
 }
 
 void World::Render(std::shared_ptr<Camera> camera)
 {
-    m_renderer->BindPipeline(RenderPipeline::UNLIT);
-    Transform trans = {};
-    m_renderer->SetModelMatrix(trans);
-    m_renderer->DrawWithBuffers(m_skyVertexBuffer, m_skyIndexBuffer);
+    if (!m_loaded)
+    {
+        return;
+    }
+
+    m_renderer->BindPipeline(RenderPipeline::SHADED);
+
+    std::vector<std::shared_ptr<Mesh<VertexShaded>>> meshes = {};
 
     for (const auto& scene : m_scenes)
     {
-        scene->FrustumCull(camera);
-        scene->Render(m_renderer);
+        meshes.append_range(scene->GetMeshes());
     }
+
+    m_renderer->CullMeshes(camera, meshes);
+    m_renderer->SortMeshes(camera, meshes);
+    m_renderer->UpdateDescriptor(meshes);
+
+    for (uint32_t i = 0; i < meshes.size(); i++)
+    {
+        const auto& mesh = meshes[i];
+        m_renderer->BindDescriptor(i);
+        m_renderer->DrawWithBuffers(mesh->GetVertexBuffer(), mesh->GetIndexBuffer());
+    }
+
+    m_renderer->BindPipeline(RenderPipeline::UNLIT);
+    m_renderer->BindDescriptor(0);
+    m_renderer->DrawWithBuffers(m_skyVertexBuffer, m_skyIndexBuffer);
 }
 } // namespace yar

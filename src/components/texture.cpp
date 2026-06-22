@@ -1,6 +1,9 @@
 #define STB_IMAGE_IMPLEMENTATION
 #include "texture.h"
 
+#include "../renderer/renderer.h"
+#include "../renderer/vulkan/image.h"
+
 #include <climits>
 
 namespace yar
@@ -9,7 +12,8 @@ Texture::Texture(
     std::shared_ptr<Renderer> renderer,
     std::string               name,
     uint32_t                  size,
-    const void*               data
+    const void*               data,
+    TextureType               type
 ) :
     m_name(name)
 {
@@ -18,18 +22,35 @@ Texture::Texture(
         throw std::runtime_error("Texture data too big");
     }
 
+    if (type == TextureType::UNKNOWN)
+    {
+        throw std::runtime_error("Unknown texture type");
+    }
+
+    m_channels = 4;
+
     m_pixels = stbi_load_from_memory(
         static_cast<const stbi_uc*>(data),
         static_cast<int>(size),
         &m_width,
         &m_height,
-        &m_channels,
-        4
+        &m_originalChannels,
+        m_channels
     );
 
     if (!m_pixels)
     {
-        throw std::runtime_error("Failed to load texture");
+        throw std::runtime_error("Failed to convert texture");
+    }
+
+    if (m_originalChannels != m_channels)
+    {
+        LOG_DEBUG(
+            "Converted texture {} from {} channels to {}",
+            name,
+            m_originalChannels,
+            m_channels
+        );
     }
 
     m_image = std::make_shared<VulkanImage>(
@@ -37,7 +58,9 @@ Texture::Texture(
         static_cast<const void*>(m_pixels),
         static_cast<uint32_t>(m_width),
         static_cast<uint32_t>(m_height),
-        Size()
+        static_cast<uint32_t>(m_channels),
+        GetSize(),
+        type
     );
 
     stbi_image_free(m_pixels);

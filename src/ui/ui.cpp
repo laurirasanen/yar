@@ -81,19 +81,15 @@ void UI::DebugWindow()
                 | ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoInputs
         ))
     {
-        const auto fps = std::format(
-            "FPS: {:.0f} ({:.2f} ms)",
-            1.0 / Time::DeltaFrame,
-            Time::DeltaFrame * 1000.0
-        );
-        ImGui::Text("%s", fps.c_str());
+        const auto renderStats = m_renderer->GetRenderStats();
+        const auto cullStats   = m_renderer->GetCullStats();
 
-        const auto ren = std::format("  Render: {:.2f} ms", Time::DeltaRender * 1000.0);
-        ImGui::Text("%s", ren.c_str());
+        ImGui::Text("FPS: %.2f (%.2fms)", 1.0 / Time::DeltaFrame, Time::DeltaFrame * 1000.0);
+        ImGui::Text("  Render: %.2fms", Time::DeltaRender * 1000.0);
+        ImGui::Text("  Cull: %.2fms", cullStats.CullTime * 1000.0);
+        ImGui::Text("  Sort: %.2fms", renderStats.SortTime * 1000.0);
 
-        const auto tps =
-            std::format("TPS: {:.0f} ({:.2f} ms)", 1.0 / Time::DeltaTick, Time::DeltaTick * 1000.0);
-        ImGui::Text("%s", tps.c_str());
+        ImGui::Text("TPS: %.0f (%.2fms)", 1.0 / Time::DeltaTick, Time::DeltaTick * 1000.0);
 
         const auto mem     = std::format("Resident: {}", Memory::GetPrettyUsage());
         const auto vkStats = GetVulkanAllocatorTotalStatistics();
@@ -103,25 +99,31 @@ void UI::DebugWindow()
         ImGui::Text("  %s", mem.c_str());
         ImGui::Text("  %s", vkMem.c_str());
 
-        const auto renderStats = m_renderer->GetRenderStats();
         ImGui::Text("Visible:");
         ImGui::Text("  Meshes: %zu", renderStats.MeshCount);
         ImGui::Text("  Indices: %zu", renderStats.IndexCount);
         ImGui::Text("  Vertices: %zu", renderStats.VertexCount);
 
-        const auto cullStats = m_renderer->GetCullStats();
         ImGui::Text("Culled:");
         ImGui::Text("  Meshes: %zu", cullStats.MeshCount);
         ImGui::Text("  Indices: %zu", cullStats.IndexCount);
         ImGui::Text("  Vertices: %zu", cullStats.VertexCount);
 
-        const auto pos     = m_camera->transform.GetPosition();
-        const auto ang     = m_camera->transform.GetEulerRotation();
-        const auto posText = std::format("pos: [{:.2f}, {:.2f}, {:.2f}]", pos.x, pos.y, pos.z);
-        const auto angText = std::format("ang: [{:.2f}, {:.2f}, {:.2f}]", ang.x, ang.y, ang.z);
+        const auto pos = m_camera->transform.GetPosition();
+        const auto ang = m_camera->transform.GetEulerRotation();
         ImGui::Text("Camera:");
-        ImGui::Text("  %s", posText.c_str());
-        ImGui::Text("  %s", angText.c_str());
+        ImGui::Text(
+            "  pos: [%.2f, %.2f, %.2f]",
+            static_cast<double>(pos.x),
+            static_cast<double>(pos.y),
+            static_cast<double>(pos.z)
+        );
+        ImGui::Text(
+            "  ang: [%.2f, %.2f, %.2f]",
+            static_cast<double>(ang.x),
+            static_cast<double>(ang.y),
+            static_cast<double>(ang.z)
+        );
 
         ImGui::End();
     }

@@ -21,6 +21,8 @@ class World
     World& operator=(const World&) = delete;
     World& operator=(World&&)      = delete;
 
+    void Load();
+
     void Frame();
     void Tick();
     void Render(std::shared_ptr<Camera> camera);
@@ -35,5 +37,7 @@ class World
     std::shared_ptr<Buffer> m_skyIndexBuffer;
 
     std::vector<std::shared_ptr<Scene>> m_scenes;
+
+    bool m_loaded;
 };
 } // namespace yar

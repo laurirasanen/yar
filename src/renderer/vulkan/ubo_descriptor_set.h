@@ -2,32 +2,36 @@
 
 #include <vulkan/vulkan_core.h>
 
+#include "../../components/mesh.h"
 #include "../data_types.h"
 #include "buffer.h"
 #include "device.h"
 
 namespace yar
 {
-#define MAX_OBJECTS 2048
-
-class VulkanDescriptorSet
+class UboDescriptorSet
 {
   public:
-    VulkanDescriptorSet() = delete;
-    VulkanDescriptorSet(const VulkanDevice& device, uint32_t maxFrames);
-    ~VulkanDescriptorSet();
+    UboDescriptorSet() = delete;
+    UboDescriptorSet(const VulkanDevice& device, uint32_t maxFrames);
+    ~UboDescriptorSet();
 
-    VulkanDescriptorSet(const VulkanDescriptorSet&)            = delete;
-    VulkanDescriptorSet(VulkanDescriptorSet&&)                 = default;
-    VulkanDescriptorSet& operator=(const VulkanDescriptorSet&) = delete;
-    VulkanDescriptorSet& operator=(VulkanDescriptorSet&&)      = delete;
+    UboDescriptorSet(const UboDescriptorSet&)            = delete;
+    UboDescriptorSet(UboDescriptorSet&&)                 = default;
+    UboDescriptorSet& operator=(const UboDescriptorSet&) = delete;
+    UboDescriptorSet& operator=(UboDescriptorSet&&)      = delete;
 
     void NewFrame()
     {
         m_objectIndex = 0;
     }
 
-    uint32_t AppendShaderObjectData(uint32_t frameIndex, const ShaderObjectData* data);
+    void Alloc();
+
+    void Update(
+        uint32_t                                                frameIndex,
+        const std::vector<std::shared_ptr<Mesh<VertexShaded>>>& meshes
+    );
 
     void Bind(
         VkCommandBuffer     commandBuffer,

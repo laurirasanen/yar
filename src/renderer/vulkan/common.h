@@ -14,6 +14,8 @@ namespace yar
         throw std::runtime_error(MSG); \
     }
 
+#define MAX_OBJECTS 2048
+
 constexpr static void ImGuiVkCheck(VkResult result)
 {
     VK_CHECK(result, "ImGuiVkCheck failed");

@@ -262,29 +262,24 @@ void VulkanDevice::Present()
     m_currentFrame = (m_currentFrame + 1) % m_maxFramesInFlight;
 }
 
-void VulkanDevice::WaitForGraphicsIdle()
-{
-    vkQueueWaitIdle(m_vkGraphicsQueue);
-}
-
 VkCommandBuffer VulkanDevice::GetTemporaryCommandBuffer()
 {
-    VkCommandBufferAllocateInfo allocInfo {};
-    allocInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
-    allocInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
-    // TODO: use separate pool?
-    allocInfo.commandPool        = m_vkCommandPool;
-    allocInfo.commandBufferCount = 1;
+    VkCommandBufferAllocateInfo allocInfo = {};
+    allocInfo.sType                       = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
+    allocInfo.level                       = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
+    allocInfo.commandPool                 = m_vkCommandPool;
+    allocInfo.commandBufferCount          = 1;
 
-    VkCommandBuffer commandBuffer {};
+    VkCommandBuffer commandBuffer;
+
     VK_CHECK(
         vkAllocateCommandBuffers(m_vkDevice, &allocInfo, &commandBuffer),
         "Failed to allocate temporary command buffer"
     );
 
-    VkCommandBufferBeginInfo beginInfo {};
-    beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
-    beginInfo.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
+    VkCommandBufferBeginInfo beginInfo = {};
+    beginInfo.sType                    = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
+    beginInfo.flags                    = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
 
     VK_CHECK(
         vkBeginCommandBuffer(commandBuffer, &beginInfo),
@@ -311,9 +306,8 @@ void VulkanDevice::SubmitTemporaryCommandBuffer(VkCommandBuffer commandBuffer)
         vkQueueSubmit2(m_vkGraphicsQueue, 1, &submitInfo, VK_NULL_HANDLE),
         "Failed to submit temporary command buffer"
     );
-    // FIXME: very unoptimal
-    WaitForGraphicsIdle();
 
+    vkQueueWaitIdle(m_vkGraphicsQueue);
     vkFreeCommandBuffers(m_vkDevice, m_vkCommandPool, 1, &commandBuffer);
 }
 
@@ -767,9 +761,10 @@ void VulkanDevice::CreateLogicalDevice()
 
     // 1.2
     VkPhysicalDeviceVulkan12Features vk12Features {};
-    vk12Features.sType               = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_2_FEATURES;
-    vk12Features.bufferDeviceAddress = VK_TRUE;
-    vk12Features.pNext               = &vk11Features;
+    vk12Features.sType                  = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_2_FEATURES;
+    vk12Features.bufferDeviceAddress    = VK_TRUE;
+    vk12Features.runtimeDescriptorArray = VK_TRUE;
+    vk12Features.pNext                  = &vk11Features;
 
     // 1.3
     VkPhysicalDeviceVulkan13Features vk13Features {};
@@ -797,10 +792,10 @@ void VulkanDevice::CreateLogicalDevice()
         "Failed to create logical Vulkan device"
     );
 
-    m_vkGraphicsQueueIndex = familyIndices.graphicsFamily.value();
-    m_vkPresentQueueIndex  = familyIndices.presentFamily.value();
-    vkGetDeviceQueue(m_vkDevice, m_vkGraphicsQueueIndex, 0, &m_vkGraphicsQueue);
-    vkGetDeviceQueue(m_vkDevice, m_vkPresentQueueIndex, 0, &m_vkPresentQueue);
+    m_vkGraphicsFamilyIndex = familyIndices.graphicsFamily.value();
+    m_vkPresentFamilyIndex  = familyIndices.presentFamily.value();
+    vkGetDeviceQueue(m_vkDevice, m_vkGraphicsFamilyIndex, 0, &m_vkGraphicsQueue);
+    vkGetDeviceQueue(m_vkDevice, m_vkPresentFamilyIndex, 0, &m_vkPresentQueue);
 }
 
 void VulkanDevice::CreateCommandPool()
@@ -865,15 +860,21 @@ void VulkanDevice::CreateDescriptorPools()
     uboPoolSize.type            = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC;
     uboPoolSize.descriptorCount = m_maxFramesInFlight;
 
+    VkDescriptorPoolSize imagePoolSize {};
+    imagePoolSize.type            = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+    imagePoolSize.descriptorCount = m_maxFramesInFlight * MAX_OBJECTS;
+
+    std::array<VkDescriptorPoolSize, 2> poolSizes = {uboPoolSize, imagePoolSize};
+
     VkDescriptorPoolCreateInfo uboPoolInfo {};
     uboPoolInfo.sType         = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
-    uboPoolInfo.poolSizeCount = 1;
-    uboPoolInfo.pPoolSizes    = &uboPoolSize;
+    uboPoolInfo.poolSizeCount = static_cast<uint32_t>(poolSizes.size());
+    uboPoolInfo.pPoolSizes    = poolSizes.data();
     uboPoolInfo.maxSets       = m_maxFramesInFlight;
 
     VK_CHECK(
         vkCreateDescriptorPool(m_vkDevice, &uboPoolInfo, nullptr, &m_vkUboDescriptorPool),
-        "Failed to create ubo descriptor pool"
+        "Failed to create descriptor pool"
     );
 
     VkDescriptorPoolSize imGuiPoolSize {};

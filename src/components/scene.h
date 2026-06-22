@@ -6,11 +6,9 @@
 
 #include "../renderer/renderer.h"
 #include "../ui/ui.h"
-#include "geometry.h"
 #include "material.h"
 #include "mesh.h"
 #include "texture.h"
-#include "transform.h"
 
 namespace yar
 {
@@ -26,18 +24,19 @@ class Scene
     Scene& operator=(const Scene&) = delete;
     Scene& operator=(Scene&&)      = delete;
 
-    void FrustumCull(std::shared_ptr<Camera> camera);
-
-    void Render(std::shared_ptr<Renderer> renderer);
-
-    void RenderBounds(std::shared_ptr<Renderer> renderer);
-
-    Transform& GetTransform()
+    std::vector<std::shared_ptr<Mesh<VertexShaded>>> GetMeshes()
     {
-        return m_transform;
+        return m_meshes;
     }
 
-    void UpdateAABB();
+    void SetTransform(const Transform& trans)
+    {
+        for (const auto& mesh : m_meshes)
+        {
+            mesh->GetTransform()->matrix = trans.matrix;
+            mesh->UpdateAABB();
+        }
+    }
 
   private:
     bool ReadIndices(const cgltf_primitive& primitive, std::vector<Index>& indices);
@@ -61,7 +60,5 @@ class Scene
     std::vector<std::shared_ptr<Mesh<VertexShaded>>> m_meshes;
     std::vector<std::shared_ptr<Material>>           m_materials;
     std::vector<std::shared_ptr<Texture>>            m_textures;
-
-    Transform m_transform;
 };
 }; // namespace yar

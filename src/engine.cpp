@@ -29,7 +29,8 @@ Engine::Engine()
     m_renderer = std::make_shared<Renderer>(m_window);
 
     m_ui = std::make_shared<UI>(m_window, m_renderer, m_camera);
-    m_ui->ToggleWindow(UIWindow::LOADING);
+
+    m_world = std::make_shared<World>(m_renderer, m_ui);
 
     m_frameInput.Clear();
     m_tickInput.Clear();
@@ -87,12 +88,6 @@ Engine::~Engine()
     m_renderer->WaitForIdle();
 }
 
-void Engine::CreateWorld()
-{
-    m_world = std::make_shared<World>(m_renderer, m_ui);
-    m_ui->ToggleWindow(UIWindow::LOADING);
-}
-
 void Engine::Frame()
 {
     auto acquired = m_mainFrameSemaphore.try_acquire();
@@ -116,10 +111,7 @@ void Engine::Frame()
         m_renderer->Resize();
     }
 
-    if (m_world)
-    {
-        m_world->Frame();
-    }
+    m_world->Frame();
 
     if (m_frameInput.HasKey(Key::KEY_MOUSE_GRAB))
     {
@@ -194,15 +186,7 @@ void Engine::TickThread(const std::stop_token token)
             break;
         }
 
-        if (!m_world)
-        {
-            CreateWorld();
-        }
-
-        if (m_world)
-        {
-            m_world->Tick();
-        }
+        m_world->Tick();
 
         m_mainTickSemaphore.release();
     }
@@ -235,10 +219,7 @@ void Engine::RenderThread(const std::stop_token token)
         m_renderer->Begin();
         m_renderer->UpdateUniforms(m_camera);
 
-        if (m_world)
-        {
-            m_world->Render(m_camera);
-        }
+        m_world->Render(m_camera);
 
         m_ui->Render();
 

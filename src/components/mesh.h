@@ -4,11 +4,10 @@
 #include <glm/vec2.hpp>
 #include <glm/vec3.hpp>
 
-#include "../log.h"
 #include "../renderer/buffer.h"
 #include "../renderer/data_types.h"
 #include "material.h"
-#include "src/components/transform.h"
+#include "transform.h"
 
 namespace yar
 {
@@ -31,16 +30,19 @@ class Mesh
         m_indexBuffer(indexBuffer),
         m_material(material)
     {
-        m_aabb = {
-            .min = vertices[0].position,
-            .max = vertices[0].position,
+        m_transform = std::make_shared<Transform>();
+        m_aabb      = {
+            .min    = vertices[0].position,
+            .max    = vertices[0].position,
+            .center = {},
         };
         for (size_t i = 1; i < vertices.size(); i++)
         {
             m_aabb.min = glm::min(m_aabb.min, vertices[i].position);
             m_aabb.max = glm::max(m_aabb.max, vertices[i].position);
         }
-        m_globalAABB = m_aabb;
+        m_aabb.center = m_aabb.min + 0.5f * (m_aabb.max - m_aabb.min);
+        m_globalAABB  = m_aabb;
     }
 
     ~Mesh()
@@ -72,22 +74,27 @@ class Mesh
         return m_indexBuffer;
     }
 
+    std::shared_ptr<Transform> GetTransform() const
+    {
+        return m_transform;
+    }
+
     std::shared_ptr<Material> GetMaterial() const
     {
         return m_material;
     }
 
-    void UpdateAABB(const Transform& transform)
+    void UpdateAABB()
     {
         const glm::vec3 corners[8] = {
-            transform.ToGlobalSpace(glm::vec4(m_aabb.min.x, m_aabb.min.y, m_aabb.min.z, 1.0f)),
-            transform.ToGlobalSpace(glm::vec4(m_aabb.max.x, m_aabb.min.y, m_aabb.min.z, 1.0f)),
-            transform.ToGlobalSpace(glm::vec4(m_aabb.min.x, m_aabb.max.y, m_aabb.min.z, 1.0f)),
-            transform.ToGlobalSpace(glm::vec4(m_aabb.max.x, m_aabb.max.y, m_aabb.min.z, 1.0f)),
-            transform.ToGlobalSpace(glm::vec4(m_aabb.min.x, m_aabb.min.y, m_aabb.max.z, 1.0f)),
-            transform.ToGlobalSpace(glm::vec4(m_aabb.max.x, m_aabb.min.y, m_aabb.max.z, 1.0f)),
-            transform.ToGlobalSpace(glm::vec4(m_aabb.min.x, m_aabb.max.y, m_aabb.max.z, 1.0f)),
-            transform.ToGlobalSpace(glm::vec4(m_aabb.max.x, m_aabb.max.y, m_aabb.max.z, 1.0f)),
+            m_transform->ToGlobalSpace(glm::vec4(m_aabb.min.x, m_aabb.min.y, m_aabb.min.z, 1.0f)),
+            m_transform->ToGlobalSpace(glm::vec4(m_aabb.max.x, m_aabb.min.y, m_aabb.min.z, 1.0f)),
+            m_transform->ToGlobalSpace(glm::vec4(m_aabb.min.x, m_aabb.max.y, m_aabb.min.z, 1.0f)),
+            m_transform->ToGlobalSpace(glm::vec4(m_aabb.max.x, m_aabb.max.y, m_aabb.min.z, 1.0f)),
+            m_transform->ToGlobalSpace(glm::vec4(m_aabb.min.x, m_aabb.min.y, m_aabb.max.z, 1.0f)),
+            m_transform->ToGlobalSpace(glm::vec4(m_aabb.max.x, m_aabb.min.y, m_aabb.max.z, 1.0f)),
+            m_transform->ToGlobalSpace(glm::vec4(m_aabb.min.x, m_aabb.max.y, m_aabb.max.z, 1.0f)),
+            m_transform->ToGlobalSpace(glm::vec4(m_aabb.max.x, m_aabb.max.y, m_aabb.max.z, 1.0f)),
         };
 
         m_globalAABB.min = corners[0];
@@ -99,16 +106,12 @@ class Mesh
             m_globalAABB.max = glm::max(m_globalAABB.max, corners[i]);
         }
 
-        /*
-        LOG_DEBUG(
-            "Mesh aabb min: [{:.2f}, {:.2f}, {:.2f}], max: [{:.2f}, {:.2f}, {:.2f}]",
-            m_globalAABB.min.x,
-            m_globalAABB.min.y,
-            m_globalAABB.min.z,
-            m_globalAABB.max.x,
-            m_globalAABB.max.y,
-            m_globalAABB.max.z
-        );*/
+        m_globalAABB.center = m_globalAABB.min + 0.5f * (m_globalAABB.max - m_globalAABB.min);
+    }
+
+    const AABB& GetAABB() const
+    {
+        return m_globalAABB;
     }
 
     void FrustumCull(std::shared_ptr<Camera> camera)
@@ -116,25 +119,11 @@ class Mesh
         Culled = !camera->IsInFrustum(m_globalAABB);
     }
 
-    void MarkAsCulled(std::shared_ptr<Renderer> renderer)
-    {
-        renderer->AddCulledMesh(m_vertexBuffer, m_indexBuffer);
-    }
-
-    void Render(std::shared_ptr<Renderer> renderer, Transform& transform)
-    {
-        renderer->BindPipeline(RenderPipeline::SHADED);
-        renderer->SetModelMatrix(transform);
-        renderer->DrawWithBuffers(m_vertexBuffer, m_indexBuffer);
-    }
-
-    void RenderBounds(std::shared_ptr<Renderer> /*renderer*/)
-    {
-    }
-
     bool Culled;
 
   private:
+    std::shared_ptr<Transform> m_transform;
+
     VertexType m_vertexType;
 
     std::vector<T>     m_vertices;
