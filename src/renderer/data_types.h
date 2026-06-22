@@ -1,6 +1,7 @@
 #pragma once
 
 #include <cstdint>
+#include <glm/geometric.hpp>
 #include <memory>
 
 #include <glm/ext/matrix_clip_space.hpp>
@@ -31,10 +32,11 @@ struct VertexUnlit
 };
 
 struct VertexShaded
-
 {
     glm::vec3 position;
     glm::vec3 normal;
+    glm::vec3 tangent;
+    glm::vec3 bitangent;
     glm::vec2 uv;
 };
 
@@ -54,8 +56,15 @@ struct ShaderGlobalData
 
     alignas(16) glm::vec4 eye;
 
+    alignas(16) glm::vec4 lightDir;
+    alignas(16) glm::vec4 lightColor;
+    alignas(16) glm::vec4 ambientLight;
+
     ShaderGlobalData()
     {
+        lightDir     = glm::vec4(glm::normalize(glm::vec3(0.15f, 0.45, 1.0f)), 0);
+        lightColor   = glm::vec4(1.0f, 1.0f, 0.9f, 10.0f);
+        ambientLight = glm::vec4(0.6f, 0.85f, 1.0f, 0.05f);
     }
 
     void Update(const std::shared_ptr<Camera> cam)
@@ -66,7 +75,7 @@ struct ShaderGlobalData
 
         invView     = glm::inverse(view);
         invProj     = glm::inverse(proj);
-        invViewProj = glm::inverse(proj * view);
+        invViewProj = glm::inverse(viewProj);
 
         viewport = cam->viewport;
 
@@ -77,6 +86,8 @@ struct ShaderGlobalData
 struct ShaderObjectData
 {
     alignas(16) glm::mat4 model;
+    alignas(16) glm::mat4 normal;
     alignas(16) uint32_t index;
+    alignas(16) glm::vec4 materialParams;
 };
 } // namespace yar

@@ -1,7 +1,5 @@
 #pragma once
 
-#include <cmath>
-
 #include <glm/ext/matrix_transform.hpp>
 #include <glm/ext/quaternion_common.hpp>
 #include <glm/gtc/quaternion.hpp>
@@ -13,25 +11,23 @@ namespace yar
 {
 struct Transform
 {
-    glm::mat4 matrix = glm::identity<glm::mat4>();
-
     void SetPosition(glm::vec3 pos)
     {
-        matrix[3][0] = pos.x;
-        matrix[3][1] = pos.y;
-        matrix[3][2] = pos.z;
+        m_model[3][0] = pos.x;
+        m_model[3][1] = pos.y;
+        m_model[3][2] = pos.z;
     }
 
     glm::vec3 GetPosition() const
     {
-        return glm::vec3(matrix[3][0], matrix[3][1], matrix[3][2]);
+        return glm::vec3(m_model[3][0], m_model[3][1], m_model[3][2]);
     }
 
     void Scale(const glm::vec3 scale)
     {
-        matrix[0] *= scale.x;
-        matrix[1] *= scale.y;
-        matrix[2] *= scale.z;
+        m_model[0] *= scale.x;
+        m_model[1] *= scale.y;
+        m_model[2] *= scale.z;
     }
 
     void SetScale(const glm::vec3 scale)
@@ -42,10 +38,26 @@ struct Transform
     glm::vec3 GetScale() const
     {
         return glm::vec3(
-            glm::length(glm::vec3(matrix[0])),
-            glm::length(glm::vec3(matrix[1])),
-            glm::length(glm::vec3(matrix[2]))
+            glm::length(glm::vec3(m_model[0])),
+            glm::length(glm::vec3(m_model[1])),
+            glm::length(glm::vec3(m_model[2]))
         );
+    }
+
+    glm::mat4 GetModelMatrix() const
+    {
+        return m_model;
+    }
+
+    void SetModelMatrix(const glm::mat4& mat)
+    {
+        m_model = mat;
+    }
+
+    void CopyFrom(const Transform& other)
+    {
+        SetModelMatrix(other.GetModelMatrix());
+        SetRotation(other.GetRotation());
     }
 
     glm::vec3 GetEulerRotation() const
@@ -65,13 +77,22 @@ struct Transform
 
     glm::quat GetRotation() const
     {
-        return glm::quat_cast(matrix);
+        return m_rotation;
     }
 
-    void SetRotation(glm::quat rotation)
+    glm::mat4 GetRotationMatrix() const
     {
-        matrix /= glm::mat4_cast(GetRotation());
-        matrix *= glm::mat4_cast(rotation);
+        return glm::mat4_cast(m_rotation);
+    }
+
+    glm::mat4 GetCombinedMatrix() const
+    {
+        return GetModelMatrix() * GetRotationMatrix();
+    }
+
+    void SetRotation(const glm::quat rotation)
+    {
+        m_rotation = rotation;
     }
 
     glm::vec3 Forward() const
@@ -91,17 +112,21 @@ struct Transform
 
     glm::vec3 ToGlobalSpace(const glm::vec3 local) const
     {
-        return glm::vec3(matrix * glm::vec4(local, 1.0));
+        return glm::vec3(GetCombinedMatrix() * glm::vec4(local, 1.0));
     }
 
     glm::vec4 ToGlobalSpace(const glm::vec4 local) const
     {
-        return matrix * local;
+        return GetCombinedMatrix() * local;
     }
 
     glm::vec3 ToLocalSpace(const glm::vec3 global) const
     {
-        return glm::vec3(glm::inverse(matrix) * glm::vec4(global, 1.0));
+        return glm::vec3(glm::inverse(GetCombinedMatrix()) * glm::vec4(global, 1.0));
     }
+
+  private:
+    glm::mat4 m_model    = glm::identity<glm::mat4>();
+    glm::quat m_rotation = glm::identity<glm::quat>();
 };
 } // namespace yar

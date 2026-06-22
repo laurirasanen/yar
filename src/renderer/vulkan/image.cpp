@@ -11,7 +11,7 @@ VulkanImage::VulkanImage(
     uint32_t                  height,
     uint32_t                  channels,
     size_t                    size,
-    TextureType               type
+    TextureFormat             type
 ) :
     m_renderer(renderer),
     m_width(width),
@@ -25,7 +25,7 @@ VulkanImage::VulkanImage(
         {
             switch (type)
             {
-                case TextureType::SRGB:
+                case TextureFormat::FMT_SRGB:
                 {
                     format = VK_FORMAT_R8G8B8A8_SRGB;
                     break;
@@ -45,7 +45,7 @@ VulkanImage::VulkanImage(
         {
             switch (type)
             {
-                case TextureType::SRGB:
+                case TextureFormat::FMT_SRGB:
                 {
                     format = VK_FORMAT_R8G8B8_SRGB;
                     break;

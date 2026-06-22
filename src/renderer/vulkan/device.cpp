@@ -48,6 +48,13 @@ VulkanDevice::~VulkanDevice()
         vkDestroySemaphore(m_vkDevice, semaphore, nullptr);
     }
 
+    vkFreeCommandBuffers(
+        m_vkDevice,
+        m_vkCommandPool,
+        static_cast<uint32_t>(m_vkCommandBuffers.size()),
+        m_vkCommandBuffers.data()
+    );
+
     vkDestroyCommandPool(m_vkDevice, m_vkCommandPool, nullptr);
 
     DestroySwapchain();
@@ -862,7 +869,7 @@ void VulkanDevice::CreateDescriptorPools()
 
     VkDescriptorPoolSize imagePoolSize {};
     imagePoolSize.type            = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-    imagePoolSize.descriptorCount = m_maxFramesInFlight * MAX_OBJECTS;
+    imagePoolSize.descriptorCount = m_maxFramesInFlight * MAX_OBJECTS * 3;
 
     std::array<VkDescriptorPoolSize, 2> poolSizes = {uboPoolSize, imagePoolSize};
 

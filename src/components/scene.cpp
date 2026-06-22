@@ -1,12 +1,12 @@
 #define CGLTF_IMPLEMENTATION
-
 #include "scene.h"
+
 #include "../log.h"
 #include "../platform/fs.h"
 #include "../platform/memory.h"
 #include "../util.h"
 
-#include <fstream>
+#include <glm/geometric.hpp>
 
 namespace yar
 {
@@ -169,9 +169,11 @@ bool Scene::ReadIndices(const cgltf_primitive& primitive, std::vector<Index>& in
 
 bool Scene::ReadVertices(const cgltf_primitive& primitive, std::vector<VertexShaded>& vertices)
 {
-    std::vector<float> vertPositions = {};
-    std::vector<float> vertNormals   = {};
-    std::vector<float> vertUVs       = {};
+    std::vector<float> vertPositions  = {};
+    std::vector<float> vertNormals    = {};
+    std::vector<float> vertTangents   = {};
+    std::vector<float> vertBitangents = {};
+    std::vector<float> vertUVs        = {};
 
     for (size_t attrIdx = 0; attrIdx < primitive.attributes_count; attrIdx++)
     {
@@ -181,7 +183,7 @@ bool Scene::ReadVertices(const cgltf_primitive& primitive, std::vector<VertexSha
             {
                 if (!ReadFloats(primitive.attributes[attrIdx].data, vertPositions))
                 {
-                    LOG_ERROR("Failed to read gltf normals: {}");
+                    LOG_ERROR("Failed to read mesh positions");
                     return false;
                 }
                 break;
@@ -191,7 +193,17 @@ bool Scene::ReadVertices(const cgltf_primitive& primitive, std::vector<VertexSha
             {
                 if (!ReadFloats(primitive.attributes[attrIdx].data, vertNormals))
                 {
-                    LOG_ERROR("Failed to read gltf normals: {}");
+                    LOG_ERROR("Failed to read mesh normals");
+                    return false;
+                }
+                break;
+            }
+
+            case cgltf_attribute_type_tangent:
+            {
+                if (!ReadFloats(primitive.attributes[attrIdx].data, vertTangents))
+                {
+                    LOG_ERROR("Failed to read mesh tangents");
                     return false;
                 }
                 break;
@@ -201,7 +213,7 @@ bool Scene::ReadVertices(const cgltf_primitive& primitive, std::vector<VertexSha
             {
                 if (!ReadFloats(primitive.attributes[attrIdx].data, vertUVs))
                 {
-                    LOG_ERROR("Failed to read gltf UVs: {}");
+                    LOG_ERROR("Failed to read mesh UVs");
                     return false;
                 }
                 break;
@@ -216,37 +228,51 @@ bool Scene::ReadVertices(const cgltf_primitive& primitive, std::vector<VertexSha
 
     if (vertPositions.size() <= 0)
     {
-        LOG_ERROR("gltf has no vertex positions: {}");
+        LOG_ERROR("mesh has no vertex positions");
         return false;
     }
     if (vertNormals.size() <= 0)
     {
-        LOG_ERROR("gltf has no vertex normals: {}");
+        LOG_ERROR("mesh has no vertex normals");
+        return false;
+    }
+    if (vertTangents.size() <= 0)
+    {
+        LOG_ERROR("mesh has no vertex tangents");
         return false;
     }
     if (vertUVs.size() <= 0)
     {
-        LOG_ERROR("gltf has no vertex UVs: {}");
+        LOG_ERROR("mesh has no vertex UVs");
         return false;
     }
 
     if (vertPositions.size() % 3 != 0)
     {
-        LOG_ERROR("gltf vertex positions count not multiple of 3 ({})", vertPositions.size());
+        LOG_ERROR("mesh vertex positions count not multiple of 3 ({})", vertPositions.size());
         return false;
     }
     if (vertNormals.size() != vertPositions.size())
     {
         LOG_ERROR(
-            "gltf vertex normals invalid size ({}/{}): {}",
+            "mesh vertex normals invalid size ({}/{})",
             vertNormals.size(),
+            vertPositions.size()
+        );
+        return false;
+    }
+    if (vertTangents.size() != 4 * vertPositions.size() / 3)
+    {
+        LOG_ERROR(
+            "mesh vertex tangents invalid size ({}/{})",
+            vertTangents.size(),
             vertPositions.size()
         );
         return false;
     }
     if (vertUVs.size() != 2 * vertPositions.size() / 3)
     {
-        LOG_ERROR("gltf vertex UVs invalid size ({}/{}): {}", vertUVs.size(), vertPositions.size());
+        LOG_ERROR("mesh vertex UVs invalid size ({}/{})", vertUVs.size(), vertPositions.size());
         return false;
     }
 
@@ -263,6 +289,14 @@ bool Scene::ReadVertices(const cgltf_primitive& primitive, std::vector<VertexSha
         vertices[vertIdx].normal.x = vertNormals[vertIdx * 3 + 0];
         vertices[vertIdx].normal.y = vertNormals[vertIdx * 3 + 1];
         vertices[vertIdx].normal.z = vertNormals[vertIdx * 3 + 2];
+
+        vertices[vertIdx].tangent.x = vertTangents[vertIdx * 3 + 0];
+        vertices[vertIdx].tangent.y = vertTangents[vertIdx * 3 + 1];
+        vertices[vertIdx].tangent.z = vertTangents[vertIdx * 3 + 2];
+        vertices[vertIdx].tangent *= vertTangents[vertIdx * 3 + 3];
+
+        vertices[vertIdx].bitangent =
+            glm::cross(vertices[vertIdx].normal, vertices[vertIdx].tangent);
 
         vertices[vertIdx].uv.x = vertUVs[vertIdx * 2 + 0];
         vertices[vertIdx].uv.y = vertUVs[vertIdx * 2 + 1];
@@ -315,30 +349,44 @@ std::shared_ptr<Material> Scene::ReadMaterial(
     LOG_DEBUG("Loading material {}", name);
 
     cgltf_texture_view* albedoView = nullptr;
+    cgltf_texture_view* normalView = &primitive.material->normal_texture;
+    cgltf_texture_view* mraoView   = nullptr;
+
+    float metalnessFactor = 1.0f;
+    float roughnessFactor = 1.0f;
 
     if (primitive.material->has_pbr_metallic_roughness)
     {
-        albedoView = &primitive.material->pbr_metallic_roughness.base_color_texture;
+        albedoView      = &primitive.material->pbr_metallic_roughness.base_color_texture;
+        mraoView        = &primitive.material->pbr_metallic_roughness.metallic_roughness_texture;
+        metalnessFactor = primitive.material->pbr_metallic_roughness.metallic_factor;
+        roughnessFactor = primitive.material->pbr_metallic_roughness.roughness_factor;
     }
     else if (primitive.material->has_pbr_specular_glossiness)
     {
         albedoView = &primitive.material->pbr_specular_glossiness.diffuse_texture;
     }
 
-    if (!albedoView)
-    {
-        LOG_ERROR("Material has no albedo view");
-        return nullptr;
-    }
-
     auto albedoTex = ReadTexture(renderer, ui, albedoView);
+    auto normalTex = ReadTexture(renderer, ui, normalView);
+    auto mraoTex   = ReadTexture(renderer, ui, mraoView);
     if (!albedoTex)
     {
-        LOG_ERROR("Material has no albedo texture");
-        return nullptr;
+        albedoTex = renderer->GetMissingTexture(TextureType::TEX_ALBEDO);
+    }
+    if (!normalTex)
+    {
+        normalTex = renderer->GetMissingTexture(TextureType::TEX_NORMAL);
+    }
+    if (!mraoTex)
+    {
+        mraoTex = renderer->GetMissingTexture(TextureType::TEX_MRAO);
     }
 
-    m_materials.push_back(std::make_shared<Material>(name, albedoTex));
+    m_materials.push_back(
+        std::make_shared<
+            Material>(name, albedoTex, normalTex, mraoTex, metalnessFactor, roughnessFactor)
+    );
     return m_materials.back();
 }
 
@@ -404,14 +452,14 @@ std::shared_ptr<Texture> Scene::ReadTexture(
         static_cast<const void*>(cgltf_buffer_view_data(view->texture->image->buffer_view));
     const auto size = static_cast<size_t>(view->texture->image->buffer_view->size);
 
-    TextureType type = TextureType::UNKNOWN;
+    TextureFormat type = TextureFormat::FMT_UNKNOWN;
     if (std::strcmp(mime, "image/jpeg") == 0)
     {
-        type = TextureType::SRGB;
+        type = TextureFormat::FMT_SRGB;
     }
     else if (std::strcmp(mime, "image/png") == 0)
     {
-        type = TextureType::SRGB;
+        type = TextureFormat::FMT_SRGB;
     }
     else
     {

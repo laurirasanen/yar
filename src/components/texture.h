@@ -11,10 +11,18 @@ namespace yar
 class Renderer;
 class VulkanImage;
 
+enum TextureFormat
+{
+    FMT_UNKNOWN,
+    FMT_SRGB
+};
+
 enum TextureType
 {
-    UNKNOWN,
-    SRGB
+    TEX_UNKNOWN,
+    TEX_ALBEDO,
+    TEX_NORMAL,
+    TEX_MRAO,
 };
 
 class Texture
@@ -26,7 +34,8 @@ class Texture
         std::string               name,
         uint32_t                  size,
         const void*               data,
-        TextureType               type
+        TextureFormat             format,
+        bool                      skipConvert = false
     );
     ~Texture();
 

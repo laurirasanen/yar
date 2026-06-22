@@ -33,7 +33,7 @@ class Scene
     {
         for (const auto& mesh : m_meshes)
         {
-            mesh->GetTransform()->matrix = trans.matrix;
+            mesh->GetTransform()->CopyFrom(trans);
             mesh->UpdateAABB();
         }
     }

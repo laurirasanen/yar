@@ -53,6 +53,18 @@ constexpr std::vector<VkVertexInputAttributeDescription> GetVulkanAttributeDescr
         desc.push_back({
             .location = 2,
             .binding  = 0,
+            .format   = VK_FORMAT_R32G32B32_SFLOAT,
+            .offset   = offsetof(T, tangent),
+        });
+        desc.push_back({
+            .location = 3,
+            .binding  = 0,
+            .format   = VK_FORMAT_R32G32B32_SFLOAT,
+            .offset   = offsetof(T, bitangent),
+        });
+        desc.push_back({
+            .location = 4,
+            .binding  = 0,
             .format   = VK_FORMAT_R32G32_SFLOAT,
             .offset   = offsetof(T, uv),
         });

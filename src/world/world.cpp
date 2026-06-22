@@ -10,6 +10,44 @@ World::World(std::shared_ptr<Renderer> renderer, std::shared_ptr<UI> ui) :
     m_loaded(false)
 {
     LOG_INFO("Creating World");
+
+    uint8_t pixel[]       = {255, 0, 255, 255};
+    auto    missingAlbedo = std::make_shared<Texture>(
+        m_renderer,
+        "_YAR_MISSING_ALBEDO",
+        4,
+        pixel,
+        TextureFormat::FMT_SRGB,
+        true
+    );
+
+    pixel[0]           = 128;
+    pixel[1]           = 128;
+    pixel[2]           = 255;
+    auto missingNormal = std::make_shared<Texture>(
+        m_renderer,
+        "_YAR_MISSING_NORMAL",
+        4,
+        pixel,
+        TextureFormat::FMT_SRGB,
+        true
+    );
+
+    pixel[0]         = 0;
+    pixel[1]         = 200;
+    pixel[2]         = 0;
+    auto missingMRAO = std::make_shared<Texture>(
+        m_renderer,
+        "_YAR_MISSING_MRAO",
+        4,
+        pixel,
+        TextureFormat::FMT_SRGB,
+        true
+    );
+
+    m_renderer->SetMissingTexture(TextureType::TEX_ALBEDO, missingAlbedo);
+    m_renderer->SetMissingTexture(TextureType::TEX_ALBEDO, missingNormal);
+    m_renderer->SetMissingTexture(TextureType::TEX_MRAO, missingMRAO);
 }
 
 World::~World()
@@ -65,18 +103,19 @@ void World::Load()
         static_cast<uint32_t>(skyIndices.size())
     );
 
-    Transform trans = {};
-
-    auto bistro = std::make_shared<Scene>(m_renderer, m_ui, "assets/scenes/bistro.glb");
+    auto      bistro = std::make_shared<Scene>(m_renderer, m_ui, "assets/scenes/bistro.glb");
+    Transform trans  = {};
+    trans.SetEulerRotation({90, 0, 0});
     trans.SetScale({0.01, 0.01, 0.01});
     bistro->SetTransform(trans);
     m_scenes.push_back(bistro);
 
-    auto helmet = std::make_shared<Scene>(m_renderer, m_ui, "assets/scenes/DamagedHelmet.glb");
-    trans.SetEulerRotation({180, 0, -90});
-    trans.SetScale({0.25, 0.25, 0.25});
-    trans.SetPosition({-0.4, -3.3, 1.3});
-    helmet->SetTransform(trans);
+    auto      helmet = std::make_shared<Scene>(m_renderer, m_ui, "assets/scenes/DamagedHelmet.glb");
+    Transform helmTrans = {};
+    helmTrans.SetEulerRotation({180, 0, -90});
+    helmTrans.SetScale({0.25, 0.25, 0.25});
+    helmTrans.SetPosition({-0.4, -3.3, 1.3});
+    helmet->SetTransform(helmTrans);
     m_scenes.push_back(helmet);
 }
 

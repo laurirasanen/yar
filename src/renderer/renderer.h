@@ -335,6 +335,61 @@ class Renderer
         return m_drawing;
     }
 
+    void SetMissingTexture(TextureType type, std::shared_ptr<Texture> tex)
+    {
+        switch (type)
+        {
+            case TextureType::TEX_ALBEDO:
+            {
+                m_missingAlbedo = tex;
+                break;
+            }
+
+            case TextureType::TEX_NORMAL:
+            {
+                m_missingNormal = tex;
+                break;
+            }
+
+            case TextureType::TEX_MRAO:
+            {
+                m_missingMetalness = tex;
+                break;
+            }
+
+            default:
+            {
+                throw std::runtime_error("Unhandled texture type");
+            }
+        }
+    }
+
+    std::shared_ptr<Texture> GetMissingTexture(TextureType type)
+    {
+        switch (type)
+        {
+            case TextureType::TEX_ALBEDO:
+            {
+                return m_missingAlbedo;
+            }
+
+            case TextureType::TEX_NORMAL:
+            {
+                return m_missingNormal;
+            }
+
+            case TextureType::TEX_MRAO:
+            {
+                return m_missingMetalness;
+            }
+
+            default:
+            {
+                throw std::runtime_error("Unhandled texture type");
+            }
+        }
+    }
+
   private:
     constexpr VkShaderModuleCreateInfo GetVulkanCreateInfo(const void* data, size_t size);
 
@@ -359,6 +414,10 @@ class Renderer
     // Hold so we don't call Buffer destructor
     // while still in use by command buffer.
     std::vector<std::shared_ptr<Buffer>> m_frameBuffers;
+
+    std::shared_ptr<Texture> m_missingAlbedo;
+    std::shared_ptr<Texture> m_missingNormal;
+    std::shared_ptr<Texture> m_missingMetalness;
 
     RenderStats m_renderStats;
     CullStats   m_cullStats;

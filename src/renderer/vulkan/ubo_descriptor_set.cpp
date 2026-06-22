@@ -27,7 +27,22 @@ UboDescriptorSet::UboDescriptorSet(const VulkanDevice& device, uint32_t maxFrame
     albedoBinding.stageFlags                   = VK_SHADER_STAGE_FRAGMENT_BIT;
     albedoBinding.pImmutableSamplers           = nullptr;
 
-    const std::array<VkDescriptorSetLayoutBinding, 2> bindings = {uboBinding, albedoBinding};
+    VkDescriptorSetLayoutBinding normalBinding = {};
+    normalBinding.binding                      = 2;
+    normalBinding.descriptorCount              = MAX_OBJECTS;
+    normalBinding.descriptorType               = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+    normalBinding.stageFlags                   = VK_SHADER_STAGE_FRAGMENT_BIT;
+    normalBinding.pImmutableSamplers           = nullptr;
+
+    VkDescriptorSetLayoutBinding mraoBinding = {};
+    mraoBinding.binding                      = 3;
+    mraoBinding.descriptorCount              = MAX_OBJECTS;
+    mraoBinding.descriptorType               = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+    mraoBinding.stageFlags                   = VK_SHADER_STAGE_FRAGMENT_BIT;
+    mraoBinding.pImmutableSamplers           = nullptr;
+
+    const std::array<VkDescriptorSetLayoutBinding, 4> bindings =
+        {uboBinding, albedoBinding, normalBinding, mraoBinding};
 
     VkDescriptorSetLayoutCreateInfo layoutInfo = {};
     layoutInfo.sType        = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
@@ -119,32 +134,52 @@ void UboDescriptorSet::Update(
     const std::vector<std::shared_ptr<Mesh<VertexShaded>>>& meshes
 )
 {
+    if (meshes.size() <= 0)
+    {
+        return;
+    }
+
     if (meshes.size() >= MAX_OBJECTS)
     {
         throw std::runtime_error("exceeded max object count");
     }
 
-    std::vector<ShaderObjectData> objects = {};
+    std::vector<ShaderObjectData>      objects     = {};
+    std::vector<VkDescriptorImageInfo> albedoInfos = {};
+    std::vector<VkDescriptorImageInfo> normalInfos = {};
+    std::vector<VkDescriptorImageInfo> mraoInfos   = {};
     objects.resize(meshes.size());
+    albedoInfos.resize(meshes.size());
+    normalInfos.resize(meshes.size());
+    mraoInfos.resize(meshes.size());
 
     for (size_t i = 0; i < meshes.size(); i++)
     {
-        objects[i].model = meshes[i]->GetTransform()->matrix;
-        objects[i].index = static_cast<uint32_t>(i);
+        const auto mat    = meshes[i]->GetMaterial();
+        const auto albedo = mat->GetAlbedo()->GetImage();
+        const auto normal = mat->GetNormal()->GetImage();
+        const auto mrao   = mat->GetMRAO()->GetImage();
+
+        objects[i].model            = meshes[i]->GetTransform()->GetCombinedMatrix();
+        objects[i].normal           = meshes[i]->GetTransform()->GetRotationMatrix();
+        objects[i].index            = static_cast<uint32_t>(i);
+        objects[i].materialParams.x = mat->GetMetalnessFactor();
+        objects[i].materialParams.y = mat->GetRoughnessFactor();
+
+        albedoInfos[i].imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+        albedoInfos[i].imageView   = albedo->GetVkImageView();
+        albedoInfos[i].sampler     = albedo->GetVkSampler();
+
+        normalInfos[i].imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+        normalInfos[i].imageView   = normal->GetVkImageView();
+        normalInfos[i].sampler     = normal->GetVkSampler();
+
+        mraoInfos[i].imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+        mraoInfos[i].imageView   = mrao->GetVkImageView();
+        mraoInfos[i].sampler     = mrao->GetVkSampler();
     }
 
     m_objectBuffers[frameIndex]->Write(objects.data(), objects.size() * sizeof(ShaderObjectData));
-
-    std::vector<VkDescriptorImageInfo> albedoInfos = {};
-    albedoInfos.resize(meshes.size());
-
-    for (size_t i = 0; i < meshes.size(); i++)
-    {
-        albedoInfos[i].imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-        albedoInfos[i].imageView =
-            meshes[i]->GetMaterial()->GetAlbedo()->GetImage()->GetVkImageView();
-        albedoInfos[i].sampler = meshes[i]->GetMaterial()->GetAlbedo()->GetImage()->GetVkSampler();
-    }
 
     VkWriteDescriptorSet albedoWrite = {};
     albedoWrite.sType                = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
@@ -155,7 +190,25 @@ void UboDescriptorSet::Update(
     albedoWrite.descriptorCount      = static_cast<uint32_t>(albedoInfos.size());
     albedoWrite.pImageInfo           = albedoInfos.data();
 
-    std::array<VkWriteDescriptorSet, 1> writes = {albedoWrite};
+    VkWriteDescriptorSet normalWrite = {};
+    normalWrite.sType                = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+    normalWrite.dstSet               = m_vkSets[frameIndex];
+    normalWrite.dstBinding           = 2;
+    normalWrite.dstArrayElement      = 0;
+    normalWrite.descriptorType       = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+    normalWrite.descriptorCount      = static_cast<uint32_t>(normalInfos.size());
+    normalWrite.pImageInfo           = normalInfos.data();
+
+    VkWriteDescriptorSet mraoWrite = {};
+    mraoWrite.sType                = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+    mraoWrite.dstSet               = m_vkSets[frameIndex];
+    mraoWrite.dstBinding           = 3;
+    mraoWrite.dstArrayElement      = 0;
+    mraoWrite.descriptorType       = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+    mraoWrite.descriptorCount      = static_cast<uint32_t>(mraoInfos.size());
+    mraoWrite.pImageInfo           = mraoInfos.data();
+
+    std::array<VkWriteDescriptorSet, 3> writes = {albedoWrite, normalWrite, mraoWrite};
 
     vkUpdateDescriptorSets(
         m_device.GetVkDevice(),
