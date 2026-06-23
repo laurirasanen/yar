@@ -14,28 +14,28 @@ UboDescriptorSet::UboDescriptorSet(const VulkanDevice& device, uint32_t maxFrame
     m_device(device)
 {
     VkDescriptorSetLayoutBinding uboBinding = {};
-    uboBinding.binding                      = 0;
+    uboBinding.binding                      = BINDING_UBO;
     uboBinding.descriptorType               = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC;
     uboBinding.descriptorCount              = 1;
     uboBinding.stageFlags         = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT;
     uboBinding.pImmutableSamplers = nullptr;
 
     VkDescriptorSetLayoutBinding albedoBinding = {};
-    albedoBinding.binding                      = 1;
+    albedoBinding.binding                      = BINDING_ALBEDO;
     albedoBinding.descriptorCount              = MAX_OBJECTS;
     albedoBinding.descriptorType               = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
     albedoBinding.stageFlags                   = VK_SHADER_STAGE_FRAGMENT_BIT;
     albedoBinding.pImmutableSamplers           = nullptr;
 
     VkDescriptorSetLayoutBinding normalBinding = {};
-    normalBinding.binding                      = 2;
+    normalBinding.binding                      = BINDING_NORMAL;
     normalBinding.descriptorCount              = MAX_OBJECTS;
     normalBinding.descriptorType               = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
     normalBinding.stageFlags                   = VK_SHADER_STAGE_FRAGMENT_BIT;
     normalBinding.pImmutableSamplers           = nullptr;
 
     VkDescriptorSetLayoutBinding ormBinding = {};
-    ormBinding.binding                      = 3;
+    ormBinding.binding                      = BINDING_ORM;
     ormBinding.descriptorCount              = MAX_OBJECTS;
     ormBinding.descriptorType               = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
     ormBinding.stageFlags                   = VK_SHADER_STAGE_FRAGMENT_BIT;
@@ -111,7 +111,7 @@ void UboDescriptorSet::Alloc()
         VkWriteDescriptorSet bufferWrite = {};
         bufferWrite.sType                = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
         bufferWrite.dstSet               = m_vkSets[i];
-        bufferWrite.dstBinding           = 0;
+        bufferWrite.dstBinding           = BINDING_UBO;
         bufferWrite.dstArrayElement      = 0;
         bufferWrite.descriptorType       = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC;
         bufferWrite.descriptorCount      = 1;
@@ -186,7 +186,7 @@ void UboDescriptorSet::Update(
     VkWriteDescriptorSet albedoWrite = {};
     albedoWrite.sType                = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
     albedoWrite.dstSet               = m_vkSets[frameIndex];
-    albedoWrite.dstBinding           = 1;
+    albedoWrite.dstBinding           = BINDING_ALBEDO;
     albedoWrite.dstArrayElement      = 0;
     albedoWrite.descriptorType       = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
     albedoWrite.descriptorCount      = static_cast<uint32_t>(albedoInfos.size());
@@ -195,7 +195,7 @@ void UboDescriptorSet::Update(
     VkWriteDescriptorSet normalWrite = {};
     normalWrite.sType                = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
     normalWrite.dstSet               = m_vkSets[frameIndex];
-    normalWrite.dstBinding           = 2;
+    normalWrite.dstBinding           = BINDING_NORMAL;
     normalWrite.dstArrayElement      = 0;
     normalWrite.descriptorType       = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
     normalWrite.descriptorCount      = static_cast<uint32_t>(normalInfos.size());
@@ -204,7 +204,7 @@ void UboDescriptorSet::Update(
     VkWriteDescriptorSet ormWrite = {};
     ormWrite.sType                = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
     ormWrite.dstSet               = m_vkSets[frameIndex];
-    ormWrite.dstBinding           = 3;
+    ormWrite.dstBinding           = BINDING_ORM;
     ormWrite.dstArrayElement      = 0;
     ormWrite.descriptorType       = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
     ormWrite.descriptorCount      = static_cast<uint32_t>(ormInfos.size());
