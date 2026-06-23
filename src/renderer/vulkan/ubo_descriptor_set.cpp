@@ -165,6 +165,8 @@ void UboDescriptorSet::Update(
         objects[i].index            = static_cast<uint32_t>(i);
         objects[i].materialParams.x = mat->GetMetalnessFactor();
         objects[i].materialParams.y = mat->GetRoughnessFactor();
+        objects[i].materialParams.z = mat->GetOcclusionFactor();
+        objects[i].materialParams.w = 0.0f;
 
         albedoInfos[i].imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
         albedoInfos[i].imageView   = albedo->GetVkImageView();

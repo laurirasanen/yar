@@ -88,6 +88,11 @@ class Material
         return m_roughnessFactor;
     }
 
+    float GetOcclusionFactor() const
+    {
+        return 2.0f;
+    }
+
   private:
     std::string m_name;
 
