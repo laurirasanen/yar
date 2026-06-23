@@ -11,6 +11,24 @@ A renderer written in modern C++ and Vulkan.
 - Frustum culling
 - Metallic/Roughness PBR
 
+# Building
+
+## Linux
+
+Dependencies:
+- meson
+- gcc
+- sdl3
+- vulkan
+- slang
+
+See install_slang.sh if your distro doesn't provide a package for Slang.
+
+```sh
+meson setup build
+meson compile -C build
+```
+
 ## Acknowledgments
 
 ### Resources
