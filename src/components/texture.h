@@ -22,7 +22,7 @@ enum TextureType
     TEX_UNKNOWN,
     TEX_ALBEDO,
     TEX_NORMAL,
-    TEX_MRAO,
+    TEX_ORM,
 };
 
 class Texture

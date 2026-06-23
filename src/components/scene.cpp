@@ -364,7 +364,7 @@ std::shared_ptr<Material> Scene::ReadMaterial(
 
     cgltf_texture_view* albedoView = nullptr;
     cgltf_texture_view* normalView = &primitive.material->normal_texture;
-    cgltf_texture_view* mraoView   = nullptr;
+    cgltf_texture_view* ormView    = nullptr;
 
     float metalnessFactor = 1.0f;
     float roughnessFactor = 1.0f;
@@ -372,7 +372,7 @@ std::shared_ptr<Material> Scene::ReadMaterial(
     if (primitive.material->has_pbr_metallic_roughness)
     {
         albedoView      = &primitive.material->pbr_metallic_roughness.base_color_texture;
-        mraoView        = &primitive.material->pbr_metallic_roughness.metallic_roughness_texture;
+        ormView         = &primitive.material->pbr_metallic_roughness.metallic_roughness_texture;
         metalnessFactor = primitive.material->pbr_metallic_roughness.metallic_factor;
         roughnessFactor = primitive.material->pbr_metallic_roughness.roughness_factor;
     }
@@ -383,7 +383,7 @@ std::shared_ptr<Material> Scene::ReadMaterial(
 
     auto albedoTex = ReadTexture(renderer, ui, albedoView);
     auto normalTex = ReadTexture(renderer, ui, normalView);
-    auto mraoTex   = ReadTexture(renderer, ui, mraoView);
+    auto ormTex    = ReadTexture(renderer, ui, ormView);
     if (!albedoTex)
     {
         albedoTex = renderer->GetMissingTexture(TextureType::TEX_ALBEDO);
@@ -392,14 +392,14 @@ std::shared_ptr<Material> Scene::ReadMaterial(
     {
         normalTex = renderer->GetMissingTexture(TextureType::TEX_NORMAL);
     }
-    if (!mraoTex)
+    if (!ormTex)
     {
-        mraoTex = renderer->GetMissingTexture(TextureType::TEX_MRAO);
+        ormTex = renderer->GetMissingTexture(TextureType::TEX_ORM);
     }
 
     m_materials.push_back(
         std::make_shared<
-            Material>(name, albedoTex, normalTex, mraoTex, metalnessFactor, roughnessFactor)
+            Material>(name, albedoTex, normalTex, ormTex, metalnessFactor, roughnessFactor)
     );
     return m_materials.back();
 }

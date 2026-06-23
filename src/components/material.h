@@ -23,14 +23,14 @@ class Material
         std::string              name,
         std::shared_ptr<Texture> albedo,
         std::shared_ptr<Texture> normal,
-        std::shared_ptr<Texture> mrao,
+        std::shared_ptr<Texture> orm,
         float                    metalnessFactor,
         float                    roughnessFactor
     ) :
         m_name(name),
         m_albedo(albedo),
         m_normal(normal),
-        m_mrao(mrao),
+        m_orm(orm),
         m_metalnessFactor(metalnessFactor),
         m_roughnessFactor(roughnessFactor)
     {
@@ -68,9 +68,9 @@ class Material
         return m_normal;
     }
 
-    std::shared_ptr<Texture> GetMRAO()
+    std::shared_ptr<Texture> GetORM()
     {
-        return m_mrao;
+        return m_orm;
     }
 
     MaterialQueue GetQueue() const
@@ -93,7 +93,7 @@ class Material
 
     std::shared_ptr<Texture> m_albedo;
     std::shared_ptr<Texture> m_normal;
-    std::shared_ptr<Texture> m_mrao;
+    std::shared_ptr<Texture> m_orm;
 
     float m_metalnessFactor;
     float m_roughnessFactor;

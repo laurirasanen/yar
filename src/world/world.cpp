@@ -47,7 +47,7 @@ World::World(std::shared_ptr<Renderer> renderer, std::shared_ptr<UI> ui) :
 
     m_renderer->SetMissingTexture(TextureType::TEX_ALBEDO, missingAlbedo);
     m_renderer->SetMissingTexture(TextureType::TEX_ALBEDO, missingNormal);
-    m_renderer->SetMissingTexture(TextureType::TEX_MRAO, missingMRAO);
+    m_renderer->SetMissingTexture(TextureType::TEX_ORM, missingMRAO);
 }
 
 World::~World()

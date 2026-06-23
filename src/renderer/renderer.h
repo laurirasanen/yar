@@ -350,7 +350,7 @@ class Renderer
                 break;
             }
 
-            case TextureType::TEX_MRAO:
+            case TextureType::TEX_ORM:
             {
                 m_missingMetalness = tex;
                 break;
@@ -377,7 +377,7 @@ class Renderer
                 return m_missingNormal;
             }
 
-            case TextureType::TEX_MRAO:
+            case TextureType::TEX_ORM:
             {
                 return m_missingMetalness;
             }

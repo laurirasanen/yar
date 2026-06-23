@@ -34,15 +34,15 @@ UboDescriptorSet::UboDescriptorSet(const VulkanDevice& device, uint32_t maxFrame
     normalBinding.stageFlags                   = VK_SHADER_STAGE_FRAGMENT_BIT;
     normalBinding.pImmutableSamplers           = nullptr;
 
-    VkDescriptorSetLayoutBinding mraoBinding = {};
-    mraoBinding.binding                      = 3;
-    mraoBinding.descriptorCount              = MAX_OBJECTS;
-    mraoBinding.descriptorType               = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-    mraoBinding.stageFlags                   = VK_SHADER_STAGE_FRAGMENT_BIT;
-    mraoBinding.pImmutableSamplers           = nullptr;
+    VkDescriptorSetLayoutBinding ormBinding = {};
+    ormBinding.binding                      = 3;
+    ormBinding.descriptorCount              = MAX_OBJECTS;
+    ormBinding.descriptorType               = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+    ormBinding.stageFlags                   = VK_SHADER_STAGE_FRAGMENT_BIT;
+    ormBinding.pImmutableSamplers           = nullptr;
 
     const std::array<VkDescriptorSetLayoutBinding, 4> bindings =
-        {uboBinding, albedoBinding, normalBinding, mraoBinding};
+        {uboBinding, albedoBinding, normalBinding, ormBinding};
 
     VkDescriptorSetLayoutCreateInfo layoutInfo = {};
     layoutInfo.sType        = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
@@ -147,18 +147,18 @@ void UboDescriptorSet::Update(
     std::vector<ShaderObjectData>      objects     = {};
     std::vector<VkDescriptorImageInfo> albedoInfos = {};
     std::vector<VkDescriptorImageInfo> normalInfos = {};
-    std::vector<VkDescriptorImageInfo> mraoInfos   = {};
+    std::vector<VkDescriptorImageInfo> ormInfos    = {};
     objects.resize(meshes.size());
     albedoInfos.resize(meshes.size());
     normalInfos.resize(meshes.size());
-    mraoInfos.resize(meshes.size());
+    ormInfos.resize(meshes.size());
 
     for (size_t i = 0; i < meshes.size(); i++)
     {
         const auto mat    = meshes[i]->GetMaterial();
         const auto albedo = mat->GetAlbedo()->GetImage();
         const auto normal = mat->GetNormal()->GetImage();
-        const auto mrao   = mat->GetMRAO()->GetImage();
+        const auto orm    = mat->GetORM()->GetImage();
 
         objects[i].model            = meshes[i]->GetTransform()->GetCombinedMatrix();
         objects[i].normal           = meshes[i]->GetTransform()->GetRotationMatrix();
@@ -174,9 +174,9 @@ void UboDescriptorSet::Update(
         normalInfos[i].imageView   = normal->GetVkImageView();
         normalInfos[i].sampler     = normal->GetVkSampler();
 
-        mraoInfos[i].imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-        mraoInfos[i].imageView   = mrao->GetVkImageView();
-        mraoInfos[i].sampler     = mrao->GetVkSampler();
+        ormInfos[i].imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+        ormInfos[i].imageView   = orm->GetVkImageView();
+        ormInfos[i].sampler     = orm->GetVkSampler();
     }
 
     m_objectBuffers[frameIndex]->Write(objects.data(), objects.size() * sizeof(ShaderObjectData));
@@ -199,16 +199,16 @@ void UboDescriptorSet::Update(
     normalWrite.descriptorCount      = static_cast<uint32_t>(normalInfos.size());
     normalWrite.pImageInfo           = normalInfos.data();
 
-    VkWriteDescriptorSet mraoWrite = {};
-    mraoWrite.sType                = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-    mraoWrite.dstSet               = m_vkSets[frameIndex];
-    mraoWrite.dstBinding           = 3;
-    mraoWrite.dstArrayElement      = 0;
-    mraoWrite.descriptorType       = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-    mraoWrite.descriptorCount      = static_cast<uint32_t>(mraoInfos.size());
-    mraoWrite.pImageInfo           = mraoInfos.data();
+    VkWriteDescriptorSet ormWrite = {};
+    ormWrite.sType                = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+    ormWrite.dstSet               = m_vkSets[frameIndex];
+    ormWrite.dstBinding           = 3;
+    ormWrite.dstArrayElement      = 0;
+    ormWrite.descriptorType       = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+    ormWrite.descriptorCount      = static_cast<uint32_t>(ormInfos.size());
+    ormWrite.pImageInfo           = ormInfos.data();
 
-    std::array<VkWriteDescriptorSet, 3> writes = {albedoWrite, normalWrite, mraoWrite};
+    std::array<VkWriteDescriptorSet, 3> writes = {albedoWrite, normalWrite, ormWrite};
 
     vkUpdateDescriptorSets(
         m_device.GetVkDevice(),
