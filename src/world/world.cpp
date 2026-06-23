@@ -1,6 +1,7 @@
 #include "world.h"
 #include "../components/transform.h"
 #include "../log.h"
+#include "../util.h"
 
 namespace yar
 {
@@ -103,22 +104,30 @@ void World::Load()
         static_cast<uint32_t>(skyIndices.size())
     );
 
-    Transform trans = {};
+    // Note: these are purposefully not instanced to simulate loading a bunch of unique meshes.
+    for (uint32_t x = 0; x < 3; x++)
+    {
+        for (uint32_t y = 0; y < 3; y++)
+        {
+            Transform trans = {};
 
-    auto flightHelmet = std::make_shared<Scene>(m_renderer, m_ui, "assets/scenes/FlightHelmet.glb");
-    trans.SetEulerRotation({90, 0, 0});
-    trans.SetPosition({-0.3, -0.1, -0.3});
-    flightHelmet->SetTransform(trans);
-    m_scenes.push_back(flightHelmet);
+            auto flightHelmet =
+                std::make_shared<Scene>(m_renderer, m_ui, "assets/scenes/FlightHelmet.glb");
+            trans.SetEulerRotation({90, 0, 0});
+            trans.SetPosition({-0.4 + x * -0.75, y * 0.75, -0.3});
+            flightHelmet->SetTransform(trans);
+            m_scenes.push_back(flightHelmet);
 
-    auto damagedHelmet =
-        std::make_shared<Scene>(m_renderer, m_ui, "assets/scenes/DamagedHelmet.glb");
-    trans = {};
-    trans.SetEulerRotation({180, 0, 0});
-    trans.SetScale({0.3, 0.3, 0.3});
-    trans.SetPosition({0.3, 0, 0});
-    damagedHelmet->SetTransform(trans);
-    m_scenes.push_back(damagedHelmet);
+            auto damagedHelmet =
+                std::make_shared<Scene>(m_renderer, m_ui, "assets/scenes/DamagedHelmet.glb");
+            trans = {};
+            trans.SetEulerRotation({180, 0, 0});
+            trans.SetScale({0.3, 0.3, 0.3});
+            trans.SetPosition({0.4 + x * 0.75, y * 0.75, 0});
+            damagedHelmet->SetTransform(trans);
+            m_scenes.push_back(damagedHelmet);
+        }
+    }
 }
 
 void World::Frame()
@@ -128,12 +137,15 @@ void World::Frame()
         return;
     }
 
-    for (auto& scene : m_scenes)
+    const float rotateSpeeds[] = {12.5f, -12.5f, 25.0f, -25.0f, 50.0f};
+    for (size_t i = 0; i < m_scenes.size(); i++)
     {
+        const auto& scene = m_scenes[i];
         for (auto& mesh : scene->GetMeshes())
         {
             auto angles = mesh->GetTransform()->GetEulerRotation();
-            angles.z += static_cast<float>(Time::DeltaFrame * 25.0);
+            angles.z +=
+                static_cast<float>(Time::DeltaFrame) * rotateSpeeds[i % ARRAY_SIZE(rotateSpeeds)];
             mesh->GetTransform()->SetEulerRotation(angles);
             mesh->UpdateAABB();
         }
