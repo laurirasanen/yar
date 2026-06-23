@@ -138,8 +138,9 @@ void Window::AggregateInput(WindowInput& input)
                 }
                 if (event.type == SDL_EVENT_MOUSE_WHEEL)
                 {
-                    input.scroll.x += event.motion.xrel;
-                    input.scroll.y += event.motion.yrel;
+                    const float dir = event.wheel.direction == SDL_MOUSEWHEEL_NORMAL ? 1.0f : -1.0f;
+                    input.scroll.x += dir * event.wheel.x;
+                    input.scroll.y += dir * event.wheel.y;
                 }
             }
         }
