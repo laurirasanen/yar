@@ -29,11 +29,6 @@ A renderer written in modern C++ and Vulkan.
 
 ### Assets
 
-**assets/scenes/bistro.glb**
-- Amazon Lumberyard Bistro, Open Research Content Archive (ORCA)
-- http://developer.nvidia.com/orca/amazon-lumberyard-bistro
-- (c) 2017 Amazon Lumberyard, CC-BY 4.0
-
 **assets/scenes/DamagedHelmet.glb**
 - A fictional helmet with textured damage.
 - https://github.com/KhronosGroup/glTF-Sample-Assets/tree/main/Models/DamagedHelmet
@@ -41,4 +36,10 @@ A renderer written in modern C++ and Vulkan.
   - ctxwing for Rebuild and conversion to glTF
 - (c) 2016 theblueturtle_, CC BY-NC 4.0 International
   - theblueturtle_ for Earlier version of model
+
+**assets/scenes/FlightHelmet.glb**
+- Displayed flight helmet on a wooden stand.
+- https://github.com/KhronosGroup/glTF-Sample-Assets/tree/main/Models/FlightHelmet
+- (c) 2018 Public, CC0 1.0 Universal
+  - Gary Hsu for Conversion from Maya
 
