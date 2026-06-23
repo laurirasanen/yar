@@ -9,7 +9,7 @@ A renderer written in modern C++ and Vulkan.
 - Slang shader compile at runtime
 - GLTF scenes
 - Frustum culling
-- Metallic/Roughness PBR
+- PBR (Metallic / Roughness / AO)
 
 # Building
 
