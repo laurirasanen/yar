@@ -105,6 +105,9 @@ Scene::Scene(std::shared_ptr<Renderer> renderer, std::shared_ptr<UI> ui, std::st
                 continue;
             }
 
+            std::vector<glm::vec3> bitangents = {};
+            bitangents.resize(vertices.size());
+
             for (size_t idx = 0; idx < indices.size(); idx += 3)
             {
                 const auto idx0 = indices[idx];
@@ -115,23 +118,34 @@ Scene::Scene(std::shared_ptr<Renderer> renderer, std::shared_ptr<UI> ui, std::st
                 const auto& v1 = vertices[idx1];
                 const auto& v2 = vertices[idx2];
 
-                const auto deltaPos1 = v1.position - v0.position;
-                const auto deltaPos2 = v2.position - v0.position;
+                const auto edge1 = v1.position - v0.position;
+                const auto edge2 = v2.position - v0.position;
 
-                const auto deltaUv1 = v1.uv - v0.uv;
-                const auto deltaUv2 = v2.uv - v0.uv;
+                const auto uv1 = v1.uv - v0.uv;
+                const auto uv2 = v2.uv - v0.uv;
 
-                const auto radius = 1.0f / (deltaUv1.x * deltaUv2.y - deltaUv1.y * deltaUv2.x);
+                const auto r = 1.0f / (uv1.x * uv2.y - uv2.x * uv1.y);
 
-                const auto tangent   = (deltaPos1 * deltaUv2.y - deltaPos2 * deltaUv1.y) * radius;
-                const auto bitangent = (deltaPos2 * deltaUv1.x - deltaPos1 * deltaUv2.x) * -radius;
+                const auto tangent   = r * (edge1 * uv2.y - edge2 * uv1.y);
+                const auto bitangent = -r * (edge2 * uv1.x - edge1 * uv2.x);
 
-                vertices[idx0].tangent   = tangent;
-                vertices[idx1].tangent   = tangent;
-                vertices[idx2].tangent   = tangent;
-                vertices[idx0].bitangent = bitangent;
-                vertices[idx1].bitangent = bitangent;
-                vertices[idx2].bitangent = bitangent;
+                vertices[idx0].tangent += tangent;
+                vertices[idx1].tangent += tangent;
+                vertices[idx2].tangent += tangent;
+                bitangents[idx0] += bitangent;
+                bitangents[idx1] += bitangent;
+                bitangents[idx2] += bitangent;
+            }
+
+            for (size_t v = 0; v < vertices.size(); v++)
+            {
+                auto&       vert      = vertices[v];
+                const auto& bitangent = bitangents[v];
+                const auto  cross     = glm::cross(vert.normal, vert.tangent);
+                const auto  sign      = glm::dot(cross, bitangent) < 0 ? -1.0f : 1.0f;
+                vert.tangent =
+                    glm::normalize(vert.tangent - vert.normal * glm::dot(vert.normal, vert.tangent))
+                    * sign;
             }
 
             std::shared_ptr<Buffer> vertexBuffer;
