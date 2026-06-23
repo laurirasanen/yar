@@ -202,7 +202,7 @@ void Renderer::GetImGuiInfo(VulkanImGuiCreationInfo& info)
     info.imInit.PipelineInfoMain           = info.imPipeline;
     info.imInit.UseDynamicRendering        = true;
     info.imInit.MinImageCount              = MAX_FRAMES_IN_FLIGHT;
-    info.imInit.Allocator                  = nullptr; // TODO vma?
+    info.imInit.Allocator                  = nullptr; // TODO vma
     info.imInit.CheckVkResultFn            = ImGuiVkCheck;
     info.imInit.MinAllocationSize          = 1024 * 1024;
     info.imInit.CustomShaderVertCreateInfo = {};

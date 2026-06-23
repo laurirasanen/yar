@@ -24,8 +24,6 @@ constexpr std::vector<VkVertexInputAttributeDescription> GetVulkanAttributeDescr
 {
     std::vector<VkVertexInputAttributeDescription> desc {};
 
-    // TODO: vertex pulling
-
     desc.push_back({
         .location = 0,
         .binding  = 0,
