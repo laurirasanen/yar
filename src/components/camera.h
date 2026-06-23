@@ -17,8 +17,8 @@
 
 namespace yar
 {
-#define CAM_NEAR 0.1f
-#define CAM_FAR  1000.0f
+#define CAM_NEAR 0.05f
+#define CAM_FAR  500.0f
 
 class Camera
 {
@@ -165,7 +165,7 @@ class NoclipCamera : public Camera
   public:
     NoclipCamera() : Camera()
     {
-        MoveSpeed   = 1.0f;
+        MoveSpeed   = 0.25f;
         Sensitivity = 2.0f;
     }
 
