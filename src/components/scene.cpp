@@ -1,3 +1,4 @@
+#include <cstdint>
 #define CGLTF_IMPLEMENTATION
 #include "scene.h"
 
@@ -362,12 +363,14 @@ std::shared_ptr<Material> Scene::ReadMaterial(
 
     LOG_DEBUG("Loading material {}", name);
 
-    cgltf_texture_view* albedoView = nullptr;
-    cgltf_texture_view* normalView = &primitive.material->normal_texture;
-    cgltf_texture_view* ormView    = nullptr;
+    cgltf_texture_view* albedoView   = nullptr;
+    cgltf_texture_view* ormView      = nullptr;
+    cgltf_texture_view* normalView   = &primitive.material->normal_texture;
+    cgltf_texture_view* emissiveView = &primitive.material->emissive_texture;
 
-    float metalnessFactor = 1.0f;
-    float roughnessFactor = 1.0f;
+    float metalnessFactor   = 1.0f;
+    float roughnessFactor   = 1.0f;
+    float emissiveFactor[3] = {1.0f, 1.0f, 1.0f};
 
     if (primitive.material->has_pbr_metallic_roughness)
     {
@@ -376,30 +379,49 @@ std::shared_ptr<Material> Scene::ReadMaterial(
         metalnessFactor = primitive.material->pbr_metallic_roughness.metallic_factor;
         roughnessFactor = primitive.material->pbr_metallic_roughness.roughness_factor;
     }
-    else if (primitive.material->has_pbr_specular_glossiness)
+
+    if (primitive.material->has_emissive_strength)
     {
-        albedoView = &primitive.material->pbr_specular_glossiness.diffuse_texture;
+        for (uint32_t i = 0; i < 3; i++)
+        {
+            emissiveFactor[i] = primitive.material->emissive_factor[0]
+                                * primitive.material->emissive_strength.emissive_strength;
+        }
     }
 
-    auto albedoTex = ReadTexture(renderer, ui, albedoView, TextureType::TEX_ALBEDO);
-    auto normalTex = ReadTexture(renderer, ui, normalView, TextureType::TEX_NORMAL);
-    auto ormTex    = ReadTexture(renderer, ui, ormView, TextureType::TEX_ORM);
+    auto albedoTex   = ReadTexture(renderer, ui, albedoView, TextureType::TEX_ALBEDO);
+    auto ormTex      = ReadTexture(renderer, ui, ormView, TextureType::TEX_ORM);
+    auto normalTex   = ReadTexture(renderer, ui, normalView, TextureType::TEX_NORMAL);
+    auto emissiveTex = ReadTexture(renderer, ui, emissiveView, TextureType::TEX_EMISSIVE);
+
     if (!albedoTex)
     {
         albedoTex = renderer->GetMissingTexture(TextureType::TEX_ALBEDO);
-    }
-    if (!normalTex)
-    {
-        normalTex = renderer->GetMissingTexture(TextureType::TEX_NORMAL);
     }
     if (!ormTex)
     {
         ormTex = renderer->GetMissingTexture(TextureType::TEX_ORM);
     }
+    if (!normalTex)
+    {
+        normalTex = renderer->GetMissingTexture(TextureType::TEX_NORMAL);
+    }
+    if (!emissiveTex)
+    {
+        emissiveTex = renderer->GetMissingTexture(TextureType::TEX_EMISSIVE);
+    }
 
     m_materials.push_back(
-        std::make_shared<
-            Material>(name, albedoTex, normalTex, ormTex, metalnessFactor, roughnessFactor)
+        std::make_shared<Material>(
+            name,
+            albedoTex,
+            ormTex,
+            normalTex,
+            emissiveTex,
+            metalnessFactor,
+            roughnessFactor,
+            emissiveFactor
+        )
     );
     return m_materials.back();
 }

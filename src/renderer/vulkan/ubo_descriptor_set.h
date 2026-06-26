@@ -11,10 +11,11 @@ namespace yar
 {
 enum DESC_BINDING : uint32_t
 {
-    BINDING_UBO    = 0u,
-    BINDING_ALBEDO = 1u,
-    BINDING_NORMAL = 2u,
-    BINDING_ORM    = 3u,
+    BINDING_UBO      = 0u,
+    BINDING_ALBEDO   = 1u,
+    BINDING_ORM      = 2u,
+    BINDING_NORMAL   = 3u,
+    BINDING_EMISSIVE = 4u,
 };
 
 class UboDescriptorSet

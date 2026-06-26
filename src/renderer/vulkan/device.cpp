@@ -874,7 +874,7 @@ void VulkanDevice::CreateDescriptorPools()
 
     VkDescriptorPoolSize imagePoolSize {};
     imagePoolSize.type               = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-    const uint32_t texturesPerObject = 3;
+    const uint32_t texturesPerObject = 4;
     imagePoolSize.descriptorCount    = m_maxFramesInFlight * MAX_OBJECTS * texturesPerObject;
 
     std::array<VkDescriptorPoolSize, 2> poolSizes = {uboPoolSize, imagePoolSize};

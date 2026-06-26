@@ -34,8 +34,9 @@ Texture::Texture(
             break;
         }
 
-        case TextureType::TEX_NORMAL:
         case TextureType::TEX_ORM:
+        case TextureType::TEX_NORMAL:
+        case TextureType::TEX_EMISSIVE:
         {
             format = TextureFormat::FMT_LINEAR;
             break;

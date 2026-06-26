@@ -344,15 +344,21 @@ class Renderer
                 break;
             }
 
+            case TextureType::TEX_ORM:
+            {
+                m_missingMetalness = tex;
+                break;
+            }
+
             case TextureType::TEX_NORMAL:
             {
                 m_missingNormal = tex;
                 break;
             }
 
-            case TextureType::TEX_ORM:
+            case TextureType::TEX_EMISSIVE:
             {
-                m_missingMetalness = tex;
+                m_missingEmissive = tex;
                 break;
             }
 
@@ -372,14 +378,19 @@ class Renderer
                 return m_missingAlbedo;
             }
 
+            case TextureType::TEX_ORM:
+            {
+                return m_missingMetalness;
+            }
+
             case TextureType::TEX_NORMAL:
             {
                 return m_missingNormal;
             }
 
-            case TextureType::TEX_ORM:
+            case TextureType::TEX_EMISSIVE:
             {
-                return m_missingMetalness;
+                return m_missingEmissive;
             }
 
             default:
@@ -443,8 +454,9 @@ class Renderer
     std::vector<std::shared_ptr<Buffer>> m_frameBuffers;
 
     std::shared_ptr<Texture> m_missingAlbedo;
-    std::shared_ptr<Texture> m_missingNormal;
     std::shared_ptr<Texture> m_missingMetalness;
+    std::shared_ptr<Texture> m_missingNormal;
+    std::shared_ptr<Texture> m_missingEmissive;
 
     RenderStats m_renderStats;
     CullStats   m_cullStats;

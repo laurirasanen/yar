@@ -112,5 +112,6 @@ struct ShaderObjectData
     alignas(16) glm::mat4 normal;
     alignas(16) uint32_t index;
     alignas(16) glm::vec4 materialParams;
+    alignas(16) glm::vec4 materialParams2;
 };
 } // namespace yar

@@ -22,8 +22,9 @@ enum TextureType
 {
     TEX_UNKNOWN,
     TEX_ALBEDO,
-    TEX_NORMAL,
     TEX_ORM,
+    TEX_NORMAL,
+    TEX_EMISSIVE,
 };
 
 class Texture

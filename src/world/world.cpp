@@ -22,6 +22,18 @@ World::World(std::shared_ptr<Renderer> renderer, std::shared_ptr<UI> ui) :
         true
     );
 
+    pixel[0]         = 0;
+    pixel[1]         = 200;
+    pixel[2]         = 0;
+    auto missingMRAO = std::make_shared<Texture>(
+        m_renderer,
+        "_YAR_MISSING_ORM",
+        4,
+        pixel,
+        TextureType::TEX_ORM,
+        true
+    );
+
     pixel[0]           = 128;
     pixel[1]           = 128;
     pixel[2]           = 255;
@@ -34,21 +46,22 @@ World::World(std::shared_ptr<Renderer> renderer, std::shared_ptr<UI> ui) :
         true
     );
 
-    pixel[0]         = 0;
-    pixel[1]         = 200;
-    pixel[2]         = 0;
-    auto missingMRAO = std::make_shared<Texture>(
+    pixel[0]             = 0;
+    pixel[1]             = 0;
+    pixel[2]             = 0;
+    auto missingEmissive = std::make_shared<Texture>(
         m_renderer,
-        "_YAR_MISSING_MRAO",
+        "_YAR_MISSING_EMISSIVE",
         4,
         pixel,
-        TextureType::TEX_ORM,
+        TextureType::TEX_EMISSIVE,
         true
     );
 
     m_renderer->SetMissingTexture(TextureType::TEX_ALBEDO, missingAlbedo);
-    m_renderer->SetMissingTexture(TextureType::TEX_ALBEDO, missingNormal);
     m_renderer->SetMissingTexture(TextureType::TEX_ORM, missingMRAO);
+    m_renderer->SetMissingTexture(TextureType::TEX_NORMAL, missingNormal);
+    m_renderer->SetMissingTexture(TextureType::TEX_EMISSIVE, missingEmissive);
 }
 
 World::~World()

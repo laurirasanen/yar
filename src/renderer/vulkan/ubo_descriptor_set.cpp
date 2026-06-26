@@ -27,13 +27,6 @@ UboDescriptorSet::UboDescriptorSet(const VulkanDevice& device, uint32_t maxFrame
     albedoBinding.stageFlags                   = VK_SHADER_STAGE_FRAGMENT_BIT;
     albedoBinding.pImmutableSamplers           = nullptr;
 
-    VkDescriptorSetLayoutBinding normalBinding = {};
-    normalBinding.binding                      = BINDING_NORMAL;
-    normalBinding.descriptorCount              = MAX_OBJECTS;
-    normalBinding.descriptorType               = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-    normalBinding.stageFlags                   = VK_SHADER_STAGE_FRAGMENT_BIT;
-    normalBinding.pImmutableSamplers           = nullptr;
-
     VkDescriptorSetLayoutBinding ormBinding = {};
     ormBinding.binding                      = BINDING_ORM;
     ormBinding.descriptorCount              = MAX_OBJECTS;
@@ -41,8 +34,22 @@ UboDescriptorSet::UboDescriptorSet(const VulkanDevice& device, uint32_t maxFrame
     ormBinding.stageFlags                   = VK_SHADER_STAGE_FRAGMENT_BIT;
     ormBinding.pImmutableSamplers           = nullptr;
 
-    const std::array<VkDescriptorSetLayoutBinding, 4> bindings =
-        {uboBinding, albedoBinding, normalBinding, ormBinding};
+    VkDescriptorSetLayoutBinding normalBinding = {};
+    normalBinding.binding                      = BINDING_NORMAL;
+    normalBinding.descriptorCount              = MAX_OBJECTS;
+    normalBinding.descriptorType               = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+    normalBinding.stageFlags                   = VK_SHADER_STAGE_FRAGMENT_BIT;
+    normalBinding.pImmutableSamplers           = nullptr;
+
+    VkDescriptorSetLayoutBinding emissiveBinding = {};
+    emissiveBinding.binding                      = BINDING_EMISSIVE;
+    emissiveBinding.descriptorCount              = MAX_OBJECTS;
+    emissiveBinding.descriptorType               = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+    emissiveBinding.stageFlags                   = VK_SHADER_STAGE_FRAGMENT_BIT;
+    emissiveBinding.pImmutableSamplers           = nullptr;
+
+    const std::array<VkDescriptorSetLayoutBinding, 5> bindings =
+        {uboBinding, albedoBinding, ormBinding, normalBinding, emissiveBinding};
 
     VkDescriptorSetLayoutCreateInfo layoutInfo = {};
     layoutInfo.sType        = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
@@ -144,41 +151,54 @@ void UboDescriptorSet::Update(
         throw std::runtime_error("exceeded max object count");
     }
 
-    std::vector<ShaderObjectData>      objects     = {};
-    std::vector<VkDescriptorImageInfo> albedoInfos = {};
-    std::vector<VkDescriptorImageInfo> normalInfos = {};
-    std::vector<VkDescriptorImageInfo> ormInfos    = {};
+    std::vector<ShaderObjectData>      objects       = {};
+    std::vector<VkDescriptorImageInfo> albedoInfos   = {};
+    std::vector<VkDescriptorImageInfo> ormInfos      = {};
+    std::vector<VkDescriptorImageInfo> normalInfos   = {};
+    std::vector<VkDescriptorImageInfo> emissiveInfos = {};
     objects.resize(meshes.size());
     albedoInfos.resize(meshes.size());
-    normalInfos.resize(meshes.size());
     ormInfos.resize(meshes.size());
+    normalInfos.resize(meshes.size());
+    emissiveInfos.resize(meshes.size());
 
     for (size_t i = 0; i < meshes.size(); i++)
     {
-        const auto mat    = meshes[i]->GetMaterial();
-        const auto albedo = mat->GetAlbedo()->GetImage();
-        const auto normal = mat->GetNormal()->GetImage();
-        const auto orm    = mat->GetORM()->GetImage();
+        const auto mat      = meshes[i]->GetMaterial();
+        const auto albedo   = mat->GetAlbedo()->GetImage();
+        const auto orm      = mat->GetORM()->GetImage();
+        const auto normal   = mat->GetNormal()->GetImage();
+        const auto emissive = mat->GetEmissive()->GetImage();
 
         objects[i].model            = meshes[i]->GetTransform()->GetCombinedMatrix();
         objects[i].normal           = meshes[i]->GetTransform()->GetRotationMatrix();
         objects[i].index            = static_cast<uint32_t>(i);
-        objects[i].materialParams.x = mat->GetMetalnessFactor();
+        objects[i].materialParams.x = mat->GetOcclusionFactor();
         objects[i].materialParams.y = mat->GetRoughnessFactor();
-        objects[i].materialParams.z = mat->GetOcclusionFactor();
+        objects[i].materialParams.z = mat->GetMetalnessFactor();
         objects[i].materialParams.w = 0.0f;
+
+        const float* emissiveFactor  = mat->GetEmissiveFactor();
+        objects[i].materialParams2.x = emissiveFactor[0];
+        objects[i].materialParams2.y = emissiveFactor[1];
+        objects[i].materialParams2.z = emissiveFactor[2];
+        objects[i].materialParams2.w = 0.0f;
 
         albedoInfos[i].imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
         albedoInfos[i].imageView   = albedo->GetVkImageView();
         albedoInfos[i].sampler     = albedo->GetVkSampler();
 
+        ormInfos[i].imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+        ormInfos[i].imageView   = orm->GetVkImageView();
+        ormInfos[i].sampler     = orm->GetVkSampler();
+
         normalInfos[i].imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
         normalInfos[i].imageView   = normal->GetVkImageView();
         normalInfos[i].sampler     = normal->GetVkSampler();
 
-        ormInfos[i].imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-        ormInfos[i].imageView   = orm->GetVkImageView();
-        ormInfos[i].sampler     = orm->GetVkSampler();
+        emissiveInfos[i].imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+        emissiveInfos[i].imageView   = emissive->GetVkImageView();
+        emissiveInfos[i].sampler     = emissive->GetVkSampler();
     }
 
     m_objectBuffers[frameIndex]->Write(objects.data(), objects.size() * sizeof(ShaderObjectData));
@@ -192,15 +212,6 @@ void UboDescriptorSet::Update(
     albedoWrite.descriptorCount      = static_cast<uint32_t>(albedoInfos.size());
     albedoWrite.pImageInfo           = albedoInfos.data();
 
-    VkWriteDescriptorSet normalWrite = {};
-    normalWrite.sType                = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-    normalWrite.dstSet               = m_vkSets[frameIndex];
-    normalWrite.dstBinding           = BINDING_NORMAL;
-    normalWrite.dstArrayElement      = 0;
-    normalWrite.descriptorType       = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-    normalWrite.descriptorCount      = static_cast<uint32_t>(normalInfos.size());
-    normalWrite.pImageInfo           = normalInfos.data();
-
     VkWriteDescriptorSet ormWrite = {};
     ormWrite.sType                = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
     ormWrite.dstSet               = m_vkSets[frameIndex];
@@ -210,7 +221,26 @@ void UboDescriptorSet::Update(
     ormWrite.descriptorCount      = static_cast<uint32_t>(ormInfos.size());
     ormWrite.pImageInfo           = ormInfos.data();
 
-    std::array<VkWriteDescriptorSet, 3> writes = {albedoWrite, normalWrite, ormWrite};
+    VkWriteDescriptorSet normalWrite = {};
+    normalWrite.sType                = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+    normalWrite.dstSet               = m_vkSets[frameIndex];
+    normalWrite.dstBinding           = BINDING_NORMAL;
+    normalWrite.dstArrayElement      = 0;
+    normalWrite.descriptorType       = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+    normalWrite.descriptorCount      = static_cast<uint32_t>(normalInfos.size());
+    normalWrite.pImageInfo           = normalInfos.data();
+
+    VkWriteDescriptorSet emissiveWrite = {};
+    emissiveWrite.sType                = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+    emissiveWrite.dstSet               = m_vkSets[frameIndex];
+    emissiveWrite.dstBinding           = BINDING_EMISSIVE;
+    emissiveWrite.dstArrayElement      = 0;
+    emissiveWrite.descriptorType       = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+    emissiveWrite.descriptorCount      = static_cast<uint32_t>(emissiveInfos.size());
+    emissiveWrite.pImageInfo           = emissiveInfos.data();
+
+    std::array<VkWriteDescriptorSet, 4> writes =
+        {albedoWrite, ormWrite, normalWrite, emissiveWrite};
 
     vkUpdateDescriptorSets(
         m_device.GetVkDevice(),
