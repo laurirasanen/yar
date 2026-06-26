@@ -1,6 +1,7 @@
 #pragma once
 
 #include <cstdint>
+#include <cstring>
 #include <memory>
 
 #include <glm/ext/matrix_clip_space.hpp>
@@ -58,11 +59,15 @@ struct ShaderGlobalData
     alignas(16) glm::vec4 lightColor;
     alignas(16) glm::vec4 ambientLight;
 
+    alignas(16) glm::vec4 settings;
+
     ShaderGlobalData()
     {
         lightDir     = glm::vec4(glm::normalize(glm::vec3(-0.3f, -0.45f, 0.6f)), 0);
         lightColor   = glm::vec4(1.0f, 1.0f, 0.9f, 15.0f);
         ambientLight = glm::vec4(0.6f, 0.85f, 1.0f, 0.05f);
+        SetExposure(1.20f);
+        SetContrast(1.15f);
     }
 
     void Update(const std::shared_ptr<Camera> cam)
@@ -78,6 +83,26 @@ struct ShaderGlobalData
         viewport = cam->viewport;
 
         eye = glm::vec4(cam->transform.GetPosition(), 0);
+    }
+
+    void SetExposure(float exposure)
+    {
+        settings[0] = exposure;
+    }
+
+    float GetExposure()
+    {
+        return settings[0];
+    }
+
+    void SetContrast(float contrast)
+    {
+        settings[1] = contrast;
+    }
+
+    float GetContrast()
+    {
+        return settings[1];
     }
 };
 

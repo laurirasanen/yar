@@ -529,6 +529,8 @@ constexpr VkSurfaceFormatKHR VulkanDevice::ChooseSwapSurfaceFormat(
         }
     }
 
+    LOG_ERROR("Could not find suitable swap surface format, using first available");
+
     return available[0];
 }
 
@@ -772,6 +774,8 @@ void VulkanDevice::CreateLogicalDevice()
     vk12Features.sType                  = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_2_FEATURES;
     vk12Features.bufferDeviceAddress    = VK_TRUE;
     vk12Features.runtimeDescriptorArray = VK_TRUE;
+    vk12Features.shaderInt8             = VK_TRUE;
+    vk12Features.storagePushConstant8   = VK_TRUE;
     vk12Features.pNext                  = &vk11Features;
 
     // 1.3

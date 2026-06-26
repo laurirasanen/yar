@@ -130,6 +130,23 @@ void Engine::Frame()
         m_ui->ToggleWindow(UIWindow::DEMO);
     }
 
+    if (m_frameInput.HasKey(Key::KEY_EXPOSURE_UP))
+    {
+        m_renderer->SetExposure(m_renderer->GetExposure() + 0.05f);
+    }
+    else if (m_frameInput.HasKey(Key::KEY_EXPOSURE_DOWN))
+    {
+        m_renderer->SetExposure(m_renderer->GetExposure() - 0.05f);
+    }
+    if (m_frameInput.HasKey(Key::KEY_CONTRAST_UP))
+    {
+        m_renderer->SetContrast(m_renderer->GetContrast() + 0.05f);
+    }
+    else if (m_frameInput.HasKey(Key::KEY_CONTRAST_DOWN))
+    {
+        m_renderer->SetContrast(m_renderer->GetContrast() - 0.05f);
+    }
+
     m_frameInput.Clear();
 
     m_threadFrameSemaphore.release();

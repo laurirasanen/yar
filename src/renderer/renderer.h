@@ -389,6 +389,34 @@ class Renderer
         }
     }
 
+    void SetExposure(float exposure)
+    {
+        LOG_INFO("Set exposure to {}", exposure);
+        for (uint32_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++)
+        {
+            m_shaderGlobalData[i]->SetExposure(exposure);
+        }
+    }
+
+    float GetExposure()
+    {
+        return m_shaderGlobalData[0]->GetExposure();
+    }
+
+    void SetContrast(float contrast)
+    {
+        LOG_INFO("Set contrast to {}", contrast);
+        for (uint32_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++)
+        {
+            m_shaderGlobalData[i]->SetContrast(contrast);
+        }
+    }
+
+    float GetContrast()
+    {
+        return m_shaderGlobalData[0]->GetContrast();
+    }
+
   private:
     constexpr VkShaderModuleCreateInfo GetVulkanCreateInfo(const void* data, size_t size);
 

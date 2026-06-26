@@ -22,6 +22,11 @@ enum Key : unsigned int
     KEY_WINDOW_DEBUG,
     KEY_WINDOW_DEMO,
 
+    KEY_EXPOSURE_UP,
+    KEY_EXPOSURE_DOWN,
+    KEY_CONTRAST_UP,
+    KEY_CONTRAST_DOWN,
+
     KEY_MAX,
 };
 
@@ -55,6 +60,11 @@ class InputSettings
         m_sdlKeyMap[static_cast<unsigned int>(SDL_SCANCODE_F1)] = Key::KEY_MOUSE_GRAB;
         m_sdlKeyMap[static_cast<unsigned int>(SDL_SCANCODE_F2)] = Key::KEY_WINDOW_DEBUG;
         m_sdlKeyMap[static_cast<unsigned int>(SDL_SCANCODE_F3)] = Key::KEY_WINDOW_DEMO;
+
+        m_sdlKeyMap[static_cast<unsigned int>(SDL_SCANCODE_1)] = Key::KEY_EXPOSURE_UP;
+        m_sdlKeyMap[static_cast<unsigned int>(SDL_SCANCODE_2)] = Key::KEY_EXPOSURE_DOWN;
+        m_sdlKeyMap[static_cast<unsigned int>(SDL_SCANCODE_3)] = Key::KEY_CONTRAST_UP;
+        m_sdlKeyMap[static_cast<unsigned int>(SDL_SCANCODE_4)] = Key::KEY_CONTRAST_DOWN;
     }
 
     Key GetKeyFromSDL(unsigned int scan)
