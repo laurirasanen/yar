@@ -18,7 +18,7 @@ World::World(std::shared_ptr<Renderer> renderer, std::shared_ptr<UI> ui) :
         "_YAR_MISSING_ALBEDO",
         4,
         pixel,
-        TextureFormat::FMT_SRGB,
+        TextureType::TEX_ALBEDO,
         true
     );
 
@@ -30,7 +30,7 @@ World::World(std::shared_ptr<Renderer> renderer, std::shared_ptr<UI> ui) :
         "_YAR_MISSING_NORMAL",
         4,
         pixel,
-        TextureFormat::FMT_SRGB,
+        TextureType::TEX_NORMAL,
         true
     );
 
@@ -42,7 +42,7 @@ World::World(std::shared_ptr<Renderer> renderer, std::shared_ptr<UI> ui) :
         "_YAR_MISSING_MRAO",
         4,
         pixel,
-        TextureFormat::FMT_SRGB,
+        TextureType::TEX_ORM,
         true
     );
 
@@ -105,9 +105,9 @@ void World::Load()
     );
 
     // Note: these are purposefully not instanced to simulate loading a bunch of unique meshes.
-    for (uint32_t x = 0; x < 3; x++)
+    for (uint32_t x = 0; x < 1; x++)
     {
-        for (uint32_t y = 0; y < 3; y++)
+        for (uint32_t y = 0; y < 1; y++)
         {
             Transform trans = {};
 

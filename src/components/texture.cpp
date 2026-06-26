@@ -14,7 +14,7 @@ Texture::Texture(
     std::string               name,
     uint32_t                  size,
     const void*               data,
-    TextureFormat             format,
+    TextureType               type,
     bool                      skipConvert
 ) :
     m_name(name)
@@ -24,9 +24,29 @@ Texture::Texture(
         throw std::runtime_error("Texture data too big");
     }
 
-    if (format == TextureFormat::FMT_UNKNOWN)
+    TextureFormat format = TextureFormat::FMT_UNKNOWN;
+
+    switch (type)
     {
-        throw std::runtime_error("Unknown texture format");
+        case TextureType::TEX_ALBEDO:
+        {
+            format = TextureFormat::FMT_SRGB;
+            break;
+        }
+
+        case TextureType::TEX_NORMAL:
+        case TextureType::TEX_ORM:
+        {
+            format = TextureFormat::FMT_LINEAR;
+            break;
+        }
+
+        default:
+        {
+            throw std::runtime_error(
+                std::format("Unknown texture type {}", static_cast<int>(type))
+            );
+        }
     }
 
     m_channels = 4;

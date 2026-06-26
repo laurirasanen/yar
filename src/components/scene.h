@@ -52,7 +52,8 @@ class Scene
     std::shared_ptr<Texture> ReadTexture(
         std::shared_ptr<Renderer> renderer,
         std::shared_ptr<UI>       ui,
-        const cgltf_texture_view* view
+        const cgltf_texture_view* view,
+        TextureType               type
     );
 
     std::string m_path;

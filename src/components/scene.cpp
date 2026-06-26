@@ -381,9 +381,9 @@ std::shared_ptr<Material> Scene::ReadMaterial(
         albedoView = &primitive.material->pbr_specular_glossiness.diffuse_texture;
     }
 
-    auto albedoTex = ReadTexture(renderer, ui, albedoView);
-    auto normalTex = ReadTexture(renderer, ui, normalView);
-    auto ormTex    = ReadTexture(renderer, ui, ormView);
+    auto albedoTex = ReadTexture(renderer, ui, albedoView, TextureType::TEX_ALBEDO);
+    auto normalTex = ReadTexture(renderer, ui, normalView, TextureType::TEX_NORMAL);
+    auto ormTex    = ReadTexture(renderer, ui, ormView, TextureType::TEX_ORM);
     if (!albedoTex)
     {
         albedoTex = renderer->GetMissingTexture(TextureType::TEX_ALBEDO);
@@ -407,7 +407,8 @@ std::shared_ptr<Material> Scene::ReadMaterial(
 std::shared_ptr<Texture> Scene::ReadTexture(
     std::shared_ptr<Renderer> renderer,
     std::shared_ptr<UI>       ui,
-    const cgltf_texture_view* view
+    const cgltf_texture_view* view,
+    TextureType               type
 )
 {
     if (!view)
@@ -461,7 +462,6 @@ std::shared_ptr<Texture> Scene::ReadTexture(
 
     LOG_DEBUG("Loading texture {}", name);
 
-    const auto mime = view->texture->image->mime_type;
     const auto data =
         static_cast<const void*>(cgltf_buffer_view_data(view->texture->image->buffer_view));
     const auto size   = static_cast<size_t>(view->texture->image->buffer_view->size);
@@ -474,20 +474,6 @@ std::shared_ptr<Texture> Scene::ReadTexture(
         offset.y = view->transform.offset[1];
         scale.x  = view->transform.scale[0];
         scale.y  = view->transform.scale[1];
-    }
-
-    TextureFormat type = TextureFormat::FMT_UNKNOWN;
-    if (std::strcmp(mime, "image/jpeg") == 0)
-    {
-        type = TextureFormat::FMT_SRGB;
-    }
-    else if (std::strcmp(mime, "image/png") == 0)
-    {
-        type = TextureFormat::FMT_SRGB;
-    }
-    else
-    {
-        throw std::runtime_error(std::format("Unkown mime type {}", mime));
     }
 
     m_textures.push_back(std::make_shared<Texture>(renderer, name, size, data, type));

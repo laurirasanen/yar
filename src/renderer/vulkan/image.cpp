@@ -32,6 +32,12 @@ VulkanImage::VulkanImage(
                     break;
                 }
 
+                case TextureFormat::FMT_LINEAR:
+                {
+                    format = VK_FORMAT_R8G8B8A8_UNORM;
+                    break;
+                }
+
                 default:
                 {
                     throw std::runtime_error(
@@ -49,6 +55,12 @@ VulkanImage::VulkanImage(
                 case TextureFormat::FMT_SRGB:
                 {
                     format = VK_FORMAT_R8G8B8_SRGB;
+                    break;
+                }
+
+                case TextureFormat::FMT_LINEAR:
+                {
+                    format = VK_FORMAT_R8G8B8_UNORM;
                     break;
                 }
 

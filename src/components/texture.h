@@ -14,7 +14,8 @@ class VulkanImage;
 enum TextureFormat
 {
     FMT_UNKNOWN,
-    FMT_SRGB
+    FMT_SRGB,
+    FMT_LINEAR,
 };
 
 enum TextureType
@@ -34,7 +35,7 @@ class Texture
         std::string               name,
         uint32_t                  size,
         const void*               data,
-        TextureFormat             format,
+        TextureType               type,
         bool                      skipConvert = false
     );
     ~Texture();
