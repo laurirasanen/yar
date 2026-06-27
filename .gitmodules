@@ -16,3 +16,9 @@
 [submodule "thirdparty/stb"]
 	path = thirdparty/stb
 	url = https://github.com/nothings/stb.git
+[submodule "thirdparty/KTX-Software"]
+	path = thirdparty/KTX-Software
+	url = https://github.com/KhronosGroup/KTX-Software.git
+[submodule "thirdparty/slang"]
+	path = thirdparty/slang
+	url = https://github.com/shader-slang/slang.git
