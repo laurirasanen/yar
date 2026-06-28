@@ -22,3 +22,6 @@
 [submodule "thirdparty/slang"]
 	path = thirdparty/slang
 	url = https://github.com/shader-slang/slang.git
+[submodule "thirdparty/glTF-IBL-Sampler"]
+	path = thirdparty/glTF-IBL-Sampler
+	url = https://github.com/KhronosGroup/glTF-IBL-Sampler
