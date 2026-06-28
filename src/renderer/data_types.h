@@ -21,8 +21,14 @@ namespace yar
 {
 enum VertexType
 {
+    Sky,
     Unlit,
     Shaded,
+};
+
+struct VertexSky
+{
+    glm::vec2 position;
 };
 
 struct VertexUnlit

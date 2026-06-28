@@ -45,6 +45,7 @@ struct CullStats
 enum RenderPipeline
 {
     NONE,
+    SKY,
     UNLIT,
     SHADED,
 };
@@ -135,6 +136,20 @@ class Renderer
 
         switch (pipe)
         {
+            case SKY:
+            {
+                m_pipelineSky->Bind(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS);
+                vkCmdPushConstants(
+                    commandBuffer,
+                    m_pipelineSky->GetVkPipelineLayout(),
+                    VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT,
+                    0,
+                    sizeof(VkDeviceAddress),
+                    m_shaderGlobalBuffers[currentFrame]->GetDeviceAddress()
+                );
+                break;
+            }
+
             case UNLIT:
             {
                 m_pipelineUnlit->Bind(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS);
@@ -243,6 +258,17 @@ class Renderer
         auto       commandBuffer = GetVkCommandBuffer();
         switch (m_currentPipeline)
         {
+            case SKY:
+            {
+                m_pipelineSky->BindDescriptor(
+                    commandBuffer,
+                    VK_PIPELINE_BIND_POINT_GRAPHICS,
+                    currentFrame,
+                    objectIndex
+                );
+                break;
+            }
+
             case UNLIT:
             {
                 m_pipelineUnlit->BindDescriptor(
@@ -470,6 +496,7 @@ class Renderer
     std::vector<std::shared_ptr<VulkanBuffer>>     m_shaderGlobalBuffers;
     std::vector<std::shared_ptr<ShaderGlobalData>> m_shaderGlobalData;
 
+    std::shared_ptr<VulkanPipeline<VertexSky>>    m_pipelineSky;
     std::shared_ptr<VulkanPipeline<VertexUnlit>>  m_pipelineUnlit;
     std::shared_ptr<VulkanPipeline<VertexShaded>> m_pipelineShaded;
 

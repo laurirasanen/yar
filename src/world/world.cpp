@@ -142,39 +142,20 @@ void World::Load()
     m_ui->SetLoadingScene("Sky");
 
     // clang-format off
-    const float skyExtent = 100.0f;
-    std::vector<VertexUnlit> skyVertices = {
-        // bottom
-        {.position = {-skyExtent, -skyExtent, -skyExtent}, .color = {0.15f, 0.5f, 1.0f}},
-        {.position = { skyExtent, -skyExtent, -skyExtent}, .color = {0.15f, 0.5f, 1.0f}},
-        {.position = { skyExtent,  skyExtent, -skyExtent}, .color = {0.15f, 0.5f, 1.0f}},
-        {.position = {-skyExtent,  skyExtent, -skyExtent}, .color = {0.15f, 0.5f, 1.0f}},
-        // top
-        {.position = {-skyExtent, -skyExtent, skyExtent}, .color = {0.15f, 0.5f, 1.0f}},
-        {.position = { skyExtent, -skyExtent, skyExtent}, .color = {0.15f, 0.5f, 1.0f}},
-        {.position = { skyExtent,  skyExtent, skyExtent}, .color = {0.15f, 0.5f, 1.0f}},
-        {.position = {-skyExtent,  skyExtent, skyExtent}, .color = {0.15f, 0.5f, 1.0f}},
+    std::vector<VertexSky> skyVertices = {
+        {.position = {-1.0f, -1.0f}},
+        {.position = {3.0f, -1.0f}},
+        {.position = {-1.0f, 3.0f}},
     };
     std::vector<Index> skyIndices = {
-        // bottom (-Z)
-        0, 1, 2, 2, 3, 0,
-        // top (+Z)
-        6, 5, 4, 4, 7, 6,
-        // left (-X)
-        0, 3, 4, 4, 3, 7,
-        // right (+X)
-        5, 2, 1, 6, 2, 5,
-        // front (+Y)
-        7, 3, 2, 2, 6, 7,
-        // back (-Y)
-        1, 0, 4, 4, 5, 1,
+        2, 1, 0
     };
     // clang-format on
     m_renderer->CreateBuffer(
         m_skyVertexBuffer,
         VertexBuffer,
         skyVertices.data(),
-        sizeof(VertexUnlit),
+        sizeof(VertexSky),
         static_cast<uint32_t>(skyVertices.size())
     );
     m_renderer->CreateBuffer(
@@ -273,7 +254,7 @@ void World::Render(std::shared_ptr<Camera> camera)
         m_renderer->DrawWithBuffers(mesh->GetVertexBuffer(), mesh->GetIndexBuffer());
     }
 
-    m_renderer->BindPipeline(RenderPipeline::UNLIT);
+    m_renderer->BindPipeline(RenderPipeline::SKY);
     m_renderer->BindDescriptor(0);
     m_renderer->DrawWithBuffers(m_skyVertexBuffer, m_skyIndexBuffer);
 }

@@ -39,13 +39,37 @@ Renderer::Renderer(std::shared_ptr<Window> window) :
     size_t         size;
 
     {
+        const void* spirv = compiler.GetSpirv("sky.slang", SHADER_ENTRY_PIXEL, size);
+        if (!spirv)
+        {
+            throw std::runtime_error("failed to load sky fragment shader");
+        }
+
+        auto fragModule = GetVulkanCreateInfo(spirv, size);
+
+        spirv = compiler.GetSpirv("sky.slang", SHADER_ENTRY_VERTEX, size);
+        if (!spirv)
+        {
+            throw std::runtime_error("failed to load sky vertex shader");
+        }
+
+        auto vertModule = GetVulkanCreateInfo(spirv, size);
+        auto shaderFrag = FillShaderStageCreateInfo(&fragModule, VK_SHADER_STAGE_FRAGMENT_BIT);
+        auto shaderVert = FillShaderStageCreateInfo(&vertModule, VK_SHADER_STAGE_VERTEX_BIT);
+        std::vector stages {shaderFrag, shaderVert};
+
+        m_pipelineSky =
+            std::make_shared<VulkanPipeline<VertexSky>>(m_device, m_uboDescriptorSet, stages);
+    }
+
+    {
         const void* spirv = compiler.GetSpirv("unlit.slang", SHADER_ENTRY_PIXEL, size);
         if (!spirv)
         {
             throw std::runtime_error("failed to load unlit fragment shader");
         }
 
-        auto moduleUnlitFrag = GetVulkanCreateInfo(spirv, size);
+        auto fragModule = GetVulkanCreateInfo(spirv, size);
 
         spirv = compiler.GetSpirv("unlit.slang", SHADER_ENTRY_VERTEX, size);
         if (!spirv)
@@ -53,18 +77,13 @@ Renderer::Renderer(std::shared_ptr<Window> window) :
             throw std::runtime_error("failed to load unlit vertex shader");
         }
 
-        auto moduleUnlitVert = GetVulkanCreateInfo(spirv, size);
-        auto stageUnlitFrag =
-            FillShaderStageCreateInfo(&moduleUnlitFrag, VK_SHADER_STAGE_FRAGMENT_BIT);
-        auto stageUnlitVert =
-            FillShaderStageCreateInfo(&moduleUnlitVert, VK_SHADER_STAGE_VERTEX_BIT);
-        std::vector unlitStages {stageUnlitFrag, stageUnlitVert};
+        auto vertModule = GetVulkanCreateInfo(spirv, size);
+        auto shaderFrag = FillShaderStageCreateInfo(&fragModule, VK_SHADER_STAGE_FRAGMENT_BIT);
+        auto shaderVert = FillShaderStageCreateInfo(&vertModule, VK_SHADER_STAGE_VERTEX_BIT);
+        std::vector stages {shaderFrag, shaderVert};
 
-        m_pipelineUnlit = std::make_shared<VulkanPipeline<VertexUnlit>>(
-            m_device,
-            m_uboDescriptorSet,
-            unlitStages
-        );
+        m_pipelineUnlit =
+            std::make_shared<VulkanPipeline<VertexUnlit>>(m_device, m_uboDescriptorSet, stages);
     }
 
     {
@@ -74,7 +93,7 @@ Renderer::Renderer(std::shared_ptr<Window> window) :
             throw std::runtime_error("failed to load shaded fragment shader");
         }
 
-        auto moduleShadedFrag = GetVulkanCreateInfo(spirv, size);
+        auto fragModule = GetVulkanCreateInfo(spirv, size);
 
         spirv = compiler.GetSpirv("shaded.slang", SHADER_ENTRY_VERTEX, size);
         if (!spirv)
@@ -82,18 +101,13 @@ Renderer::Renderer(std::shared_ptr<Window> window) :
             throw std::runtime_error("failed to load shaded vertex shader");
         }
 
-        auto moduleShadedVert = GetVulkanCreateInfo(spirv, size);
-        auto stageShadedFrag =
-            FillShaderStageCreateInfo(&moduleShadedFrag, VK_SHADER_STAGE_FRAGMENT_BIT);
-        auto stageShadedVert =
-            FillShaderStageCreateInfo(&moduleShadedVert, VK_SHADER_STAGE_VERTEX_BIT);
-        std::vector shadedStages {stageShadedFrag, stageShadedVert};
+        auto vertModule = GetVulkanCreateInfo(spirv, size);
+        auto shaderFrag = FillShaderStageCreateInfo(&fragModule, VK_SHADER_STAGE_FRAGMENT_BIT);
+        auto shaderVert = FillShaderStageCreateInfo(&vertModule, VK_SHADER_STAGE_VERTEX_BIT);
+        std::vector stages {shaderFrag, shaderVert};
 
-        m_pipelineShaded = std::make_shared<VulkanPipeline<VertexShaded>>(
-            m_device,
-            m_uboDescriptorSet,
-            shadedStages
-        );
+        m_pipelineShaded =
+            std::make_shared<VulkanPipeline<VertexShaded>>(m_device, m_uboDescriptorSet, stages);
     }
 }
 
