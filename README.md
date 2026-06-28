@@ -7,9 +7,14 @@ A renderer written in modern C++ and Vulkan.
 - SDL3
 - Dear ImGui overlay
 - Slang shader compile at runtime
-- GLTF scenes
+- glTF scenes
 - Frustum culling
-- PBR (Metallic / Roughness / AO)
+- PBR (ORM workflow)
+- Image based lighting
+
+![Sunny scene](docs/sunny.mp4)
+
+![Cloudy scene](docs/cloudy.mp4)
 
 # Building
 
