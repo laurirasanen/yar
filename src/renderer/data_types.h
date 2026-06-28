@@ -72,8 +72,8 @@ struct ShaderGlobalData
         lightDir     = glm::vec4(glm::normalize(glm::vec3(-0.3f, -0.45f, 0.6f)), 0);
         lightColor   = glm::vec4(1.0f, 1.0f, 0.9f, 15.0f);
         ambientLight = glm::vec4(0.6f, 0.85f, 1.0f, 0.05f);
-        SetExposure(1.20f);
-        SetContrast(1.15f);
+        SetExposure(1.0f);
+        SetContrast(1.0f);
         SetIBLStrength(0.4f);
     }
 
