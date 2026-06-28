@@ -65,9 +65,6 @@ struct ShaderGlobalData
     alignas(16) glm::vec4 lightColor;
     alignas(16) glm::vec4 ambientLight;
 
-    alignas(16) glm::vec4 iblDiffuse;
-    alignas(16) glm::vec4 iblSpecular;
-
     alignas(16) glm::vec4 settings;
 
     ShaderGlobalData()
@@ -75,10 +72,9 @@ struct ShaderGlobalData
         lightDir     = glm::vec4(glm::normalize(glm::vec3(-0.3f, -0.45f, 0.6f)), 0);
         lightColor   = glm::vec4(1.0f, 1.0f, 0.9f, 15.0f);
         ambientLight = glm::vec4(0.6f, 0.85f, 1.0f, 0.05f);
-        iblDiffuse   = glm::vec4(1.0f, 1.0f, 1.0f, 1.0f);
-        iblSpecular  = glm::vec4(1.0f, 1.0f, 1.0f, 2.0f);
         SetExposure(1.20f);
         SetContrast(1.15f);
+        SetIBLStrength(0.4f);
     }
 
     void Update(const std::shared_ptr<Camera> cam)
@@ -119,6 +115,11 @@ struct ShaderGlobalData
     void SetIBLMips(float max)
     {
         settings[2] = max;
+    }
+
+    void SetIBLStrength(float strength)
+    {
+        settings[3] = strength;
     }
 };
 

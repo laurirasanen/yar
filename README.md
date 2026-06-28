@@ -50,9 +50,9 @@ meson compile -C build
 
 ### Assets
 
-**assets/ibl/garden/color.hdr**
-- https://polyhaven.com/a/suburban_garden
-- Dimitrios Savva, Jarod Guest, CC0
+**assets/ibl/cloudy/color.hdr**
+- https://polyhaven.com/a/overcast_soil_puresky
+- Sergej Majboroda, Jarod Guest, CC0
 
 **assets/scenes/DamagedHelmet.glb**
 - A fictional helmet with textured damage.

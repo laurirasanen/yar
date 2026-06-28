@@ -6,3 +6,7 @@ Subprojects/**/*
 imgui.ini
 
 .gdb_history
+
+outputCubeMap.ktx2
+outputLUT.png
+pipeline.cache

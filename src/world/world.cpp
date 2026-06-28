@@ -25,10 +25,10 @@ void World::Load()
 
     m_ui->SetLoadingScene("Global textures");
 
-    const char* iblColorPath    = "assets/ibl/garden/color.hdr";
-    const char* iblLUTPath      = "assets/ibl/garden/lut.png";
-    const char* iblDiffusePath  = "assets/ibl/garden/diffuse.ktx2";
-    const char* iblSpecularPath = "assets/ibl/garden/specular.ktx2";
+    const char* iblColorPath    = "assets/ibl/cloudy/color.hdr";
+    const char* iblLUTPath      = "assets/ibl/cloudy/lut.png";
+    const char* iblDiffusePath  = "assets/ibl/cloudy/diffuse.ktx2";
+    const char* iblSpecularPath = "assets/ibl/cloudy/specular.ktx2";
     if (!fs_exists(iblColorPath) || !fs_exists(iblLUTPath) || !fs_exists(iblDiffusePath)
         || !fs_exists(iblSpecularPath))
     {

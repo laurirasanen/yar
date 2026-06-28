@@ -7,3 +7,6 @@
 /assets/ibl/garden/color.hdr filter=lfs diff=lfs merge=lfs -text
 /assets/ibl/garden/diffuse.ktx2 filter=lfs diff=lfs merge=lfs -text
 /assets/ibl/garden/specular.ktx2 filter=lfs diff=lfs merge=lfs -text
+/assets/ibl/cloudy/color.hdr filter=lfs diff=lfs merge=lfs -text
+/assets/ibl/cloudy/diffuse.ktx2 filter=lfs diff=lfs merge=lfs -text
+/assets/ibl/cloudy/specular.ktx2 filter=lfs diff=lfs merge=lfs -text
