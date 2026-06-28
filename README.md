@@ -40,6 +40,7 @@ meson compile -C build
 
 - [Sascha Willems: Vulkan examples](https://github.com/SaschaWillems/Vulkan) (MIT)
 - [Joey de Vries: Learn OpenGL - Theory](https://learnopengl.com/PBR/Theory) (CC BY-NC 4.0)
+- [Krzysztof Narkowicz: ACES Filmic Tone Mapping Curve](https://knarkowicz.wordpress.com/2016/01/06/aces-filmic-tone-mapping-curve/)(CC0 / MIT)
 
 ### Third-party depedencies
 - [cgltf](https://github.com/jkuhlmann/cgltf) (MIT)
