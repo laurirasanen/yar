@@ -12,9 +12,13 @@ A renderer written in modern C++ and Vulkan.
 - PBR (ORM workflow)
 - Image based lighting
 
-![Sunny scene](docs/sunny.mp4)
+<video width="100%" height="auto" controls loop autoplay>
+  <source src="docs/sunny.mp4" type="video/mp4">
+</video>
 
-![Cloudy scene](docs/cloudy.mp4)
+<video width="100%" height="auto" controls loop autoplay>
+  <source src="docs/cloudy.mp4" type="video/mp4">
+</video>
 
 # Building
 
