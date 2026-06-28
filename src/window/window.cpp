@@ -11,6 +11,8 @@
 #include "../log.h"
 #include "window.h"
 
+#include <cmath>
+
 namespace yar
 {
 Window::Window(std::shared_ptr<InputSettings> inputSettings) : m_inputSettings(inputSettings)
@@ -174,7 +176,16 @@ unsigned int Window::GetRefreshRate()
     {
         if (const auto* mode = SDL_GetDesktopDisplayMode(display))
         {
-            return static_cast<unsigned int>(mode->refresh_rate);
+            if (mode->refresh_rate_numerator <= 0)
+            {
+                LOG_ERROR("Unspecified display refresh rate");
+                return 60;
+            }
+
+            float rate = static_cast<float>(mode->refresh_rate_numerator)
+                         / static_cast<float>(mode->refresh_rate_denominator);
+            rate       = std::ceilf(rate);
+            return static_cast<unsigned int>(rate);
         }
     }
 
