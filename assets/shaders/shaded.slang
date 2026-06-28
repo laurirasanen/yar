@@ -31,7 +31,6 @@
     output.tangentPos      = mul(worldPosition.xyz, TBN);
     output.tangentLightDir = mul(globalData->lightDir.xyz, TBN);
     output.tangentEye      = mul(globalData->eye.xyz, TBN);
-    output.tbn = TBN;
 
     output.pos = mul(worldPosition, globalData->viewProj);
 

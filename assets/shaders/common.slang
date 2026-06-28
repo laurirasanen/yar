@@ -101,7 +101,6 @@ struct VertexOutShaded
     float3 tangentPos;
     float3 tangentLightDir;
     float3 tangentEye;
-    float3x3 tbn;
 };
 
 struct PixelOut
