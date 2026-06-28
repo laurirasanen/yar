@@ -1,3 +1,7 @@
+*.glb filter=lfs diff=lfs merge=lfs -text
+*.hdr filter=lfs diff=lfs merge=lfs -text
+*.ktx2 filter=lfs diff=lfs merge=lfs -text
+*.png filter=lfs diff=lfs merge=lfs -text
 /assets/models/DamagedHelmet.glb filter=lfs diff=lfs merge=lfs -text
 /assets/models/bistro.glb filter=lfs diff=lfs merge=lfs -text
 /assets/scenes/DamagedHelmet.glb filter=lfs diff=lfs merge=lfs -text
