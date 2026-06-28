@@ -63,7 +63,10 @@ ShaderCompiler::ShaderCompiler()
     for (const auto& path : filepaths)
     {
         const std::string source = fs_read_text(path.c_str());
-        LoadModule(path.filename(), path.string(), source);
+        if (!LoadModule(path.filename(), path.string(), source))
+        {
+            throw std::runtime_error(std::format("Failed to load shader module {}", path.string()));
+        }
     }
 
     QueryEntries();

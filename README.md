@@ -34,11 +34,14 @@ meson compile -C build
 ### Resources
 
 - [Sascha Willems: Vulkan examples](https://github.com/SaschaWillems/Vulkan) (MIT)
+- [Joey de Vries: Learn OpenGL - Theory](https://learnopengl.com/PBR/Theory) (CC BY-NC 4.0)
 
-### Third-party code
+### Third-party depedencies
 - [cgltf](https://github.com/jkuhlmann/cgltf) (MIT)
 - [glm](https://github.com/g-truc/glm) (MIT)
+- [glTF-IBL-Sampler](https://github.com/KhronosGroup/glTF-IBL-Sampler) (Apache 2.0)
 - [imgui](https://github.com/ocornut/imgui) (MIT)
+- [KTX-Software](https://github.com/KhronosGroup/KTX-Software) (Apache 2.0)
 - [SDL](https://github.com/libsdl-org/SDL) (zlib)
 - [slang](https://github.com/shader-slang/slang) (Apache 2.0)
 - [stb](https://github.com/nothings/stb) (MIT / Public Domain)
@@ -46,6 +49,10 @@ meson compile -C build
 - [Vulkan-Headers](https://github.com/KhronosGroup/Vulkan-Headers) (Apache 2.0 / MIT)
 
 ### Assets
+
+**assets/ibl/garden/color.hdr**
+- https://polyhaven.com/a/suburban_garden
+- Dimitrios Savva, Jarod Guest, CC0
 
 **assets/scenes/DamagedHelmet.glb**
 - A fictional helmet with textured damage.

@@ -79,6 +79,11 @@ class Log
         "fatal",
     };
 
+    static void Backtrace()
+    {
+
+    }
+
   private:
     static inline LogLevel m_logLevel;
 

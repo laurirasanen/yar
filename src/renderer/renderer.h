@@ -17,6 +17,7 @@
 #include "vulkan/buffer.h"
 #include "vulkan/common.h"
 #include "vulkan/device.h"
+#include "vulkan/image.h"
 #include "vulkan/instance.h"
 #include "vulkan/pipeline.h"
 #include "vulkan/ubo_descriptor_set.h"
@@ -312,9 +313,11 @@ class Renderer
         m_renderStats.MeshCount   = 0;
         m_renderStats.IndexCount  = 0;
         m_renderStats.VertexCount = 0;
+        m_renderStats.SortTime    = 0.0;
         m_cullStats.MeshCount     = 0;
         m_cullStats.IndexCount    = 0;
         m_cullStats.VertexCount   = 0;
+        m_cullStats.CullTime      = 0.0;
     }
 
     void AddCulledMesh(std::shared_ptr<Buffer> vertexBuffer, std::shared_ptr<Buffer> indexBuffer)
@@ -332,6 +335,27 @@ class Renderer
     bool IsDrawing() const
     {
         return m_drawing;
+    }
+
+    void SetIBL(
+        std::shared_ptr<Texture> texColor,
+        std::shared_ptr<Texture> texLUT,
+        std::shared_ptr<Texture> texDiffuse,
+        std::shared_ptr<Texture> texSpecular
+    )
+    {
+        m_iblColor    = texColor;
+        m_iblLUT      = texLUT;
+        m_iblDiffuse  = texDiffuse;
+        m_iblSpecular = texSpecular;
+        m_uboDescriptorSet->SetIBL(texColor, texLUT, texDiffuse, texSpecular);
+
+        for (uint32_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++)
+        {
+            m_shaderGlobalData[i]->SetIBLMips(
+                static_cast<float>(m_iblSpecular->GetImage()->GetMips())
+            );
+        }
     }
 
     void SetMissingTexture(TextureType type, std::shared_ptr<Texture> tex)
@@ -457,6 +481,11 @@ class Renderer
     std::shared_ptr<Texture> m_missingMetalness;
     std::shared_ptr<Texture> m_missingNormal;
     std::shared_ptr<Texture> m_missingEmissive;
+
+    std::shared_ptr<Texture> m_iblColor;
+    std::shared_ptr<Texture> m_iblLUT;
+    std::shared_ptr<Texture> m_iblDiffuse;
+    std::shared_ptr<Texture> m_iblSpecular;
 
     RenderStats m_renderStats;
     CullStats   m_cullStats;

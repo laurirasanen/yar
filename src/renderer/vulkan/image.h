@@ -5,6 +5,8 @@
 
 #include <vulkan/vulkan_core.h>
 
+#include "ktxvulkan.h"
+
 namespace yar
 {
 class Renderer;
@@ -21,8 +23,10 @@ class VulkanImage
         uint32_t                  height,
         uint32_t                  channels,
         size_t                    size,
-        TextureFormat             type
+        TextureType               type
     );
+
+    VulkanImage(std::shared_ptr<Renderer> renderer, std::shared_ptr<ktxVulkanTexture> texture);
 
     ~VulkanImage();
 
@@ -46,16 +50,24 @@ class VulkanImage
         return m_sampler;
     }
 
+    uint32_t GetMips() const
+    {
+        return m_mips;
+    }
+
   private:
     std::shared_ptr<Renderer> m_renderer;
 
     uint32_t m_width;
     uint32_t m_height;
+    uint32_t m_mips;
 
     VkImage           m_image;
     VkImageView       m_imageView;
     VkSampler         m_sampler;
     VmaAllocation     m_vmaAllocation;
     VmaAllocationInfo m_vmaAllocationInfo;
+
+    bool ktx;
 };
 }; // namespace yar

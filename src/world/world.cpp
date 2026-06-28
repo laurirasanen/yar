@@ -1,6 +1,7 @@
 #include "world.h"
 #include "../components/transform.h"
 #include "../log.h"
+#include "../platform/fs.h"
 #include "../util.h"
 
 namespace yar
@@ -11,8 +12,77 @@ World::World(std::shared_ptr<Renderer> renderer, std::shared_ptr<UI> ui) :
     m_loaded(false)
 {
     LOG_INFO("Creating World");
+}
 
-    uint8_t pixel[]       = {255, 0, 255, 255};
+World::~World()
+{
+    LOG_INFO("Destroying World");
+}
+
+void World::Load()
+{
+    LOG_INFO("Loading World");
+
+    m_ui->SetLoadingScene("Global textures");
+
+    const char* iblColorPath    = "assets/ibl/garden/color.hdr";
+    const char* iblLUTPath      = "assets/ibl/garden/lut.png";
+    const char* iblDiffusePath  = "assets/ibl/garden/diffuse.ktx2";
+    const char* iblSpecularPath = "assets/ibl/garden/specular.ktx2";
+    if (!fs_exists(iblColorPath) || !fs_exists(iblLUTPath) || !fs_exists(iblDiffusePath)
+        || !fs_exists(iblSpecularPath))
+    {
+        throw std::runtime_error("Missing IBL texture");
+    }
+
+    m_ui->SetLoadingTexture(iblColorPath);
+    const auto iblColorData = fs_read_data(iblColorPath);
+    auto       iblColor     = std::make_shared<Texture>(
+        m_renderer,
+        "_YAR_IBL_COLOR",
+        iblColorData.size(),
+        iblColorData.data(),
+        TextureType::TEX_IBL,
+        false
+    );
+
+    m_ui->SetLoadingTexture(iblLUTPath);
+    const auto iblLUTData = fs_read_data(iblLUTPath);
+    auto       iblLUT     = std::make_shared<Texture>(
+        m_renderer,
+        "_YAR_IBL_LUT",
+        iblLUTData.size(),
+        iblLUTData.data(),
+        TextureType::TEX_IBL_LUT,
+        false
+    );
+
+    m_ui->SetLoadingTexture(iblDiffusePath);
+    const auto iblDiffuseData = fs_read_data(iblDiffusePath);
+    auto       iblDiffuse     = std::make_shared<Texture>(
+        m_renderer,
+        "_YAR_IBL_DIFFUSE",
+        iblDiffuseData.size(),
+        iblDiffuseData.data(),
+        TextureType::TEX_KTX,
+        false
+    );
+
+    m_ui->SetLoadingTexture(iblSpecularPath);
+    const auto iblSpecularData = fs_read_data(iblSpecularPath);
+    auto       iblSpecular     = std::make_shared<Texture>(
+        m_renderer,
+        "_YAR_IBL_SPECULAR",
+        iblSpecularData.size(),
+        iblSpecularData.data(),
+        TextureType::TEX_KTX,
+        false
+    );
+
+    m_renderer->SetIBL(iblColor, iblLUT, iblDiffuse, iblSpecular);
+
+    m_ui->SetLoadingTexture("_YAR_MISSING_ALBEDO");
+    uint8_t pixel[]       = {255, 0, 255, 0};
     auto    missingAlbedo = std::make_shared<Texture>(
         m_renderer,
         "_YAR_MISSING_ALBEDO",
@@ -22,6 +92,7 @@ World::World(std::shared_ptr<Renderer> renderer, std::shared_ptr<UI> ui) :
         true
     );
 
+    m_ui->SetLoadingTexture("_YAR_MISSING_ORM");
     pixel[0]         = 0;
     pixel[1]         = 200;
     pixel[2]         = 0;
@@ -34,6 +105,7 @@ World::World(std::shared_ptr<Renderer> renderer, std::shared_ptr<UI> ui) :
         true
     );
 
+    m_ui->SetLoadingTexture("_YAR_MISSING_NORMAL");
     pixel[0]           = 128;
     pixel[1]           = 128;
     pixel[2]           = 255;
@@ -46,9 +118,11 @@ World::World(std::shared_ptr<Renderer> renderer, std::shared_ptr<UI> ui) :
         true
     );
 
+    m_ui->SetLoadingTexture("_YAR_MISSING_EMISSIVE");
     pixel[0]             = 0;
     pixel[1]             = 0;
     pixel[2]             = 0;
+    pixel[3]             = 0;
     auto missingEmissive = std::make_shared<Texture>(
         m_renderer,
         "_YAR_MISSING_EMISSIVE",
@@ -58,20 +132,14 @@ World::World(std::shared_ptr<Renderer> renderer, std::shared_ptr<UI> ui) :
         true
     );
 
+    m_ui->SetLoadingTexture("");
+
     m_renderer->SetMissingTexture(TextureType::TEX_ALBEDO, missingAlbedo);
     m_renderer->SetMissingTexture(TextureType::TEX_ORM, missingMRAO);
     m_renderer->SetMissingTexture(TextureType::TEX_NORMAL, missingNormal);
     m_renderer->SetMissingTexture(TextureType::TEX_EMISSIVE, missingEmissive);
-}
 
-World::~World()
-{
-    LOG_INFO("Destroying World");
-}
-
-void World::Load()
-{
-    LOG_INFO("Loading World");
+    m_ui->SetLoadingScene("Sky");
 
     // clang-format off
     const float skyExtent = 100.0f;

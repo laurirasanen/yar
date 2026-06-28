@@ -58,15 +58,8 @@ int main(int argc, char** argv)
 
     yar::Log::SetLogLevel(logLevel);
 
-    try
     {
         yar::Engine engine;
-    }
-    catch (std::exception& ex)
-    {
-        LOG_FATAL("Unhandled exception: {}", ex.what());
-        yar::Log::Flush();
-        return -1;
     }
 
     return 0;

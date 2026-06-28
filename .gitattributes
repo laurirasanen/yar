@@ -4,3 +4,6 @@
 /assets/scenes/bistro.glb filter=lfs diff=lfs merge=lfs -text
 /assets/scenes/FlightHelmet.glb filter=lfs diff=lfs merge=lfs -text
 /assets/scenes/Sponza.glb filter=lfs diff=lfs merge=lfs -text
+/assets/ibl/garden/color.hdr filter=lfs diff=lfs merge=lfs -text
+/assets/ibl/garden/diffuse.ktx2 filter=lfs diff=lfs merge=lfs -text
+/assets/ibl/garden/specular.ktx2 filter=lfs diff=lfs merge=lfs -text

@@ -14,12 +14,13 @@ namespace yar
 bool fs_exists(const char* path)
 {
     std::filesystem::path p = {path};
-    return fs_exists(path);
+    return fs_exists(p);
 }
 
 bool fs_exists(const std::filesystem::path path)
 {
-    return std::filesystem::exists(path);
+    auto p = fs_relative_path(path);
+    return std::filesystem::exists(p);
 }
 
 std::string fs_read_text(const char* path)
@@ -30,8 +31,25 @@ std::string fs_read_text(const char* path)
 
 std::string fs_read_text(const std::filesystem::path path)
 {
-    std::ifstream ifs(path);
+    auto          p = fs_relative_path(path);
+    std::ifstream ifs(p);
     return std::string(std::istreambuf_iterator<char>(ifs), std::istreambuf_iterator<char>());
+}
+
+std::vector<uint8_t> fs_read_data(const char* path)
+{
+    std::filesystem::path p = {path};
+    return fs_read_data(p);
+}
+
+std::vector<uint8_t> fs_read_data(const std::filesystem::path path)
+{
+    auto          p = fs_relative_path(path);
+    std::ifstream ifs(p);
+    return std::vector<uint8_t>(
+        std::istreambuf_iterator<char>(ifs),
+        std::istreambuf_iterator<char>()
+    );
 }
 
 std::vector<std::filesystem::path> fs_iter(const char* path, const char* ext, bool recursive)
@@ -106,6 +124,10 @@ std::filesystem::path fs_relative_path(const char* path)
 
 std::filesystem::path fs_relative_path(const std::filesystem::path path)
 {
+    if (path.is_absolute())
+    {
+        return path;
+    }
     return fs_relative_path(path.c_str());
 }
 } // namespace yar

@@ -48,8 +48,29 @@ UboDescriptorSet::UboDescriptorSet(const VulkanDevice& device, uint32_t maxFrame
     emissiveBinding.stageFlags                   = VK_SHADER_STAGE_FRAGMENT_BIT;
     emissiveBinding.pImmutableSamplers           = nullptr;
 
-    const std::array<VkDescriptorSetLayoutBinding, 5> bindings =
-        {uboBinding, albedoBinding, ormBinding, normalBinding, emissiveBinding};
+    VkDescriptorSetLayoutBinding iblColorBinding = {};
+    iblColorBinding.binding                      = BINDING_IBL;
+    iblColorBinding.descriptorCount              = 2;
+    iblColorBinding.descriptorType               = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+    iblColorBinding.stageFlags                   = VK_SHADER_STAGE_FRAGMENT_BIT;
+    iblColorBinding.pImmutableSamplers           = nullptr;
+
+    VkDescriptorSetLayoutBinding iblLightingBinding = {};
+    iblLightingBinding.binding                      = BINDING_IBL_FILTERED;
+    iblLightingBinding.descriptorCount              = 2;
+    iblLightingBinding.descriptorType               = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+    iblLightingBinding.stageFlags                   = VK_SHADER_STAGE_FRAGMENT_BIT;
+    iblLightingBinding.pImmutableSamplers           = nullptr;
+
+    const std::array<VkDescriptorSetLayoutBinding, 7> bindings = {
+        uboBinding,
+        albedoBinding,
+        ormBinding,
+        normalBinding,
+        emissiveBinding,
+        iblColorBinding,
+        iblLightingBinding
+    };
 
     VkDescriptorSetLayoutCreateInfo layoutInfo = {};
     layoutInfo.sType        = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
@@ -98,6 +119,11 @@ void UboDescriptorSet::Alloc()
         "Failed to allocate descriptor sets"
     );
 
+    std::vector<VkWriteDescriptorSet>   writes      = {};
+    std::vector<VkDescriptorBufferInfo> bufferInfos = {};
+    writes.resize(setCount);
+    bufferInfos.resize(setCount);
+
     for (uint32_t i = 0; i < setCount; i++)
     {
         m_objectBuffers.push_back(
@@ -110,30 +136,26 @@ void UboDescriptorSet::Alloc()
             )
         );
 
-        VkDescriptorBufferInfo bufferInfo = {};
-        bufferInfo.buffer                 = m_objectBuffers[i]->GetVkBuffer();
-        bufferInfo.offset                 = 0;
-        bufferInfo.range                  = sizeof(ShaderObjectData);
+        bufferInfos[i].buffer = m_objectBuffers[i]->GetVkBuffer();
+        bufferInfos[i].offset = 0;
+        bufferInfos[i].range  = sizeof(ShaderObjectData);
 
-        VkWriteDescriptorSet bufferWrite = {};
-        bufferWrite.sType                = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-        bufferWrite.dstSet               = m_vkSets[i];
-        bufferWrite.dstBinding           = BINDING_UBO;
-        bufferWrite.dstArrayElement      = 0;
-        bufferWrite.descriptorType       = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC;
-        bufferWrite.descriptorCount      = 1;
-        bufferWrite.pBufferInfo          = &bufferInfo;
-
-        std::array<VkWriteDescriptorSet, 1> writes = {bufferWrite};
-
-        vkUpdateDescriptorSets(
-            m_device.GetVkDevice(),
-            static_cast<uint32_t>(writes.size()),
-            writes.data(),
-            0,
-            nullptr
-        );
+        writes[i].sType           = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+        writes[i].dstSet          = m_vkSets[i];
+        writes[i].dstBinding      = BINDING_UBO;
+        writes[i].dstArrayElement = 0;
+        writes[i].descriptorType  = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC;
+        writes[i].descriptorCount = 1;
+        writes[i].pBufferInfo     = &bufferInfos[i];
     }
+
+    vkUpdateDescriptorSets(
+        m_device.GetVkDevice(),
+        static_cast<uint32_t>(writes.size()),
+        writes.data(),
+        0,
+        nullptr
+    );
 }
 
 void UboDescriptorSet::Update(
@@ -241,6 +263,105 @@ void UboDescriptorSet::Update(
 
     std::array<VkWriteDescriptorSet, 4> writes =
         {albedoWrite, ormWrite, normalWrite, emissiveWrite};
+
+    vkUpdateDescriptorSets(
+        m_device.GetVkDevice(),
+        static_cast<uint32_t>(writes.size()),
+        writes.data(),
+        0,
+        nullptr
+    );
+}
+
+void UboDescriptorSet::SetIBL(
+    std::shared_ptr<Texture> texColor,
+    std::shared_ptr<Texture> texLUT,
+    std::shared_ptr<Texture> texDiffuse,
+    std::shared_ptr<Texture> texSpecular
+)
+{
+    const auto                         color         = texColor->GetImage();
+    const auto                         lut           = texLUT->GetImage();
+    const auto                         diffuse       = texDiffuse->GetImage();
+    const auto                         specular      = texSpecular->GetImage();
+    const uint32_t                     setCount      = static_cast<uint32_t>(m_vkLayouts.size());
+    std::vector<VkWriteDescriptorSet>  writes        = {};
+    std::vector<VkDescriptorImageInfo> colorInfos    = {};
+    std::vector<VkDescriptorImageInfo> lutInfos      = {};
+    std::vector<VkDescriptorImageInfo> diffuseInfos  = {};
+    std::vector<VkDescriptorImageInfo> specularInfos = {};
+    writes.reserve(setCount * 4);
+    colorInfos.reserve(setCount);
+    lutInfos.reserve(setCount);
+    diffuseInfos.reserve(setCount);
+    specularInfos.reserve(setCount);
+
+    for (uint32_t i = 0; i < setCount; i++)
+    {
+        VkDescriptorImageInfo colorInfo = {};
+        colorInfo.imageLayout           = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+        colorInfo.imageView             = color->GetVkImageView();
+        colorInfo.sampler               = color->GetVkSampler();
+        colorInfos.push_back(colorInfo);
+
+        VkDescriptorImageInfo lutInfo = {};
+        lutInfo.imageLayout           = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+        lutInfo.imageView             = lut->GetVkImageView();
+        lutInfo.sampler               = lut->GetVkSampler();
+        lutInfos.push_back(lutInfo);
+
+        VkDescriptorImageInfo diffuseInfo = {};
+        diffuseInfo.imageLayout           = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+        diffuseInfo.imageView             = diffuse->GetVkImageView();
+        diffuseInfo.sampler               = diffuse->GetVkSampler();
+        diffuseInfos.push_back(diffuseInfo);
+
+        VkDescriptorImageInfo specularInfo = {};
+        specularInfo.imageLayout           = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+        specularInfo.imageView             = specular->GetVkImageView();
+        specularInfo.sampler               = specular->GetVkSampler();
+        specularInfos.push_back(specularInfo);
+
+        VkWriteDescriptorSet colorWrite = {};
+        colorWrite.sType                = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+        colorWrite.dstSet               = m_vkSets[i];
+        colorWrite.dstBinding           = BINDING_IBL;
+        colorWrite.dstArrayElement      = 0;
+        colorWrite.descriptorType       = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+        colorWrite.descriptorCount      = 1;
+        colorWrite.pImageInfo           = &colorInfos.back();
+        writes.push_back(colorWrite);
+
+        VkWriteDescriptorSet lutWrite = {};
+        lutWrite.sType                = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+        lutWrite.dstSet               = m_vkSets[i];
+        lutWrite.dstBinding           = BINDING_IBL;
+        lutWrite.dstArrayElement      = 1;
+        lutWrite.descriptorType       = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+        lutWrite.descriptorCount      = 1;
+        lutWrite.pImageInfo           = &lutInfos.back();
+        writes.push_back(lutWrite);
+
+        VkWriteDescriptorSet diffuseWrite = {};
+        diffuseWrite.sType                = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+        diffuseWrite.dstSet               = m_vkSets[i];
+        diffuseWrite.dstBinding           = BINDING_IBL_FILTERED;
+        diffuseWrite.dstArrayElement      = 0;
+        diffuseWrite.descriptorType       = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+        diffuseWrite.descriptorCount      = 1;
+        diffuseWrite.pImageInfo           = &diffuseInfos.back();
+        writes.push_back(diffuseWrite);
+
+        VkWriteDescriptorSet specularWrite = {};
+        specularWrite.sType                = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+        specularWrite.dstSet               = m_vkSets[i];
+        specularWrite.dstBinding           = BINDING_IBL_FILTERED;
+        specularWrite.dstArrayElement      = 1;
+        specularWrite.descriptorType       = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+        specularWrite.descriptorCount      = 1;
+        specularWrite.pImageInfo           = &specularInfos.back();
+        writes.push_back(specularWrite);
+    }
 
     vkUpdateDescriptorSets(
         m_device.GetVkDevice(),

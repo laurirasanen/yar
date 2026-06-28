@@ -11,11 +11,13 @@ namespace yar
 {
 enum DESC_BINDING : uint32_t
 {
-    BINDING_UBO      = 0u,
-    BINDING_ALBEDO   = 1u,
-    BINDING_ORM      = 2u,
-    BINDING_NORMAL   = 3u,
-    BINDING_EMISSIVE = 4u,
+    BINDING_UBO          = 0u,
+    BINDING_ALBEDO       = 1u,
+    BINDING_ORM          = 2u,
+    BINDING_NORMAL       = 3u,
+    BINDING_EMISSIVE     = 4u,
+    BINDING_IBL          = 5u,
+    BINDING_IBL_FILTERED = 6u,
 };
 
 class UboDescriptorSet
@@ -40,6 +42,13 @@ class UboDescriptorSet
     void Update(
         uint32_t                                                frameIndex,
         const std::vector<std::shared_ptr<Mesh<VertexShaded>>>& meshes
+    );
+
+    void SetIBL(
+        std::shared_ptr<Texture> texColor,
+        std::shared_ptr<Texture> texLUT,
+        std::shared_ptr<Texture> texDiffuse,
+        std::shared_ptr<Texture> texSpecular
     );
 
     void Bind(

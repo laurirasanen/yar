@@ -1,10 +1,17 @@
 sdl_dep = dependency('sdl3', include_type: 'system')
 vk_dep = dependency('vulkan', include_type: 'system')
 
-slang_dep = declare_dependency(
-  link_args: ['-lslang-compiler'],
-  include_directories: include_directories('/usr/local/include')
-)
+#slang_dep = declare_dependency(
+#  link_args: ['-lslang-compiler'],
+#  include_directories: include_directories(
+#    '../thirdparty/slang/build/slang-2026.3-linux-x86_64/include/'
+#  )
+#)
+#
+#ktx_dep = declare_dependency(
+#  link_args: ['-lktx'],
+#  include_directories: include_directories('../thirdparty/KTX-Software/lib/include/')
+#)
 
 yar_src = files([
   'components/scene.cpp',
@@ -36,6 +43,5 @@ yar_src = files([
 yar_deps = [
     sdl_dep,
     vk_dep,
-    slang_dep
 ]
 

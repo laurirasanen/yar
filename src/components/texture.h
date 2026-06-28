@@ -6,17 +6,12 @@
 #include <memory>
 #include <string>
 
+class ktxVulkanTexture;
+
 namespace yar
 {
 class Renderer;
 class VulkanImage;
-
-enum TextureFormat
-{
-    FMT_UNKNOWN,
-    FMT_SRGB,
-    FMT_LINEAR,
-};
 
 enum TextureType
 {
@@ -25,6 +20,9 @@ enum TextureType
     TEX_ORM,
     TEX_NORMAL,
     TEX_EMISSIVE,
+    TEX_IBL,
+    TEX_IBL_LUT,
+    TEX_KTX,
 };
 
 class Texture
@@ -53,7 +51,7 @@ class Texture
 
     size_t GetSize() const
     {
-        return static_cast<size_t>(m_width * m_height * m_channels);
+        return static_cast<size_t>(m_width * m_height * m_channels) * m_elementSize;
     }
 
     int GetChannels() const
@@ -72,17 +70,22 @@ class Texture
     }
 
   private:
+    std::shared_ptr<Renderer> m_renderer;
+
     std::string m_name;
+    TextureType m_type;
 
-    int m_width;
-    int m_height;
-    int m_channels;
-    int m_originalChannels;
+    int      m_width;
+    int      m_height;
+    int      m_channels;
+    uint32_t m_elementSize;
 
-    stbi_uc* m_pixels;
+    void* m_pixels;
 
     bool m_transparent;
 
     std::shared_ptr<VulkanImage> m_image;
+
+    std::shared_ptr<ktxVulkanTexture> m_ktxVulkanTexture;
 };
 }; // namespace yar

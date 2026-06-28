@@ -486,17 +486,7 @@ std::shared_ptr<Texture> Scene::ReadTexture(
 
     const auto data =
         static_cast<const void*>(cgltf_buffer_view_data(view->texture->image->buffer_view));
-    const auto size   = static_cast<size_t>(view->texture->image->buffer_view->size);
-    glm::vec2  offset = {0.0f, 0.0f};
-    glm::vec2  scale  = {1.0f, 1.0f};
-
-    if (view->has_transform)
-    {
-        offset.x = view->transform.offset[0];
-        offset.y = view->transform.offset[1];
-        scale.x  = view->transform.scale[0];
-        scale.y  = view->transform.scale[1];
-    }
+    const auto size = static_cast<size_t>(view->texture->image->buffer_view->size);
 
     m_textures.push_back(std::make_shared<Texture>(renderer, name, size, data, type));
     return m_textures.back();

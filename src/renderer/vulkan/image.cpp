@@ -1,5 +1,6 @@
 #include "image.h"
 #include "../renderer.h"
+#include "src/components/texture.h"
 
 #include <vulkan/vulkan_core.h>
 
@@ -12,11 +13,13 @@ VulkanImage::VulkanImage(
     uint32_t                  height,
     uint32_t                  channels,
     size_t                    size,
-    TextureFormat             type
+    TextureType               type
 ) :
     m_renderer(renderer),
     m_width(width),
-    m_height(height)
+    m_height(height),
+    m_mips(1),
+    ktx(false)
 {
     VkFormat format = VK_FORMAT_UNDEFINED;
 
@@ -26,41 +29,24 @@ VulkanImage::VulkanImage(
         {
             switch (type)
             {
-                case TextureFormat::FMT_SRGB:
+                case TextureType::TEX_ALBEDO:
                 {
                     format = VK_FORMAT_R8G8B8A8_SRGB;
                     break;
                 }
 
-                case TextureFormat::FMT_LINEAR:
+                case TextureType::TEX_ORM:
+                case TextureType::TEX_NORMAL:
+                case TextureType::TEX_EMISSIVE:
+                case TextureType::TEX_IBL_LUT:
                 {
                     format = VK_FORMAT_R8G8B8A8_UNORM;
                     break;
                 }
 
-                default:
+                case TextureType::TEX_IBL:
                 {
-                    throw std::runtime_error(
-                        std::format("Unhandled texture type {}", static_cast<int>(type))
-                    );
-                }
-            }
-            break;
-        }
-
-        case 3:
-        {
-            switch (type)
-            {
-                case TextureFormat::FMT_SRGB:
-                {
-                    format = VK_FORMAT_R8G8B8_SRGB;
-                    break;
-                }
-
-                case TextureFormat::FMT_LINEAR:
-                {
-                    format = VK_FORMAT_R8G8B8_UNORM;
+                    format = VK_FORMAT_R32G32B32A32_SFLOAT;
                     break;
                 }
 
@@ -145,7 +131,7 @@ VulkanImage::VulkanImage(
 
     vkCmdPipelineBarrier2(commandBuffer, &dep);
 
-    // Use a staging buffer to transition pixels to VK_IMAGE_TILING_OPTIMAL.
+    // Use a staging buffer to transition pixels to the optimal format.
     auto hostBuffer = std::make_shared<VulkanBuffer>(
         renderer->GetDevice().GetVkDevice(),
         BufferType::ImageBuffer,
@@ -228,11 +214,68 @@ VulkanImage::VulkanImage(
     );
 }
 
+VulkanImage::VulkanImage(
+    std::shared_ptr<Renderer>         renderer,
+    std::shared_ptr<ktxVulkanTexture> texture
+) :
+    m_renderer(renderer),
+    m_width(texture->width),
+    m_height(texture->height),
+    m_mips(texture->levelCount),
+    ktx(false)
+{
+    m_image = texture->image;
+
+    VkImageViewCreateInfo viewInfo           = {};
+    viewInfo.sType                           = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
+    viewInfo.image                           = m_image;
+    viewInfo.viewType                        = texture->viewType;
+    viewInfo.format                          = texture->imageFormat;
+    viewInfo.subresourceRange.aspectMask     = VK_IMAGE_ASPECT_COLOR_BIT;
+    viewInfo.subresourceRange.baseMipLevel   = 0;
+    viewInfo.subresourceRange.levelCount     = texture->levelCount;
+    viewInfo.subresourceRange.baseArrayLayer = 0;
+    viewInfo.subresourceRange.layerCount     = texture->layerCount;
+
+    VK_CHECK(
+        vkCreateImageView(renderer->GetDevice().GetVkDevice(), &viewInfo, nullptr, &m_imageView),
+        "Failed to create image view"
+    );
+
+    VkSamplerCreateInfo samplerInfo = {};
+    samplerInfo.sType               = VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO;
+    samplerInfo.minFilter           = VK_FILTER_LINEAR;
+    samplerInfo.magFilter           = VK_FILTER_LINEAR;
+    samplerInfo.addressModeU        = VK_SAMPLER_ADDRESS_MODE_REPEAT;
+    samplerInfo.addressModeV        = VK_SAMPLER_ADDRESS_MODE_REPEAT;
+    samplerInfo.addressModeW        = VK_SAMPLER_ADDRESS_MODE_REPEAT;
+    samplerInfo.anisotropyEnable    = VK_TRUE;
+    samplerInfo.maxAnisotropy = m_renderer->GetDevice().GetProperties().limits.maxSamplerAnisotropy;
+    samplerInfo.borderColor   = VK_BORDER_COLOR_FLOAT_TRANSPARENT_BLACK;
+    samplerInfo.unnormalizedCoordinates = VK_FALSE;
+    samplerInfo.compareEnable           = VK_FALSE;
+    samplerInfo.compareOp               = VK_COMPARE_OP_ALWAYS;
+    samplerInfo.mipmapMode              = VK_SAMPLER_MIPMAP_MODE_LINEAR;
+    samplerInfo.mipLodBias              = 0.0f;
+    samplerInfo.minLod                  = 0.0f;
+    samplerInfo.maxLod                  = static_cast<float>(texture->levelCount) - 1.0f;
+
+    VK_CHECK(
+        vkCreateSampler(m_renderer->GetDevice().GetVkDevice(), &samplerInfo, nullptr, &m_sampler),
+        "Failed to create image sampler"
+    );
+}
+
 VulkanImage::~VulkanImage()
 {
     LOG_DEBUG("Destroy image {}", static_cast<void*>(m_image));
     vkDestroySampler(m_renderer->GetDevice().GetVkDevice(), m_sampler, nullptr);
     vkDestroyImageView(m_renderer->GetDevice().GetVkDevice(), m_imageView, nullptr);
-    vmaDestroyImage(g_vma, m_image, m_vmaAllocation);
+
+    if (!ktx)
+    {
+        vmaDestroyImage(g_vma, m_image, m_vmaAllocation);
+    }
 }
+
 }; // namespace yar

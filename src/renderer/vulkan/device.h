@@ -119,6 +119,11 @@ class VulkanDevice
         return m_vkPhysicalDeviceProperties;
     }
 
+    VkCommandPool GetCommandPool() const
+    {
+        return m_vkCommandPool;
+    }
+
   private:
     void RecreateSwapchain();
     void DestroySwapchain();
