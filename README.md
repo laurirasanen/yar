@@ -12,9 +12,7 @@ A renderer written in modern C++ and Vulkan.
 - PBR (ORM workflow)
 - Image based lighting
 
-![Sunny scene](docs/sunny.gif)
-
-![Cloudy scene](docs/cloudy.gif)
+![Example scene](docs/cobble.gif)
 
 # Building
 
