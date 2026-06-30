@@ -74,13 +74,11 @@
         occlusion
     );
 
-    /* Emissive */
     const float4 emissiveStrength = float4(objectData.materialParams2.xyz, 1.0);
     const float4 emissiveTex = texEmissive[objectData.index].Sample(input.uv).rgba;
     const float4 emissive = emissiveTex * emissiveStrength;
     color += emissive.rgb * emissive.a;
 
-    /* Post-processing */
     const float exposure = globalData->settings[0];
     color = color * exposure;
     color = ACESTonemap(color);

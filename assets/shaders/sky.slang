@@ -28,7 +28,6 @@ PixelOut pixel(
     const float2 uv = sphericalUV(normalize(input.viewDir));
     float3 color = texIBL[0].Sample(uv).rgb * globalData->settings.w;
 
-    /* Post-processing */
     const float exposure = globalData->settings[0];
     color = color * exposure;
     color = ACESTonemap(color);
