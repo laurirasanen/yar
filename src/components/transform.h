@@ -9,6 +9,14 @@
 
 namespace yar
 {
+#define VEC_X glm::vec3(1.0f, 0.0f, 0.0f)
+#define VEC_Y glm::vec3(0.0f, 1.0f, 0.0f)
+#define VEC_Z glm::vec3(0.0f, 0.0f, 1.0f)
+
+#define VEC_LEFT VEC_X
+#define VEC_UP   VEC_Y
+#define VEC_FWD  VEC_Z
+
 struct Transform
 {
     void SetPosition(glm::vec3 pos)
@@ -60,6 +68,12 @@ struct Transform
         SetRotation(other.GetRotation());
     }
 
+    void AddRotation(const float angle, const glm::vec3 axis)
+    {
+        m_rotation = glm::angleAxis(glm::radians(angle), axis) * m_rotation;
+    }
+
+    // Bad idea!
     glm::vec3 GetEulerRotation() const
     {
         const auto quat  = GetRotation();
@@ -67,12 +81,13 @@ struct Transform
         return glm::degrees(euler);
     }
 
+    // Bad idea!
     void SetEulerRotation(const glm::vec3 angles)
     {
-        SetRotation(
-            glm::angleAxis(glm::radians(angles.z), glm::vec3 {0.0f, 0.0f, 1.0f})
-            * glm::angleAxis(glm::radians(angles.x), glm::vec3 {1.0f, 0.0f, 0.0f})
-        );
+        m_rotation = glm::identity<glm::quat>();
+        AddRotation(angles.x, VEC_LEFT);
+        AddRotation(angles.y, VEC_UP);
+        AddRotation(angles.z, VEC_FWD);
     }
 
     glm::quat GetRotation() const
@@ -97,17 +112,17 @@ struct Transform
 
     glm::vec3 Forward() const
     {
-        return GetRotation() * glm::vec3(0.0f, 1.0f, 0.0f);
+        return GetRotation() * VEC_FWD;
     }
 
-    glm::vec3 Right() const
+    glm::vec3 Left() const
     {
-        return GetRotation() * glm::vec3(1.0f, 0.0f, 0.0f);
+        return GetRotation() * VEC_LEFT;
     }
 
     glm::vec3 Up() const
     {
-        return GetRotation() * glm::vec3(0.0f, 0.0f, 1.0f);
+        return GetRotation() * VEC_UP;
     }
 
     glm::vec3 ToGlobalSpace(const glm::vec3 local) const

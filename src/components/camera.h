@@ -39,7 +39,7 @@ class Camera
     void UpdateMatrices()
     {
         const auto pos = transform.GetPosition();
-        view           = glm::lookAt(pos, pos + transform.Forward(), glm::vec3(0.0f, 0.0f, 1.0f));
+        view           = glm::lookAt(pos, pos + transform.Forward(), VEC_UP);
         proj           = glm::perspective(glm::radians(fov), aspect, near, far);
         proj[1][1] *= -1; // OpenGL Y flip
     }
@@ -158,6 +158,10 @@ class Camera
     glm::mat4 view;
     glm::mat4 proj;
     Frustum   frustum;
+
+    float Pitch;
+    float Yaw;
+    float Roll;
 };
 
 class NoclipCamera : public Camera
@@ -171,25 +175,28 @@ class NoclipCamera : public Camera
 
     void HandleInput(WindowInput input) override
     {
-        auto euler = transform.GetEulerRotation();
         if (input.mouse.x != 0)
         {
-            euler.z -= 0.022f * 3.14f * static_cast<float>(input.mouse.x);
-            while (euler.z < -180.0f)
+            const float delta = -0.022f * 3.14f * static_cast<float>(input.mouse.x);
+            Yaw += delta;
+            while (Yaw < -180.0f)
             {
-                euler.z += 360.0f;
+                Yaw += 360.0f;
             }
-            while (euler.z > 180.0f)
+            while (Yaw > 180.0f)
             {
-                euler.z -= 360.0f;
+                Yaw -= 360.0f;
             }
         }
         if (input.mouse.y != 0)
         {
-            euler.x -= 0.022f * 3.14f * static_cast<float>(input.mouse.y);
-            euler.x = std::clamp(euler.x, -89.0f, 89.0f);
+            const float delta = 0.022f * 3.14f * static_cast<float>(input.mouse.y);
+            Pitch += delta;
+            Pitch = std::clamp(Pitch, -89.0f, 89.0f);
+            transform.AddRotation(delta, transform.Left());
         }
-        transform.SetEulerRotation(euler);
+
+        transform.SetEulerRotation({Pitch, Yaw, 0.0f});
 
         if (input.scroll.y > 0)
         {
@@ -209,21 +216,21 @@ class NoclipCamera : public Camera
         {
             position -= transform.Forward() * MoveSpeed * static_cast<float>(Time::DeltaFrame);
         }
-        if (input.HasKey(Key::KEY_MOVE_RIGHT))
-        {
-            position += transform.Right() * MoveSpeed * static_cast<float>(Time::DeltaFrame);
-        }
         if (input.HasKey(Key::KEY_MOVE_LEFT))
         {
-            position -= transform.Right() * MoveSpeed * static_cast<float>(Time::DeltaFrame);
+            position += transform.Left() * MoveSpeed * static_cast<float>(Time::DeltaFrame);
+        }
+        if (input.HasKey(Key::KEY_MOVE_RIGHT))
+        {
+            position -= transform.Left() * MoveSpeed * static_cast<float>(Time::DeltaFrame);
         }
         if (input.HasKey(Key::KEY_MOVE_UP))
         {
-            position += glm::vec3(0, 0, 1) * MoveSpeed * static_cast<float>(Time::DeltaFrame);
+            position += VEC_UP * MoveSpeed * static_cast<float>(Time::DeltaFrame);
         }
         if (input.HasKey(Key::KEY_MOVE_DOWN))
         {
-            position -= glm::vec3(0, 0, 1) * MoveSpeed * static_cast<float>(Time::DeltaFrame);
+            position -= VEC_UP * MoveSpeed * static_cast<float>(Time::DeltaFrame);
         }
         transform.SetPosition(position);
 

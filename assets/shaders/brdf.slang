@@ -80,10 +80,7 @@ float3 BRDF_IBL(
 {
     const float n_dot_v = max(dot(normal, view), 0.0);
 
-    // Y-flip
-    const float3 iblNormal = float3(worldNormal.x, worldNormal.z, -worldNormal.y);
-
-    float3 iblDiffuse = texIBLFiltered[0].Sample(iblNormal).rgb
+    float3 iblDiffuse = texIBLFiltered[0].Sample(worldNormal).rgb
         * globalData->settings.w;
 
     float3 F0 = lerp(0.04, albedo.rgb, metalness);
@@ -93,7 +90,7 @@ float3 BRDF_IBL(
     float3 diffuse = kD * iblDiffuse * albedo.rgb * occlusion;
 
     float3 specularDir = reflect(-worldView, worldNormal);
-    specularDir = float3(specularDir.x, specularDir.z, -specularDir.y);
+    specularDir = float3(specularDir.x, specularDir.y, specularDir.z);
 
     const float specularMips = globalData->settings.z;
     const float specularLod = roughness * (specularMips - 1.0);

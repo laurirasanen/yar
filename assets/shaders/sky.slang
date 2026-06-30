@@ -11,10 +11,6 @@ VertexOutSky vertex(
 
     output.pos = float4(input.pos, 0.99, 1.0);
 
-    const float3 viewPos = mul(output.pos, globalData->invProj).xyz;
-    const float3 worldDir = normalize(mul(viewPos, float3x3(globalData->invView)));
-    output.viewDir = worldDir;
-
     return output;
 }
 
@@ -25,8 +21,14 @@ PixelOut pixel(
 ) {
     PixelOut output;
 
-    const float2 uv = sphericalUV(normalize(input.viewDir));
-    float3 color = texIBL[0].Sample(uv).rgb * globalData->settings.w;
+    const float4 clipPos = FragClipPos(input.pos, globalData->viewport.xy);
+    const float3 viewPos = mul(clipPos, globalData->invProj).xyz;
+    const float3 worldDir = normalize(mul(viewPos, float3x3(globalData->invView)));
+
+    float2 uv = SphericalUV(worldDir);
+    uv.y = 1.0 -uv.y;
+    // lod has to be explicit here to avoid seams
+    float3 color = texIBL[0].SampleLevel(uv, 0).rgb * globalData->settings.w;
 
     const float exposure = globalData->settings[0];
     color = color * exposure;

@@ -69,7 +69,6 @@ struct VertexSky
 struct VertexOutSky
 {
     float4 pos : SV_Position;
-    float3 viewDir;
 };
 
 struct VertexUnlit
@@ -107,20 +106,5 @@ struct PixelOut
 {
     float4 color : SV_Target0;
 };
-
-float4 FragClipPos(float4 pos, float2 viewport)
-{
-    float4 ndc;
-    ndc.xy      = (2.0 * pos.xy / viewport) - 1.0;
-    ndc.z       = (2.0 * pos.z) - 1.0;
-    ndc.w       = 1.0;
-    float4 clip = ndc / pos.w;
-    return clip;
-}
-
-float3 FragWorldPos(float4 pos, float2 viewport, float4x4 invViewProj)
-{
-    return mul(FragClipPos(pos, viewport), invViewProj).xyz;
-}
 
 #endif // COMMON_SLANG

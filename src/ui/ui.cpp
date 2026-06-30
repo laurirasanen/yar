@@ -107,7 +107,6 @@ void UI::DebugWindow()
         ImGui::Text("  Vertices: %zu", cullStats.VertexCount);
 
         const auto pos = m_camera->transform.GetPosition();
-        const auto ang = m_camera->transform.GetEulerRotation();
         ImGui::Text("Camera:");
         ImGui::Text(
             "  pos: [%.2f, %.2f, %.2f]",
@@ -117,9 +116,9 @@ void UI::DebugWindow()
         );
         ImGui::Text(
             "  ang: [%.2f, %.2f, %.2f]",
-            static_cast<double>(ang.x),
-            static_cast<double>(ang.y),
-            static_cast<double>(ang.z)
+            static_cast<double>(m_camera->Pitch),
+            static_cast<double>(m_camera->Yaw),
+            static_cast<double>(m_camera->Roll)
         );
 
         ImGui::End();

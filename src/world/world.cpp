@@ -169,23 +169,23 @@ void World::Load()
     // Note: these are purposefully not instanced to simulate loading a bunch of unique meshes.
     for (uint32_t x = 0; x < 1; x++)
     {
-        for (uint32_t y = 0; y < 1; y++)
+        for (uint32_t z = 0; z < 1; z++)
         {
             Transform trans = {};
 
             auto flightHelmet =
                 std::make_shared<Scene>(m_renderer, m_ui, "assets/scenes/FlightHelmet.glb");
-            trans.SetEulerRotation({90, 0, 0});
-            trans.SetPosition({-0.4 + x * -0.75, y * 0.75, -0.3});
+            trans.SetEulerRotation({0, 0, 0});
+            trans.SetPosition({-0.4 + x * -0.75, -0.3, z * 0.75});
             flightHelmet->SetTransform(trans);
             m_scenes.push_back(flightHelmet);
 
             auto damagedHelmet =
                 std::make_shared<Scene>(m_renderer, m_ui, "assets/scenes/DamagedHelmet.glb");
             trans = {};
-            trans.SetEulerRotation({180, 0, 0});
+            trans.SetEulerRotation({90, 0, 0});
             trans.SetScale({0.3, 0.3, 0.3});
-            trans.SetPosition({0.4 + x * 0.75, y * 0.75, 0});
+            trans.SetPosition({0.4 + x * 0.75, 0, z * 0.75});
             damagedHelmet->SetTransform(trans);
             m_scenes.push_back(damagedHelmet);
         }
@@ -205,10 +205,9 @@ void World::Frame()
         const auto& scene = m_scenes[i];
         for (auto& mesh : scene->GetMeshes())
         {
-            auto angles = mesh->GetTransform()->GetEulerRotation();
-            angles.z +=
+            const float delta =
                 static_cast<float>(Time::DeltaFrame) * rotateSpeeds[i % ARRAY_SIZE(rotateSpeeds)];
-            mesh->GetTransform()->SetEulerRotation(angles);
+            mesh->GetTransform()->AddRotation(delta, VEC_UP);
             mesh->UpdateAABB();
         }
     }
