@@ -208,27 +208,27 @@ class NoclipCamera : public Camera
         }
 
         auto position = transform.GetPosition();
-        if (input.HasKey(Key::KEY_MOVE_FORWARD))
+        if (input.IsDown(Key::KEY_MOVE_FORWARD))
         {
             position += transform.Forward() * MoveSpeed * static_cast<float>(Time::DeltaFrame);
         }
-        if (input.HasKey(Key::KEY_MOVE_BACK))
+        if (input.IsDown(Key::KEY_MOVE_BACK))
         {
             position -= transform.Forward() * MoveSpeed * static_cast<float>(Time::DeltaFrame);
         }
-        if (input.HasKey(Key::KEY_MOVE_LEFT))
+        if (input.IsDown(Key::KEY_MOVE_LEFT))
         {
             position += transform.Left() * MoveSpeed * static_cast<float>(Time::DeltaFrame);
         }
-        if (input.HasKey(Key::KEY_MOVE_RIGHT))
+        if (input.IsDown(Key::KEY_MOVE_RIGHT))
         {
             position -= transform.Left() * MoveSpeed * static_cast<float>(Time::DeltaFrame);
         }
-        if (input.HasKey(Key::KEY_MOVE_UP))
+        if (input.IsDown(Key::KEY_MOVE_UP))
         {
             position += VEC_UP * MoveSpeed * static_cast<float>(Time::DeltaFrame);
         }
-        if (input.HasKey(Key::KEY_MOVE_DOWN))
+        if (input.IsDown(Key::KEY_MOVE_DOWN))
         {
             position -= VEC_UP * MoveSpeed * static_cast<float>(Time::DeltaFrame);
         }

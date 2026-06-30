@@ -88,6 +88,7 @@ struct WindowInput
     bool wantsQuit;
     bool wantsResize;
 
+    unsigned long long prevFlags;
     unsigned long long keyFlags;
 
     glm::vec2 mouse;
@@ -95,6 +96,8 @@ struct WindowInput
 
     WindowInput()
     {
+        prevFlags = 0;
+        keyFlags  = 0;
         Clear(true);
     }
 
@@ -102,6 +105,8 @@ struct WindowInput
     {
         wantsQuit   = false;
         wantsResize = false;
+
+        prevFlags = keyFlags;
 
         // Generally don't want to do this,
         // since window only tracks key up / down events.
@@ -121,23 +126,31 @@ struct WindowInput
         wantsQuit |= other.wantsQuit;
         wantsResize |= other.wantsResize;
 
+        prevFlags |= other.prevFlags;
         keyFlags |= other.keyFlags;
 
         mouse += other.mouse;
         scroll += other.scroll;
     }
 
-    bool HasKey(Key key)
+    bool IsDown(Key key)
     {
         return (keyFlags & KeyToFlag(key)) == KeyToFlag(key);
     }
 
-    void KeyDown(Key key)
+    bool WasPressed(Key key)
+    {
+        const auto pressedPrev = (prevFlags & KeyToFlag(key)) == KeyToFlag(key);
+        const auto pressedNow  = (keyFlags & KeyToFlag(key)) == KeyToFlag(key);
+        return pressedNow && !pressedPrev;
+    }
+
+    void SetKeyDown(Key key)
     {
         keyFlags |= KeyToFlag(key);
     }
 
-    void KeyUp(Key key)
+    void SetKeyUp(Key key)
     {
         keyFlags &= ~KeyToFlag(key);
     }

@@ -106,13 +106,13 @@ void Window::AggregateInput(WindowInput& input)
             if (event.type == SDL_EVENT_KEY_DOWN)
             {
                 auto key = m_inputSettings->GetKeyFromSDL(event.key.scancode);
-                input.KeyDown(key);
+                input.SetKeyDown(key);
             }
 
             if (event.type == SDL_EVENT_KEY_UP)
             {
                 auto key = m_inputSettings->GetKeyFromSDL(event.key.scancode);
-                input.KeyUp(key);
+                input.SetKeyUp(key);
             }
         }
 

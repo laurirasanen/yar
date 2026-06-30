@@ -111,48 +111,48 @@ void Engine::Frame()
 
     m_world->Frame();
 
-    if (m_frameInput.HasKey(Key::KEY_MOUSE_GRAB))
+    if (m_frameInput.WasPressed(Key::KEY_MOUSE_GRAB))
     {
         m_window->SetMouseGrab(!m_window->IsMouseGrabbed());
         m_frameInput.Clear(true);
     }
 
-    if (m_frameInput.HasKey(Key::KEY_WINDOW_DEBUG))
+    if (m_frameInput.WasPressed(Key::KEY_WINDOW_DEBUG))
     {
         m_ui->ToggleWindow(UIWindow::DEBUG);
-        m_frameInput.KeyUp(Key::KEY_WINDOW_DEBUG);
+        m_frameInput.SetKeyUp(Key::KEY_WINDOW_DEBUG);
     }
 
-    if (m_frameInput.HasKey(Key::KEY_WINDOW_DEMO))
+    if (m_frameInput.WasPressed(Key::KEY_WINDOW_DEMO))
     {
         m_window->SetMouseGrab(false);
         m_frameInput.Clear();
         m_ui->ToggleWindow(UIWindow::DEMO);
     }
 
-    if (m_frameInput.HasKey(Key::KEY_EXPOSURE_UP))
+    if (m_frameInput.WasPressed(Key::KEY_EXPOSURE_UP))
     {
         m_renderer->SetExposure(m_renderer->GetExposure() + 0.05f);
     }
-    else if (m_frameInput.HasKey(Key::KEY_EXPOSURE_DOWN))
+    else if (m_frameInput.WasPressed(Key::KEY_EXPOSURE_DOWN))
     {
         m_renderer->SetExposure(m_renderer->GetExposure() - 0.05f);
     }
 
-    if (m_frameInput.HasKey(Key::KEY_CONTRAST_UP))
+    if (m_frameInput.WasPressed(Key::KEY_CONTRAST_UP))
     {
         m_renderer->SetContrast(m_renderer->GetContrast() + 0.05f);
     }
-    else if (m_frameInput.HasKey(Key::KEY_CONTRAST_DOWN))
+    else if (m_frameInput.WasPressed(Key::KEY_CONTRAST_DOWN))
     {
         m_renderer->SetContrast(m_renderer->GetContrast() - 0.05f);
     }
 
-    if (m_frameInput.HasKey(Key::KEY_IBL_UP))
+    if (m_frameInput.WasPressed(Key::KEY_IBL_UP))
     {
         m_renderer->SetIBLStrength(m_renderer->GetIBLStrength() + 0.05f);
     }
-    else if (m_frameInput.HasKey(Key::KEY_IBL_DOWN))
+    else if (m_frameInput.WasPressed(Key::KEY_IBL_DOWN))
     {
         m_renderer->SetIBLStrength(m_renderer->GetIBLStrength() - 0.05f);
     }
