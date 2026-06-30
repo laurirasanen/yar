@@ -1,5 +1,5 @@
 #include "common.slang"
-#include "texture.slang"
+#include "math.slang"
 #include "color.slang"
 
 [shader("vertex")]

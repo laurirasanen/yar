@@ -1,6 +1,6 @@
 #include "common.slang"
 #include "color.slang"
-#include "texture.slang"
+#include "math.slang"
 #include "brdf.slang"
 
 [shader("vertex")] VertexOutShaded vertex(
