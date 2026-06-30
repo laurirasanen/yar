@@ -55,6 +55,10 @@ meson compile -C build
 
 ### Assets
 
+**assets/ibl/cobble/color.hdr**
+- https://polyhaven.com/a/cobblestone_parish_road
+- Elvis Posa, CC0
+
 **assets/ibl/cloudy/color.hdr**
 - https://polyhaven.com/a/overcast_soil_puresky
 - Sergej Majboroda, Jarod Guest, CC0
