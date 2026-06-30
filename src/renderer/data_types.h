@@ -121,6 +121,11 @@ struct ShaderGlobalData
     {
         settings[3] = strength;
     }
+
+    float GetIBLStrength()
+    {
+        return settings[3];
+    }
 };
 
 struct ShaderObjectData

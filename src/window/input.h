@@ -27,6 +27,9 @@ enum Key : unsigned int
     KEY_CONTRAST_UP,
     KEY_CONTRAST_DOWN,
 
+    KEY_IBL_UP,
+    KEY_IBL_DOWN,
+
     KEY_MAX,
 };
 
@@ -65,6 +68,9 @@ class InputSettings
         m_sdlKeyMap[static_cast<unsigned int>(SDL_SCANCODE_2)] = Key::KEY_EXPOSURE_DOWN;
         m_sdlKeyMap[static_cast<unsigned int>(SDL_SCANCODE_3)] = Key::KEY_CONTRAST_UP;
         m_sdlKeyMap[static_cast<unsigned int>(SDL_SCANCODE_4)] = Key::KEY_CONTRAST_DOWN;
+
+        m_sdlKeyMap[static_cast<unsigned int>(SDL_SCANCODE_5)] = Key::KEY_IBL_UP;
+        m_sdlKeyMap[static_cast<unsigned int>(SDL_SCANCODE_6)] = Key::KEY_IBL_DOWN;
     }
 
     Key GetKeyFromSDL(unsigned int scan)

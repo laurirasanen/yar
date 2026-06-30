@@ -138,6 +138,7 @@ void Engine::Frame()
     {
         m_renderer->SetExposure(m_renderer->GetExposure() - 0.05f);
     }
+
     if (m_frameInput.HasKey(Key::KEY_CONTRAST_UP))
     {
         m_renderer->SetContrast(m_renderer->GetContrast() + 0.05f);
@@ -145,6 +146,15 @@ void Engine::Frame()
     else if (m_frameInput.HasKey(Key::KEY_CONTRAST_DOWN))
     {
         m_renderer->SetContrast(m_renderer->GetContrast() - 0.05f);
+    }
+
+    if (m_frameInput.HasKey(Key::KEY_IBL_UP))
+    {
+        m_renderer->SetIBLStrength(m_renderer->GetIBLStrength() + 0.05f);
+    }
+    else if (m_frameInput.HasKey(Key::KEY_IBL_DOWN))
+    {
+        m_renderer->SetIBLStrength(m_renderer->GetIBLStrength() - 0.05f);
     }
 
     m_frameInput.Clear();

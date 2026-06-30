@@ -478,6 +478,20 @@ class Renderer
         return m_shaderGlobalData[0]->GetContrast();
     }
 
+    void SetIBLStrength(float strength)
+    {
+        LOG_INFO("Set IBL strength to {}", strength);
+        for (uint32_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++)
+        {
+            m_shaderGlobalData[i]->SetIBLStrength(strength);
+        }
+    }
+
+    float GetIBLStrength()
+    {
+        return m_shaderGlobalData[0]->GetIBLStrength();
+    }
+
   private:
     constexpr VkShaderModuleCreateInfo GetVulkanCreateInfo(const void* data, size_t size);
 
