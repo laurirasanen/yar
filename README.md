@@ -35,10 +35,14 @@ meson compile -C build
 
 ## Acknowledgments
 
-### Resources
+### Papers
+
+- [Brent Burley. Physically Based Shading at Disney. 2012.](https://media.disneyanimation.com/uploads/production/publication_asset/48/asset/s2012_pbs_disney_brdf_notes_v3.pdf)
+
+### Other resources
 
 - [Sascha Willems: Vulkan examples](https://github.com/SaschaWillems/Vulkan) (MIT)
-- [Joey de Vries: Learn OpenGL - Theory](https://learnopengl.com/PBR/Theory) (CC BY-NC 4.0)
+- [Google: Filament](https://github.com/google/filament) (Apache 2.0)
 - [Krzysztof Narkowicz: ACES Filmic Tone Mapping Curve](https://knarkowicz.wordpress.com/2016/01/06/aces-filmic-tone-mapping-curve/) (CC0 / MIT)
 
 ### Third-party depedencies

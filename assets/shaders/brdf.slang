@@ -1,107 +1,126 @@
 #include "common.slang"
 
-// Trowbridge-Reitz
-float BRDFDistribution(float3 n, float3 h, float a)
+float D_GGX(float roughness, float NoH, float3 N, float3 H)
+{
+    const float3 NxH = cross(N, H);
+    const float a = NoH * roughness;
+    const float k = roughness / (dot(NxH, NxH) + a * a);
+    return k * k * (1.0 / PI);
+}
+
+float V_SmithGGXCorrelated(float NoV, float NoL, float a)
 {
     float a2 = a * a;
-    float n_dot_h = dot(n, h);
-    float n_dot_h2 = n_dot_h * n_dot_h;
-    float denom = n_dot_h2 * (a2 - 1.0) + 1.0;
-    denom = PI * denom * denom;
-    return a2 / denom;
+    float GGXL = NoV * sqrt((-NoL * a2 + NoL) * NoL + a2);
+    float GGXV = NoL * sqrt((-NoV * a2 + NoV) * NoV + a2);
+    return 0.5 / (GGXV + GGXL);
 }
 
-float BRDFGeometrySchlick(float nom, float k)
+float V_SmithGGXCorrelatedFast(float NoV, float NoL, float roughness)
 {
-    float denom = nom * (1.0 - k) + k;
-    return nom / denom;
+    float GGXV = NoL * (NoV * (1.0 - roughness) + roughness);
+    float GGXL = NoV * (NoL * (1.0 - roughness) + roughness);
+    return 0.5 / (GGXV + GGXL);
 }
 
-// Smith's Schlick
-float BRDFGeometry(float3 n, float n_dot_v, float n_dot_l, float k)
+float3 F_Schlick(float u, float3 f0, float3 f90)
 {
-    float sch1 = BRDFGeometrySchlick(n_dot_v, k);
-    float sch2 = BRDFGeometrySchlick(n_dot_l, k);
-    return sch1 * sch2;
+    return f0 + (f90 - f0) * pow(1.0 - u, 5.0);
 }
 
-// Fresnel-Schlick approximation
-float3 BRDFFresnel(float cos_theta, float3 f)
+float F_Schlick(float u, float f0, float f90)
 {
-    return f + (1.0 - f) * pow(1.0 - cos_theta, 5.0);
+    return f0 + (f90 - f0) * pow(1.0 - u, 5.0);
 }
 
-float3 BRDFFresnelRoughness(float cosTheta, float3 F0, float roughness)
+float F_Schlick(float u, float f0)
 {
-    return F0 + (max(float3(1.0 - roughness), F0) - F0) * pow(clamp(1.0 - cosTheta, 0.0, 1.0), 5.0);
+    return F_Schlick(u, f0, 1.0);
+}
+
+float3 F_Schlick(float u, float3 f0)
+{
+    return F_Schlick(u, f0, 1.0);
+}
+
+float Fd_Burley(float NoV, float NoL, float LoH, float roughness) {
+    float f90 = 0.5 + 2.0 * roughness * LoH * LoH;
+    float lightScatter = F_Schlick(NoL, 1.0, f90);
+    float viewScatter = F_Schlick(NoV, 1.0, f90);
+    return lightScatter * viewScatter * (1.0 / PI);
 }
 
 float3 BRDF(
-    float3 normal_dir,
-    float3 light_dir,
-    float3 view_dir,
-    float3 half_dir,
-    float3 albedo,
-    float metalness,
-    float roughness
+    float3 N,
+    float3 L,
+    float3 V,
+    float3 H,
+    float3 basecolor,
+    float metallic,
+    float perceptualRoughness
 )
 {
-    float n_dot_v = max(dot(normal_dir, view_dir), 0.0);
-    float n_dot_l = max(dot(normal_dir, light_dir), 0.0);
+    const float roughness = perceptualRoughness * perceptualRoughness;
 
-    float3 dialectric = lerp(0.04, albedo, metalness);
-    float3 fresnel = BRDFFresnel(max(dot(half_dir, view_dir), 0.0), dialectric);
+    const float NoV = max(dot(N, V), 0.0) + 1e-5;
+    const float NoL = clamp(dot(N, L), 0.0, 1.0);
+    const float LoH = clamp(dot(L, H), 0.0, 1.0);
+    const float NoH = clamp(dot(N, H), 0.0, 1.0);
 
-    float ndf = BRDFDistribution(normal_dir, half_dir, roughness);
+    float D = D_GGX(NoH, roughness, N, H);
+    float f0 = 0.04;
+    float3 F = F_Schlick(LoH, f0);
+    float V = V_SmithGGXCorrelatedFast(NoV, NoL, roughness);
 
-    float geo = BRDFGeometry(normal_dir, n_dot_v, n_dot_l, roughness);
+    float3 Fr = (D * V) * F;
 
-    float3 nom = ndf * geo * fresnel;
-    float denom = 4.0 * n_dot_v * n_dot_l + 0.0001;
-    float3 specular = nom / denom;
+    const float3 diffuseColor = (1.0 - metallic) * basecolor.rgb;
+    float3 Fd = diffuseColor * Fd_Burley(NoV, NoL, LoH, roughness);
 
-    float3 k_d = (float3(1.0) - fresnel) * (1.0 - metalness);
-    float3 diffuse = k_d * albedo / PI;
-
-    return n_dot_l * (diffuse + specular);
+    return Fd + Fr;
 }
 
 float3 BRDF_IBL(
     GlobalData* globalData,
     float3 worldNormal,
-    float3 normal,
+    float3 N,
     float3 worldView,
-    float3 view,
-    float3 albedo,
-    float roughness,
-    float metalness,
+    float3 V,
+    float3 basecolor,
+    float perceptualRoughness,
+    float metallic,
     float occlusion
 )
 {
-    const float n_dot_v = max(dot(normal, view), 0.0);
+    const float roughness = perceptualRoughness * perceptualRoughness;
+
+    const float3 L = normalize(reflect(-worldView, worldNormal));
+    const float3 H = normalize(worldView + L);
+
+    const float NoV = max(dot(N, V), 0.0);
+    const float LoH = clamp(dot(L, H), 0.0, 1.0);
+
+    const float specularMips = globalData->settings.z;
+    const float specularLod = roughness * (specularMips - 1.0);
+    float3 D = texIBLFiltered[1].SampleLevel(L, specularLod).rgb
+        * globalData->settings.w;
 
     float3 iblDiffuse = texIBLFiltered[0].Sample(worldNormal).rgb
         * globalData->settings.w;
 
-    float3 F0 = lerp(0.04, albedo.rgb, metalness);
-    float3 fresnel = BRDFFresnelRoughness(n_dot_v, F0, roughness);
-    float3 kD = 1.0 - fresnel;
+    float3 f0 = lerp(0.04, basecolor.rgb, metallic);
+    float f90 = clamp(0.5 + 2.0 * roughness * LoH * LoH, 0.0, 1.0);
+    float3 F = F_Schlick(LoH, f0, f90);
 
-    float3 diffuse = kD * iblDiffuse * albedo.rgb * occlusion;
+    const float3 diffuseColor = (1.0 - metallic) * basecolor.rgb;
+    float3 kD = (1.0 - F) * (1.0 - metallic);
+    float3 Fd = kD * iblDiffuse * diffuseColor * occlusion;
 
-    float3 specularDir = reflect(-worldView, worldNormal);
-    specularDir = float3(specularDir.x, specularDir.y, specularDir.z);
+    const float2 lutUV = float2(NoV, perceptualRoughness);
+    const float2 visLUT = texIBL[1].Sample(lutUV).rg;
+    float3 FV = F * visLUT.x + visLUT.y;
 
-    const float specularMips = globalData->settings.z;
-    const float specularLod = roughness * (specularMips - 1.0);
-    float3 iblSpecular = texIBLFiltered[1].SampleLevel(specularDir, specularLod).rgb
-        * globalData->settings.w;
+    float3 Fr = f0 * D * FV;
 
-    const float2 lutUV = float2(n_dot_v, roughness);
-    const float2 iblLUT = texIBL[1].Sample(lutUV).rg;
-    float3 scatter = fresnel * iblLUT.x + iblLUT.y;
-
-    float3 specular = metalness * iblSpecular * scatter;
-
-    return diffuse + specular;
+    return Fd + Fr;
 }
