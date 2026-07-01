@@ -31,8 +31,8 @@ Renderer::Renderer(std::shared_ptr<Window> window) :
         m_shaderGlobalData[i] = std::make_shared<ShaderGlobalData>();
     }
 
-    m_uboDescriptorSet = std::make_shared<UboDescriptorSet>(m_device, MAX_FRAMES_IN_FLIGHT);
-    m_uboDescriptorSet->Alloc();
+    m_descriptorSet = std::make_shared<DescriptorSet>(m_device, MAX_FRAMES_IN_FLIGHT);
+    m_descriptorSet->Alloc();
 
     // TODO: abstract away to materials?
     ShaderCompiler compiler;
@@ -59,7 +59,7 @@ Renderer::Renderer(std::shared_ptr<Window> window) :
         std::vector stages {shaderFrag, shaderVert};
 
         m_pipelineSky =
-            std::make_shared<VulkanPipeline<VertexSky>>(m_device, m_uboDescriptorSet, stages);
+            std::make_shared<VulkanPipeline<VertexSky>>(m_device, m_descriptorSet, stages);
     }
 
     {
@@ -83,7 +83,7 @@ Renderer::Renderer(std::shared_ptr<Window> window) :
         std::vector stages {shaderFrag, shaderVert};
 
         m_pipelineUnlit =
-            std::make_shared<VulkanPipeline<VertexUnlit>>(m_device, m_uboDescriptorSet, stages);
+            std::make_shared<VulkanPipeline<VertexUnlit>>(m_device, m_descriptorSet, stages);
     }
 
     {
@@ -107,7 +107,7 @@ Renderer::Renderer(std::shared_ptr<Window> window) :
         std::vector stages {shaderFrag, shaderVert};
 
         m_pipelineShaded =
-            std::make_shared<VulkanPipeline<VertexShaded>>(m_device, m_uboDescriptorSet, stages);
+            std::make_shared<VulkanPipeline<VertexShaded>>(m_device, m_descriptorSet, stages);
     }
 }
 
@@ -120,7 +120,7 @@ Renderer::~Renderer()
     m_pipelineUnlit.reset();
     m_pipelineShaded.reset();
 
-    m_uboDescriptorSet.reset();
+    m_descriptorSet.reset();
 
     m_frameBuffers.clear();
 }
@@ -146,7 +146,7 @@ float Renderer::GetAspect()
 void Renderer::Begin()
 {
     m_drawing = true;
-    m_uboDescriptorSet->NewFrame();
+    m_descriptorSet->NewFrame();
     m_currentPipeline = RenderPipeline::NONE;
     m_device.Begin();
 }

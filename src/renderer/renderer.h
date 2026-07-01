@@ -20,7 +20,7 @@
 #include "vulkan/image.h"
 #include "vulkan/instance.h"
 #include "vulkan/pipeline.h"
-#include "vulkan/ubo_descriptor_set.h"
+#include "vulkan/descriptor_set.h"
 
 namespace yar
 {
@@ -249,7 +249,7 @@ class Renderer
     void UpdateDescriptor(const std::vector<std::shared_ptr<Mesh<VertexShaded>>>& meshes)
     {
         const auto currentFrame = m_device.GetCurrentFrame();
-        m_uboDescriptorSet->Update(currentFrame, meshes);
+        m_descriptorSet->Update(currentFrame, meshes);
     }
 
     void BindDescriptor(uint32_t objectIndex)
@@ -374,7 +374,7 @@ class Renderer
         m_iblLUT      = texLUT;
         m_iblDiffuse  = texDiffuse;
         m_iblSpecular = texSpecular;
-        m_uboDescriptorSet->SetIBL(texColor, texLUT, texDiffuse, texSpecular);
+        m_descriptorSet->SetIBL(texColor, texLUT, texDiffuse, texSpecular);
 
         for (uint32_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++)
         {
@@ -503,7 +503,7 @@ class Renderer
     VulkanInstance m_instance;
     VulkanDevice   m_device;
 
-    std::shared_ptr<UboDescriptorSet> m_uboDescriptorSet;
+    std::shared_ptr<DescriptorSet> m_descriptorSet;
 
     RenderPipeline m_currentPipeline;
 

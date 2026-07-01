@@ -20,17 +20,17 @@ enum DESC_BINDING : uint32_t
     BINDING_IBL_FILTERED = 6u,
 };
 
-class UboDescriptorSet
+class DescriptorSet
 {
   public:
-    UboDescriptorSet() = delete;
-    UboDescriptorSet(const VulkanDevice& device, uint32_t maxFrames);
-    ~UboDescriptorSet();
+    DescriptorSet() = delete;
+    DescriptorSet(const VulkanDevice& device, uint32_t maxFrames);
+    ~DescriptorSet();
 
-    UboDescriptorSet(const UboDescriptorSet&)            = delete;
-    UboDescriptorSet(UboDescriptorSet&&)                 = default;
-    UboDescriptorSet& operator=(const UboDescriptorSet&) = delete;
-    UboDescriptorSet& operator=(UboDescriptorSet&&)      = delete;
+    DescriptorSet(const DescriptorSet&)            = delete;
+    DescriptorSet(DescriptorSet&&)                 = default;
+    DescriptorSet& operator=(const DescriptorSet&) = delete;
+    DescriptorSet& operator=(DescriptorSet&&)      = delete;
 
     void NewFrame()
     {
@@ -68,7 +68,7 @@ class UboDescriptorSet
     const VulkanDevice&                        m_device;
     std::vector<VkDescriptorSetLayout>         m_vkLayouts;
     std::vector<VkDescriptorSet>               m_vkSets;
-    std::vector<std::shared_ptr<VulkanBuffer>> m_objectBuffers;
+    std::vector<std::shared_ptr<Buffer>> m_objectBuffers;
     uint32_t                                   m_objectIndex;
 };
 } // namespace yar

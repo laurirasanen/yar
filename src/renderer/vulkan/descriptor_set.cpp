@@ -6,12 +6,11 @@
 #include "../data_types.h"
 #include "common.h"
 #include "image.h"
-#include "ubo_descriptor_set.h"
+#include "descriptor_set.h"
 
 namespace yar
 {
-UboDescriptorSet::UboDescriptorSet(const VulkanDevice& device, uint32_t maxFrames) :
-    m_device(device)
+DescriptorSet::DescriptorSet(const VulkanDevice& device, uint32_t maxFrames) : m_device(device)
 {
     VkDescriptorSetLayoutBinding uboBinding = {};
     uboBinding.binding                      = BINDING_UBO;
@@ -93,7 +92,7 @@ UboDescriptorSet::UboDescriptorSet(const VulkanDevice& device, uint32_t maxFrame
     }
 }
 
-UboDescriptorSet::~UboDescriptorSet()
+DescriptorSet::~DescriptorSet()
 {
     m_objectBuffers.clear();
 
@@ -103,7 +102,7 @@ UboDescriptorSet::~UboDescriptorSet()
     }
 }
 
-void UboDescriptorSet::Alloc()
+void DescriptorSet::Alloc()
 {
     const uint32_t setCount = static_cast<uint32_t>(m_vkLayouts.size());
     m_vkSets.resize(setCount);
@@ -158,7 +157,7 @@ void UboDescriptorSet::Alloc()
     );
 }
 
-void UboDescriptorSet::Update(
+void DescriptorSet::Update(
     uint32_t                                                frameIndex,
     const std::vector<std::shared_ptr<Mesh<VertexShaded>>>& meshes
 )
@@ -273,7 +272,7 @@ void UboDescriptorSet::Update(
     );
 }
 
-void UboDescriptorSet::SetIBL(
+void DescriptorSet::SetIBL(
     std::shared_ptr<Texture> texColor,
     std::shared_ptr<Texture> texLUT,
     std::shared_ptr<Texture> texDiffuse,
@@ -372,7 +371,7 @@ void UboDescriptorSet::SetIBL(
     );
 }
 
-void UboDescriptorSet::Bind(
+void DescriptorSet::Bind(
     VkCommandBuffer     commandBuffer,
     VkPipelineBindPoint bindPoint,
     VkPipelineLayout    pipelineLayout,

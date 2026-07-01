@@ -7,7 +7,7 @@
 #include "../../log.h"
 #include "attributes.h"
 #include "device.h"
-#include "ubo_descriptor_set.h"
+#include "descriptor_set.h"
 
 namespace yar
 {
@@ -18,7 +18,7 @@ class VulkanPipeline
     VulkanPipeline() = delete;
     VulkanPipeline(
         const VulkanDevice&                          device,
-        std::shared_ptr<UboDescriptorSet>            uboDescriptorSet,
+        std::shared_ptr<DescriptorSet>               descriptorSet,
         std::vector<VkPipelineShaderStageCreateInfo> shaderStages,
         bool                                         enableCulling = true,
         bool                                         enableDepth   = true
@@ -50,8 +50,8 @@ class VulkanPipeline
     }
 
   private:
-    const VulkanDevice&               m_device;
-    std::shared_ptr<UboDescriptorSet> m_uboDescriptorSet;
+    const VulkanDevice&            m_device;
+    std::shared_ptr<DescriptorSet> m_uboDescriptorSet;
 
     VkPipelineLayout m_vkPipelineLayout;
     VkPipeline       m_vkPipeline;
@@ -60,7 +60,7 @@ class VulkanPipeline
 template<typename V>
 VulkanPipeline<V>::VulkanPipeline(
     const VulkanDevice&                          device,
-    std::shared_ptr<UboDescriptorSet>            uboDescriptorSet,
+    std::shared_ptr<DescriptorSet>               uboDescriptorSet,
     std::vector<VkPipelineShaderStageCreateInfo> shaderStages,
     bool                                         enableCulling,
     bool                                         enableDepth
