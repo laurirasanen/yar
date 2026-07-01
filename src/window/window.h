@@ -5,15 +5,18 @@
 #include <SDL3/SDL_video.h>
 #include <vulkan/vulkan_core.h>
 
+#include "../public/iwindow.h"
 #include "input.h"
 
 namespace yar
 {
-class Window
+class Window : public IWindow
 {
   public:
     Window(std::shared_ptr<InputSettings> inputSettings);
     ~Window();
+
+    void SetTitle(const char* title) override;
 
     void SetMouseGrab(bool grab);
     bool IsMouseGrabbed();

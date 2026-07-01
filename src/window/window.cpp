@@ -8,7 +8,7 @@
 #include <SDL3/SDL_video.h>
 #include <SDL3/SDL_vulkan.h>
 
-#include "../log.h"
+#include "../public/log.h"
 #include "window.h"
 
 #include <cmath>
@@ -49,6 +49,11 @@ Window::~Window()
         SDL_DestroyWindow(m_window);
     }
     SDL_Quit();
+}
+
+void Window::SetTitle(const char* title)
+{
+    SDL_SetWindowTitle(m_window, title);
 }
 
 void Window::SetMouseGrab(bool grab)

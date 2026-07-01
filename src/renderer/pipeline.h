@@ -4,7 +4,7 @@
 
 #include "vulkan/vulkan_core.h"
 
-#include "../log.h"
+#include "../public/log.h"
 #include "attributes.h"
 #include "descriptor_set.h"
 #include "device.h"

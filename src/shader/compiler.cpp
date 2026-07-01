@@ -1,8 +1,8 @@
 #include <cstring>
 
-#include "../log.h"
+#include "../public/log.h"
 #include "../platform/fs.h"
-#include "../util.h"
+#include "../public/util.h"
 #include "compiler.h"
 
 namespace yar

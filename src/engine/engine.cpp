@@ -5,10 +5,8 @@
 
 #include <imgui.h>
 
+#include "../public/log.h"
 #include "engine.h"
-#include "log.h"
-#include "time.h"
-#include "window/window.h"
 
 namespace yar
 {
@@ -35,13 +33,34 @@ Engine::Engine()
 
     m_window->SetMouseGrab(true);
 
-    m_tickThread   = std::jthread {std::bind_front(&Engine::TickThread, this)};
-    m_renderThread = std::jthread {std::bind_front(&Engine::RenderThread, this)};
-
     auto fps = m_window->GetRefreshRate();
     LOG_DEBUG("Setting framerate to {}", fps);
     Time::SetFrameRate(fps);
 
+    m_tickThread   = std::jthread {std::bind_front(&Engine::TickThread, this)};
+    m_renderThread = std::jthread {std::bind_front(&Engine::RenderThread, this)};
+}
+
+Engine::~Engine()
+{
+    LOG_INFO("Destroying Engine");
+
+    LOG_DEBUG("Requesting TickThread stop");
+    m_tickThread.request_stop();
+    m_threadTickSemaphore.release();
+    m_tickThread.join();
+
+    LOG_DEBUG("Requesting RenderThread stop");
+    m_renderThread.request_stop();
+    m_threadFrameSemaphore.release();
+    m_renderThread.join();
+
+    LOG_DEBUG("Waiting for renderer idle");
+    m_renderer->WaitForIdle();
+}
+
+int Engine::Run()
+{
     m_mainFrameSemaphore.release();
     m_mainTickSemaphore.release();
 
@@ -66,24 +85,8 @@ Engine::Engine()
 
         std::this_thread::yield();
     }
-}
 
-Engine::~Engine()
-{
-    LOG_INFO("Destroying Engine");
-
-    LOG_DEBUG("Requesting TickThread stop");
-    m_tickThread.request_stop();
-    m_threadTickSemaphore.release();
-    m_tickThread.join();
-
-    LOG_DEBUG("Requesting RenderThread stop");
-    m_renderThread.request_stop();
-    m_threadFrameSemaphore.release();
-    m_renderThread.join();
-
-    LOG_DEBUG("Waiting for renderer idle");
-    m_renderer->WaitForIdle();
+    return 0;
 }
 
 void Engine::Frame()

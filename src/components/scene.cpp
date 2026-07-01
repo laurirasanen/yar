@@ -2,10 +2,10 @@
 #define CGLTF_IMPLEMENTATION
 #include "scene.h"
 
-#include "../log.h"
+#include "../public/log.h"
 #include "../platform/fs.h"
 #include "../platform/memory.h"
-#include "../util.h"
+#include "../public/util.h"
 
 #include <glm/geometric.hpp>
 

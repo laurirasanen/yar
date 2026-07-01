@@ -1,8 +1,13 @@
+#include "../public/entry.h"
+#include "../public/log.h"
 #include "engine.h"
-#include "log.h"
 
 #include <cstring>
 #include <exception>
+
+namespace yar
+{
+std::shared_ptr<IEngine> g_engine;
 
 bool HasLaunchArg(const char* name, const char* value, int argc, char** argv)
 {
@@ -35,7 +40,7 @@ char* GetLaunchArg(const char* name, int argc, char** argv)
     return nullptr;
 }
 
-int main(int argc, char** argv)
+int YAR_Init(int argc, char** argv)
 {
 #if NDEBUG
     auto logLevel = yar::LogLevel::Warn;
@@ -58,9 +63,15 @@ int main(int argc, char** argv)
 
     yar::Log::SetLogLevel(logLevel);
 
-    {
-        yar::Engine engine;
-    }
+    g_engine = std::make_shared<yar::Engine>();
 
-    return 0;
+    return 1;
 }
+
+int YAR_Run()
+{
+    auto code = g_engine->Run();
+    g_engine.reset();
+    return code;
+}
+} // namespace yar

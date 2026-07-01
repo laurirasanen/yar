@@ -8,19 +8,27 @@
 #include <glm/gtc/quaternion.hpp>
 #include <glm/vec3.hpp>
 
-#include "renderer/renderer.h"
-#include "ui/ui.h"
-#include "window/input.h"
-#include "window/window.h"
-#include "world/world.h"
+#include "../public/iengine.h"
+#include "../renderer/renderer.h"
+#include "../ui/ui.h"
+#include "../window/input.h"
+#include "../window/window.h"
+#include "../world/world.h"
 
 namespace yar
 {
-class Engine
+class Engine : public IEngine
 {
   public:
     Engine();
     ~Engine();
+
+    int Run() override;
+
+    std::shared_ptr<IWindow> GetWindow() override
+    {
+        return m_window;
+    }
 
   private:
     void Frame();

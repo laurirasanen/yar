@@ -4,7 +4,7 @@
 #include <imgui_impl_vulkan.h>
 #include <vulkan/vulkan_core.h>
 
-#include "../log.h"
+#include "../public/log.h"
 #include "../shader/compiler.h"
 #include "data_types.h"
 #include "renderer.h"

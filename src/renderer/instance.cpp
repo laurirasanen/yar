@@ -1,7 +1,7 @@
 #include <cstdint>
 #include <stdexcept>
 
-#include "../log.h"
+#include "../public/log.h"
 #include "common.h"
 #include "instance.h"
 

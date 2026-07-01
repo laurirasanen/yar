@@ -4,7 +4,7 @@
 #include <imgui_internal.h>
 #include <SDL3/SDL_events.h>
 
-#include "../log.h"
+#include "../public/log.h"
 #include "../platform/memory.h"
 #include "ui.h"
 

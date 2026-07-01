@@ -1,8 +1,8 @@
 #include "world.h"
 #include "../components/transform.h"
-#include "../log.h"
+#include "../public/log.h"
 #include "../platform/fs.h"
-#include "../util.h"
+#include "../public/util.h"
 
 namespace yar
 {
