@@ -2,9 +2,9 @@
 
 #include <vulkan/vulkan_core.h>
 
-#include "../../components/mesh.h"
-#include "../data_types.h"
+#include "../components/mesh.h"
 #include "buffer.h"
+#include "data_types.h"
 #include "device.h"
 
 namespace yar
@@ -65,10 +65,10 @@ class DescriptorSet
     }
 
   private:
-    const VulkanDevice&                        m_device;
-    std::vector<VkDescriptorSetLayout>         m_vkLayouts;
-    std::vector<VkDescriptorSet>               m_vkSets;
+    const VulkanDevice&                  m_device;
+    std::vector<VkDescriptorSetLayout>   m_vkLayouts;
+    std::vector<VkDescriptorSet>         m_vkSets;
     std::vector<std::shared_ptr<Buffer>> m_objectBuffers;
-    uint32_t                                   m_objectIndex;
+    uint32_t                             m_objectIndex;
 };
 } // namespace yar

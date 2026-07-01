@@ -1,8 +1,8 @@
 #define STB_IMAGE_IMPLEMENTATION
 #include "texture.h"
 
+#include "../renderer/image.h"
 #include "../renderer/renderer.h"
-#include "../renderer/vulkan/image.h"
 
 #include "ktxvulkan.h"
 

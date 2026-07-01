@@ -12,14 +12,14 @@
 #include "../components/mesh.h"
 #include "../components/rect.h"
 #include "../window/window.h"
+#include "buffer.h"
+#include "common.h"
 #include "data_types.h"
-#include "vulkan/buffer.h"
-#include "vulkan/common.h"
-#include "vulkan/descriptor_set.h"
-#include "vulkan/device.h"
-#include "vulkan/image.h"
-#include "vulkan/instance.h"
-#include "vulkan/pipeline.h"
+#include "descriptor_set.h"
+#include "device.h"
+#include "image.h"
+#include "instance.h"
+#include "pipeline.h"
 
 namespace yar
 {

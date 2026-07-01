@@ -1,8 +1,7 @@
 #include <cstdint>
-#include <cstring>
 #include <stdexcept>
 
-#include "../../log.h"
+#include "../log.h"
 #include "common.h"
 #include "instance.h"
 

@@ -1,6 +1,6 @@
 #pragma once
 
-#include "../../components/texture.h"
+#include "../components/texture.h"
 #include "vma.h"
 
 #include <vulkan/vulkan_core.h>

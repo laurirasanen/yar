@@ -1,6 +1,6 @@
 #include "image.h"
-#include "../renderer.h"
-#include "src/components/texture.h"
+#include "../components/texture.h"
+#include "renderer.h"
 
 #include <vulkan/vulkan_core.h>
 

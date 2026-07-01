@@ -2,8 +2,8 @@
 #include <cstring>
 #include <vulkan/vulkan_core.h>
 
-#include "../data_types.h"
 #include "common.h"
+#include "data_types.h"
 #include "descriptor_set.h"
 #include "image.h"
 

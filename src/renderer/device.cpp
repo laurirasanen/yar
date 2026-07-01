@@ -7,7 +7,7 @@
 
 #include <vulkan/vulkan_core.h>
 
-#include "../../log.h"
+#include "../log.h"
 #include "common.h"
 #include "device.h"
 

@@ -5,7 +5,7 @@
 
 #include <vulkan/vulkan_core.h>
 
-#include "../data_types.h"
+#include "data_types.h"
 
 namespace yar
 {

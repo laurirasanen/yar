@@ -1,7 +1,6 @@
 #pragma once
 
 #include <cstdint>
-#include <cstring>
 #include <memory>
 
 #include <glm/ext/matrix_clip_space.hpp>

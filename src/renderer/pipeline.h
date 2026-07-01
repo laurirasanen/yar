@@ -4,10 +4,10 @@
 
 #include "vulkan/vulkan_core.h"
 
-#include "../../log.h"
+#include "../log.h"
 #include "attributes.h"
-#include "device.h"
 #include "descriptor_set.h"
+#include "device.h"
 
 namespace yar
 {
