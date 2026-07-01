@@ -1,18 +1,36 @@
 #pragma once
 
+#include <cstdint>
 #include <cstring>
+#include <iterator>
 #include <memory>
+#include <stdexcept>
 
-#include "../buffer.h"
 #include "vma.h"
 
 namespace yar
 {
-class VulkanBuffer : public Buffer
+enum BufferType
+{
+    VertexBuffer,
+    IndexBuffer,
+    UniformBuffer,
+    ShaderDataBuffer,
+    ImageBuffer,
+};
+
+enum BufferLocation
+{
+    Host,
+    Device,
+    SecretThirdOption,
+};
+
+class Buffer
 {
   public:
-    VulkanBuffer() = delete;
-    VulkanBuffer(
+    Buffer() = delete;
+    Buffer(
         VkDevice       device,
         BufferType     bufferType,
         BufferLocation bufferLocation,
@@ -20,31 +38,45 @@ class VulkanBuffer : public Buffer
         uint32_t       elementCount
     );
 
-    ~VulkanBuffer();
+    ~Buffer();
 
-    VulkanBuffer(const VulkanBuffer&)            = delete;
-    VulkanBuffer(VulkanBuffer&&)                 = delete;
-    VulkanBuffer& operator=(const VulkanBuffer&) = delete;
-    VulkanBuffer& operator=(VulkanBuffer&&)      = delete;
+    Buffer(const Buffer&)            = delete;
+    Buffer(Buffer&&)                 = delete;
+    Buffer& operator=(const Buffer&) = delete;
+    Buffer& operator=(Buffer&&)      = delete;
 
-    void Write(void* data, size_t size) override;
+    template<class IT>
+    requires std::contiguous_iterator<IT>
+    void Write(const IT it)
+    {
+        if (m_bufferLocation != Host)
+        {
+            throw std::runtime_error("Tried mapping a non-host buffer");
+        }
 
-    void CopyToDevice(void* commandBuffer, std::shared_ptr<Buffer> deviceBuffer) override;
+        size_t size = it.size() * m_elementSize;
+        if (size > m_size)
+        {
+            throw std::runtime_error("Tried to write more data than allocated");
+        }
 
-    void Clear() override;
+        Write(static_cast<void*>(it), size);
+        m_elementCount = it.size();
+    }
 
-    void Bind(void* commandBuffer) override;
+    void Write(void* data, size_t size);
 
-    void Draw(void* commandBuffer, uint32_t firstInstance, uint32_t instanceCount) override;
-    void Draw(
-        void*    commandBuffer,
-        uint32_t indexOffset,
-        uint32_t indexCount,
-        int32_t  vertexOffset
-    ) override;
+    void CopyToDevice(void* commandBuffer, std::shared_ptr<Buffer> deviceBuffer);
 
-    void Map(void** data) override;
-    void Unmap() override;
+    void Clear();
+
+    void Bind(void* commandBuffer);
+
+    void Draw(void* commandBuffer, uint32_t firstInstance, uint32_t instanceCount);
+    void Draw(void* commandBuffer, uint32_t indexOffset, uint32_t indexCount, int32_t vertexOffset);
+
+    void Map(void** data);
+    void Unmap();
 
     VkBuffer GetVkBuffer() const
     {
@@ -65,10 +97,47 @@ class VulkanBuffer : public Buffer
         return m_vmaAllocationInfo;
     }
 
+    void SetElementCount(uint32_t count)
+    {
+        m_elementCount = count;
+    }
+
+    uint32_t GetElementCount() const
+    {
+        return m_elementCount;
+    }
+
+    constexpr BufferType GetType() const
+    {
+        return m_bufferType;
+    }
+
+    BufferLocation GetLocation() const
+    {
+        return m_bufferLocation;
+    }
+
+    size_t GetSize() const
+    {
+        return m_size;
+    }
+
+    size_t GetElementSize()
+    {
+        return m_elementSize;
+    }
+
   private:
     VkBuffer          m_vkBuffer;
     VmaAllocation     m_vmaAllocation;
     VmaAllocationInfo m_vmaAllocationInfo;
     VkDeviceAddress   m_vkDeviceAddress;
+
+    BufferType     m_bufferType;
+    BufferLocation m_bufferLocation;
+    uint32_t       m_elementSize;
+    uint32_t       m_elementCount;
+    size_t         m_size;
+    bool           m_isMapped = false;
 };
 } // namespace yar

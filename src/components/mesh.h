@@ -4,8 +4,8 @@
 #include <glm/vec2.hpp>
 #include <glm/vec3.hpp>
 
-#include "../renderer/buffer.h"
 #include "../renderer/data_types.h"
+#include "../renderer/vulkan/buffer.h"
 #include "material.h"
 #include "transform.h"
 

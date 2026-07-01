@@ -2,11 +2,10 @@
 #include <cstring>
 #include <vulkan/vulkan_core.h>
 
-#include "../buffer.h"
 #include "../data_types.h"
 #include "common.h"
-#include "image.h"
 #include "descriptor_set.h"
+#include "image.h"
 
 namespace yar
 {
@@ -126,7 +125,7 @@ void DescriptorSet::Alloc()
     for (uint32_t i = 0; i < setCount; i++)
     {
         m_objectBuffers.push_back(
-            std::make_shared<VulkanBuffer>(
+            std::make_shared<Buffer>(
                 m_device.GetVkDevice(),
                 UniformBuffer,
                 SecretThirdOption,

@@ -132,7 +132,7 @@ VulkanImage::VulkanImage(
     vkCmdPipelineBarrier2(commandBuffer, &dep);
 
     // Use a staging buffer to transition pixels to the optimal format.
-    auto hostBuffer = std::make_shared<VulkanBuffer>(
+    auto hostBuffer = std::make_shared<Buffer>(
         renderer->GetDevice().GetVkDevice(),
         BufferType::ImageBuffer,
         Host,

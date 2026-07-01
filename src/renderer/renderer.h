@@ -12,15 +12,14 @@
 #include "../components/mesh.h"
 #include "../components/rect.h"
 #include "../window/window.h"
-#include "buffer.h"
 #include "data_types.h"
 #include "vulkan/buffer.h"
 #include "vulkan/common.h"
+#include "vulkan/descriptor_set.h"
 #include "vulkan/device.h"
 #include "vulkan/image.h"
 #include "vulkan/instance.h"
 #include "vulkan/pipeline.h"
-#include "vulkan/descriptor_set.h"
 
 namespace yar
 {
@@ -111,7 +110,7 @@ class Renderer
         uint32_t                 elementCount
     )
     {
-        auto vkBuffer = std::make_shared<VulkanBuffer>(
+        auto vkBuffer = std::make_shared<Buffer>(
             m_device.GetVkDevice(),
             bufferType,
             SecretThirdOption,
@@ -507,7 +506,7 @@ class Renderer
 
     RenderPipeline m_currentPipeline;
 
-    std::vector<std::shared_ptr<VulkanBuffer>>     m_shaderGlobalBuffers;
+    std::vector<std::shared_ptr<Buffer>>           m_shaderGlobalBuffers;
     std::vector<std::shared_ptr<ShaderGlobalData>> m_shaderGlobalData;
 
     std::shared_ptr<VulkanPipeline<VertexSky>>    m_pipelineSky;

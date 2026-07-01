@@ -21,7 +21,7 @@ Renderer::Renderer(std::shared_ptr<Window> window) :
     m_shaderGlobalData.resize(MAX_FRAMES_IN_FLIGHT);
     for (unsigned int i = 0; i < MAX_FRAMES_IN_FLIGHT; i++)
     {
-        m_shaderGlobalBuffers[i] = std::make_shared<VulkanBuffer>(
+        m_shaderGlobalBuffers[i] = std::make_shared<Buffer>(
             m_device.GetVkDevice(),
             ShaderDataBuffer,
             SecretThirdOption,

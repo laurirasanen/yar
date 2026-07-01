@@ -2,14 +2,18 @@
 
 namespace yar
 {
-VulkanBuffer::VulkanBuffer(
+Buffer::Buffer(
     VkDevice       device,
     BufferType     bufferType,
     BufferLocation bufferLocation,
     uint32_t       elementSize,
     uint32_t       elementCount
 ) :
-    Buffer(bufferType, bufferLocation, elementSize, elementCount)
+    m_bufferType(bufferType),
+    m_bufferLocation(bufferLocation),
+    m_elementSize(elementSize),
+    m_elementCount(elementCount),
+    m_size(m_elementSize * m_elementCount)
 {
     VkBufferCreateInfo bufferInfo {};
     bufferInfo.sType       = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
@@ -113,7 +117,7 @@ VulkanBuffer::VulkanBuffer(
     }
 }
 
-VulkanBuffer::~VulkanBuffer()
+Buffer::~Buffer()
 {
     if (m_isMapped)
     {
@@ -122,12 +126,12 @@ VulkanBuffer::~VulkanBuffer()
     vmaDestroyBuffer(g_vma, m_vkBuffer, m_vmaAllocation);
 }
 
-void VulkanBuffer::Write(void* data, size_t size)
+void Buffer::Write(void* data, size_t size)
 {
     vmaCopyMemoryToAllocation(g_vma, data, m_vmaAllocation, 0, size);
 }
 
-void VulkanBuffer::CopyToDevice(void* commandBuffer, std::shared_ptr<Buffer> deviceBuffer)
+void Buffer::CopyToDevice(void* commandBuffer, std::shared_ptr<Buffer> deviceBuffer)
 {
     if (m_bufferLocation != Host)
     {
@@ -152,13 +156,13 @@ void VulkanBuffer::CopyToDevice(void* commandBuffer, std::shared_ptr<Buffer> dev
     copyRegion.srcOffset = 0;
     copyRegion.dstOffset = 0;
 
-    auto vkDeviceBuffer = static_pointer_cast<VulkanBuffer>(deviceBuffer);
+    auto vkDeviceBuffer = static_pointer_cast<Buffer>(deviceBuffer);
     vkCmdCopyBuffer(vkCommandBuffer, m_vkBuffer, vkDeviceBuffer->GetVkBuffer(), 1, &copyRegion);
 
     deviceBuffer->SetElementCount(m_elementCount);
 }
 
-void VulkanBuffer::Clear()
+void Buffer::Clear()
 {
     if (m_bufferLocation != Host)
     {
@@ -179,7 +183,7 @@ void VulkanBuffer::Clear()
     }
 }
 
-void VulkanBuffer::Bind(void* commandBuffer)
+void Buffer::Bind(void* commandBuffer)
 {
     if (m_bufferLocation != Device && m_bufferLocation != SecretThirdOption)
     {
@@ -211,7 +215,7 @@ void VulkanBuffer::Bind(void* commandBuffer)
     }
 }
 
-void VulkanBuffer::Draw(void* commandBuffer, uint32_t firstInstance, uint32_t instanceCount)
+void Buffer::Draw(void* commandBuffer, uint32_t firstInstance, uint32_t instanceCount)
 {
     auto vkCommandBuffer = static_cast<VkCommandBuffer>(commandBuffer);
 
@@ -236,7 +240,7 @@ void VulkanBuffer::Draw(void* commandBuffer, uint32_t firstInstance, uint32_t in
     }
 }
 
-void VulkanBuffer::Draw(
+void Buffer::Draw(
     void*    commandBuffer,
     uint32_t indexOffset,
     uint32_t indexCount,
@@ -260,7 +264,7 @@ void VulkanBuffer::Draw(
     }
 }
 
-void VulkanBuffer::Map(void** data)
+void Buffer::Map(void** data)
 {
     if (m_isMapped)
     {
@@ -271,7 +275,7 @@ void VulkanBuffer::Map(void** data)
     m_isMapped = true;
 }
 
-void VulkanBuffer::Unmap()
+void Buffer::Unmap()
 {
     if (!m_isMapped)
     {
