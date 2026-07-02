@@ -13,8 +13,8 @@ class IApplication
     IApplication& operator=(const IApplication&) = delete;
     IApplication& operator=(IApplication&&)      = delete;
 
-    virtual int Start() = 0;
-    virtual int Frame() = 0;
-    virtual int Tick()  = 0;
+    virtual int  Start() = 0;
+    virtual void Frame() = 0;
+    virtual void Tick()  = 0;
 };
 }; // namespace yar

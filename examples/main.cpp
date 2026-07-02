@@ -25,8 +25,8 @@ class ExampleApp : public IApplication
         g_window->SetTitle("example");
 
         m_camera = std::make_shared<NoclipCamera>();
-        m_camera->transform.SetPosition({0.0f, 0.15f, -0.6f});
-        m_camera->transform.SetEulerRotation({-10.0f, 0.0f, 0.0f});
+        m_camera->transform.SetPosition({0.10f, 0.15f, -0.8f});
+        m_camera->Pitch = 10.0f;
 
         g_renderer->SetCamera(m_camera);
 
@@ -34,8 +34,13 @@ class ExampleApp : public IApplication
         return 0;
     }
 
-    int Frame() override
+    void Frame() override
     {
+        if (!m_loaded)
+        {
+            return;
+        }
+
         const auto frameInput = g_engine->GetFrameInput();
         if (frameInput.WasPressed(Key::KEY_EXPOSURE_UP))
         {
@@ -64,11 +69,6 @@ class ExampleApp : public IApplication
             g_renderer->SetIBLStrength(g_renderer->GetIBLStrength() - 0.05f);
         }
 
-        if (m_flightHelmet == nullptr || m_damagedHelmet == nullptr)
-        {
-            return 0;
-        }
-
         const std::array<std::shared_ptr<INode>, 2> nodes = {m_flightHelmet, m_damagedHelmet};
         const float rotateSpeeds[]                        = {12.5f, -12.5f, 25.0f, -25.0f, 50.0f};
         for (size_t i = 0; i < nodes.size(); i++)
@@ -80,11 +80,9 @@ class ExampleApp : public IApplication
             t.AddRotation(delta, VEC_UP);
             node->SetTransform(t);
         }
-
-        return 0;
     }
 
-    int Tick() override
+    void Tick() override
     {
         if (!m_loaded)
         {
@@ -94,8 +92,6 @@ class ExampleApp : public IApplication
             g_world->SetEnabled(true);
             m_loaded = true;
         }
-
-        return 0;
     }
 
     void Load()
@@ -119,6 +115,8 @@ class ExampleApp : public IApplication
         auto sky = g_assets->LoadSky("assets/ibl/cobble");
         g_world->SetSky(sky);
         g_renderer->SetIBLStrength(1.0f);
+        g_renderer->SetExposure(1.0f);
+        g_renderer->SetContrast(1.0f);
     }
 
   private:
