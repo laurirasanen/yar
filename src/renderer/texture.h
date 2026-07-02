@@ -1,5 +1,7 @@
 #pragma once
 
+#include "../public/itexture.h"
+
 #include "stb_image.h"
 
 #include <cstdint>
@@ -25,7 +27,7 @@ enum TextureType
     TEX_KTX,
 };
 
-class Texture
+class Texture : public ITexture
 {
   public:
     Texture() = delete;
@@ -44,11 +46,6 @@ class Texture
     Texture& operator=(const Texture&) = delete;
     Texture& operator=(Texture&&)      = delete;
 
-    std::string Name() const
-    {
-        return m_name;
-    }
-
     size_t GetSize() const
     {
         return static_cast<size_t>(m_width * m_height * m_channels) * m_elementSize;
@@ -59,9 +56,9 @@ class Texture
         return m_channels;
     }
 
-    std::shared_ptr<VulkanImage> GetImage()
+    std::shared_ptr<IImage> GetImage() override
     {
-        return m_image;
+        return static_pointer_cast<IImage>(m_image);
     }
 
     bool HasTransparency()
@@ -72,7 +69,6 @@ class Texture
   private:
     std::shared_ptr<Renderer> m_renderer;
 
-    std::string m_name;
     TextureType m_type;
 
     int      m_width;

@@ -10,8 +10,8 @@
 #include <glm/gtc/constants.hpp>
 #include <glm/matrix.hpp>
 
+#include "../public/input.h"
 #include "../public/util.h"
-#include "../window/input.h"
 #include "geometry.h"
 #include "transform.h"
 

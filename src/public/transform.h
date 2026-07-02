@@ -19,6 +19,22 @@ namespace yar
 
 struct Transform
 {
+    friend Transform operator*(const Transform& lhs, const Transform& rhs)
+    {
+        Transform t  = {};
+        t.m_model    = lhs.m_model * rhs.m_model;
+        t.m_rotation = lhs.m_rotation * rhs.m_rotation;
+        return t;
+    }
+
+    friend Transform operator/(const Transform& lhs, const Transform& rhs)
+    {
+        Transform t  = {};
+        t.m_model    = lhs.m_model / rhs.m_model;
+        t.m_rotation = lhs.m_rotation * glm::inverse(rhs.m_rotation);
+        return t;
+    }
+
     void SetPosition(glm::vec3 pos)
     {
         m_model[3][0] = pos.x;
@@ -60,12 +76,6 @@ struct Transform
     void SetModelMatrix(const glm::mat4& mat)
     {
         m_model = mat;
-    }
-
-    void CopyFrom(const Transform& other)
-    {
-        SetModelMatrix(other.GetModelMatrix());
-        SetRotation(other.GetRotation());
     }
 
     void AddRotation(const float angle, const glm::vec3 axis)

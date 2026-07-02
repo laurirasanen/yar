@@ -9,11 +9,7 @@ Buffer::Buffer(
     uint32_t       elementSize,
     uint32_t       elementCount
 ) :
-    m_bufferType(bufferType),
-    m_bufferLocation(bufferLocation),
-    m_elementSize(elementSize),
-    m_elementCount(elementCount),
-    m_size(m_elementSize * m_elementCount)
+    IBuffer(bufferType, bufferLocation, elementSize, elementCount)
 {
     VkBufferCreateInfo bufferInfo {};
     bufferInfo.sType       = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
@@ -156,8 +152,7 @@ void Buffer::CopyToDevice(void* commandBuffer, std::shared_ptr<Buffer> deviceBuf
     copyRegion.srcOffset = 0;
     copyRegion.dstOffset = 0;
 
-    auto vkDeviceBuffer = static_pointer_cast<Buffer>(deviceBuffer);
-    vkCmdCopyBuffer(vkCommandBuffer, m_vkBuffer, vkDeviceBuffer->GetVkBuffer(), 1, &copyRegion);
+    vkCmdCopyBuffer(vkCommandBuffer, m_vkBuffer, deviceBuffer->GetVkBuffer(), 1, &copyRegion);
 
     deviceBuffer->SetElementCount(m_elementCount);
 }

@@ -15,7 +15,7 @@
 
 namespace yar
 {
-Window::Window(std::shared_ptr<InputSettings> inputSettings) : m_inputSettings(inputSettings)
+SDLWindow::SDLWindow(std::shared_ptr<InputSettings> inputSettings) : m_inputSettings(inputSettings)
 {
     LOG_INFO(
         "Creating window, SDL version: {}.{}.{}",
@@ -41,7 +41,7 @@ Window::Window(std::shared_ptr<InputSettings> inputSettings) : m_inputSettings(i
     LOG_DEBUG("Window created");
 }
 
-Window::~Window()
+SDLWindow::~SDLWindow()
 {
     LOG_INFO("Destroying window");
     if (m_window != nullptr)
@@ -51,22 +51,22 @@ Window::~Window()
     SDL_Quit();
 }
 
-void Window::SetTitle(const char* title)
+void SDLWindow::SetTitle(const char* title)
 {
     SDL_SetWindowTitle(m_window, title);
 }
 
-void Window::SetMouseGrab(bool grab)
+void SDLWindow::SetMouseGrab(bool grab)
 {
     SDL_SetWindowRelativeMouseMode(m_window, grab);
 }
 
-bool Window::IsMouseGrabbed()
+bool SDLWindow::IsMouseGrabbed()
 {
     return SDL_GetWindowRelativeMouseMode(m_window);
 }
 
-void Window::AggregateInput(WindowInput& input)
+void SDLWindow::AggregateInput(WindowInput& input)
 {
     ImGuiIO& io             = ImGui::GetIO();
     bool     handleKeyboard = true;
@@ -154,27 +154,27 @@ void Window::AggregateInput(WindowInput& input)
     }
 }
 
-void Window::GetFramebufferSize(int* width, int* height)
+void SDLWindow::GetFramebufferSize(int* width, int* height)
 {
     SDL_GetWindowSizeInPixels(m_window, width, height);
 }
 
-bool Window::CreateVulkanSurface(VkInstance instance, VkSurfaceKHR* surface)
+bool SDLWindow::CreateVulkanSurface(VkInstance instance, VkSurfaceKHR* surface)
 {
     return SDL_Vulkan_CreateSurface(m_window, instance, nullptr, surface);
 }
 
-const char* const* Window::GetVulkanExtensions(unsigned int* pCount)
+const char* const* SDLWindow::GetVulkanExtensions(unsigned int* pCount)
 {
     return SDL_Vulkan_GetInstanceExtensions(pCount);
 }
 
-bool Window::IsMinimized()
+bool SDLWindow::IsMinimized()
 {
     return SDL_GetWindowFlags(m_window) & SDL_WINDOW_MINIMIZED;
 }
 
-unsigned int Window::GetRefreshRate()
+unsigned int SDLWindow::GetRefreshRate()
 {
     auto display = SDL_GetDisplayForWindow(m_window);
     if (display != 0)

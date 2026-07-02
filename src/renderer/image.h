@@ -1,6 +1,7 @@
 #pragma once
 
-#include "../components/texture.h"
+#include "../public/iimage.h"
+#include "../renderer/texture.h"
 #include "vma.h"
 
 #include <vulkan/vulkan_core.h>
@@ -11,7 +12,7 @@ namespace yar
 {
 class Renderer;
 
-class VulkanImage
+class VulkanImage : public IImage
 {
   public:
     VulkanImage() = delete;
@@ -50,17 +51,8 @@ class VulkanImage
         return m_sampler;
     }
 
-    uint32_t GetMips() const
-    {
-        return m_mips;
-    }
-
   private:
     std::shared_ptr<Renderer> m_renderer;
-
-    uint32_t m_width;
-    uint32_t m_height;
-    uint32_t m_mips;
 
     VkImage           m_image;
     VkImageView       m_imageView;

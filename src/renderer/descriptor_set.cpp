@@ -6,6 +6,7 @@
 #include "data_types.h"
 #include "descriptor_set.h"
 #include "image.h"
+#include "material.h"
 
 namespace yar
 {
@@ -156,17 +157,14 @@ void DescriptorSet::Alloc()
     );
 }
 
-void DescriptorSet::Update(
-    uint32_t                                                frameIndex,
-    const std::vector<std::shared_ptr<Mesh<VertexShaded>>>& meshes
-)
+void DescriptorSet::Update(uint32_t frameIndex, const std::vector<std::shared_ptr<INode>>& nodes)
 {
-    if (meshes.size() <= 0)
+    if (nodes.size() <= 0)
     {
         return;
     }
 
-    if (meshes.size() >= MAX_OBJECTS)
+    if (nodes.size() >= MAX_OBJECTS)
     {
         throw std::runtime_error("exceeded max object count");
     }
@@ -176,22 +174,22 @@ void DescriptorSet::Update(
     std::vector<VkDescriptorImageInfo> ormInfos      = {};
     std::vector<VkDescriptorImageInfo> normalInfos   = {};
     std::vector<VkDescriptorImageInfo> emissiveInfos = {};
-    objects.resize(meshes.size());
-    albedoInfos.resize(meshes.size());
-    ormInfos.resize(meshes.size());
-    normalInfos.resize(meshes.size());
-    emissiveInfos.resize(meshes.size());
+    objects.resize(nodes.size());
+    albedoInfos.resize(nodes.size());
+    ormInfos.resize(nodes.size());
+    normalInfos.resize(nodes.size());
+    emissiveInfos.resize(nodes.size());
 
-    for (size_t i = 0; i < meshes.size(); i++)
+    for (size_t i = 0; i < nodes.size(); i++)
     {
-        const auto mat      = meshes[i]->GetMaterial();
-        const auto albedo   = mat->GetAlbedo()->GetImage();
-        const auto orm      = mat->GetORM()->GetImage();
-        const auto normal   = mat->GetNormal()->GetImage();
-        const auto emissive = mat->GetEmissive()->GetImage();
+        const auto mat      = static_pointer_cast<Material>(nodes[i]->GetMaterial());
+        const auto albedo   = static_pointer_cast<VulkanImage>(mat->GetAlbedo()->GetImage());
+        const auto orm      = static_pointer_cast<VulkanImage>(mat->GetORM()->GetImage());
+        const auto normal   = static_pointer_cast<VulkanImage>(mat->GetNormal()->GetImage());
+        const auto emissive = static_pointer_cast<VulkanImage>(mat->GetEmissive()->GetImage());
 
-        objects[i].model            = meshes[i]->GetTransform()->GetCombinedMatrix();
-        objects[i].normal           = meshes[i]->GetTransform()->GetRotationMatrix();
+        objects[i].model            = nodes[i]->GetGlobalTransform().GetCombinedMatrix();
+        objects[i].normal           = nodes[i]->GetGlobalTransform().GetRotationMatrix();
         objects[i].index            = static_cast<uint32_t>(i);
         objects[i].materialParams.x = mat->GetOcclusionFactor();
         objects[i].materialParams.y = mat->GetRoughnessFactor();
@@ -271,18 +269,13 @@ void DescriptorSet::Update(
     );
 }
 
-void DescriptorSet::SetIBL(
-    std::shared_ptr<Texture> texColor,
-    std::shared_ptr<Texture> texLUT,
-    std::shared_ptr<Texture> texDiffuse,
-    std::shared_ptr<Texture> texSpecular
-)
+void DescriptorSet::SetSky(std::shared_ptr<ISky> sky)
 {
-    const auto                         color         = texColor->GetImage();
-    const auto                         lut           = texLUT->GetImage();
-    const auto                         diffuse       = texDiffuse->GetImage();
-    const auto                         specular      = texSpecular->GetImage();
-    const uint32_t                     setCount      = static_cast<uint32_t>(m_vkLayouts.size());
+    const auto     color    = static_pointer_cast<VulkanImage>(sky->GetColor()->GetImage());
+    const auto     lut      = static_pointer_cast<VulkanImage>(sky->GetLUT()->GetImage());
+    const auto     diffuse  = static_pointer_cast<VulkanImage>(sky->GetDiffuse()->GetImage());
+    const auto     specular = static_pointer_cast<VulkanImage>(sky->GetSpecular()->GetImage());
+    const uint32_t setCount = static_cast<uint32_t>(m_vkLayouts.size());
     std::vector<VkWriteDescriptorSet>  writes        = {};
     std::vector<VkDescriptorImageInfo> colorInfos    = {};
     std::vector<VkDescriptorImageInfo> lutInfos      = {};

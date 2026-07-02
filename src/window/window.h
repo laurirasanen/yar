@@ -5,33 +5,33 @@
 #include <SDL3/SDL_video.h>
 #include <vulkan/vulkan_core.h>
 
+#include "../public/input.h"
 #include "../public/iwindow.h"
-#include "input.h"
 
 namespace yar
 {
-class Window : public IWindow
+class SDLWindow : public IWindow
 {
   public:
-    Window(std::shared_ptr<InputSettings> inputSettings);
-    ~Window();
+    SDLWindow(std::shared_ptr<InputSettings> inputSettings);
+    ~SDLWindow();
 
     void SetTitle(const char* title) override;
 
-    void SetMouseGrab(bool grab);
-    bool IsMouseGrabbed();
+    void SetMouseGrab(bool grab) override;
+    bool IsMouseGrabbed() override;
+
+    void GetFramebufferSize(int* width, int* height) override;
+
+    bool IsMinimized() override;
+
+    unsigned int GetRefreshRate() override;
 
     void AggregateInput(WindowInput& input);
-
-    void GetFramebufferSize(int* width, int* height);
 
     bool CreateVulkanSurface(VkInstance instance, VkSurfaceKHR* surface);
 
     const char* const* GetVulkanExtensions(unsigned int* pCount);
-
-    bool IsMinimized();
-
-    unsigned int GetRefreshRate();
 
     SDL_Window* GetSDLWindow() const
     {

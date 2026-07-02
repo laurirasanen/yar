@@ -1,6 +1,7 @@
 #pragma once
 
 #include <array>
+#include <format>
 #include <stdexcept>
 
 #include <imgui_impl_vulkan.h>
@@ -187,5 +188,34 @@ constexpr static void TransitionImageLayout(
     dep.imageMemoryBarrierCount = 1;
 
     vkCmdPipelineBarrier2(commandBuffer, &dep);
+}
+
+constexpr static uint32_t VkFormatChannels(VkFormat format)
+{
+    switch (format)
+    {
+        case VK_FORMAT_R8G8B8_UNORM:
+        case VK_FORMAT_R8G8B8_SRGB:
+        case VK_FORMAT_R16G16B16_SFLOAT:
+        case VK_FORMAT_R32G32B32_SFLOAT:
+        {
+            return 3;
+        }
+
+        case VK_FORMAT_R8G8B8A8_UNORM:
+        case VK_FORMAT_R8G8B8A8_SRGB:
+        case VK_FORMAT_R16G16B16A16_SFLOAT:
+        case VK_FORMAT_R32G32B32A32_SFLOAT:
+        {
+            return 4;
+        }
+
+        default:
+        {
+            throw std::runtime_error(
+                std::format("Unhandled format {}", static_cast<uint32_t>(format))
+            );
+        }
+    }
 }
 } // namespace yar

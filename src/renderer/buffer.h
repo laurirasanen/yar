@@ -1,5 +1,7 @@
 #pragma once
 
+#include "../public/ibuffer.h"
+
 #include <cstdint>
 #include <cstring>
 #include <iterator>
@@ -10,23 +12,7 @@
 
 namespace yar
 {
-enum BufferType
-{
-    VertexBuffer,
-    IndexBuffer,
-    UniformBuffer,
-    ShaderDataBuffer,
-    ImageBuffer,
-};
-
-enum BufferLocation
-{
-    Host,
-    Device,
-    SecretThirdOption,
-};
-
-class Buffer
+class Buffer : public IBuffer
 {
   public:
     Buffer() = delete;
@@ -97,47 +83,12 @@ class Buffer
         return m_vmaAllocationInfo;
     }
 
-    void SetElementCount(uint32_t count)
-    {
-        m_elementCount = count;
-    }
-
-    uint32_t GetElementCount() const
-    {
-        return m_elementCount;
-    }
-
-    constexpr BufferType GetType() const
-    {
-        return m_bufferType;
-    }
-
-    BufferLocation GetLocation() const
-    {
-        return m_bufferLocation;
-    }
-
-    size_t GetSize() const
-    {
-        return m_size;
-    }
-
-    size_t GetElementSize()
-    {
-        return m_elementSize;
-    }
-
   private:
     VkBuffer          m_vkBuffer;
     VmaAllocation     m_vmaAllocation;
     VmaAllocationInfo m_vmaAllocationInfo;
     VkDeviceAddress   m_vkDeviceAddress;
 
-    BufferType     m_bufferType;
-    BufferLocation m_bufferLocation;
-    uint32_t       m_elementSize;
-    uint32_t       m_elementCount;
-    size_t         m_size;
     bool           m_isMapped = false;
 };
 } // namespace yar

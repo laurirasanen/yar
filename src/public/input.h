@@ -133,12 +133,12 @@ struct WindowInput
         scroll += other.scroll;
     }
 
-    bool IsDown(Key key)
+    bool IsDown(Key key) const
     {
         return (keyFlags & KeyToFlag(key)) == KeyToFlag(key);
     }
 
-    bool WasPressed(Key key)
+    bool WasPressed(Key key) const
     {
         const auto pressedPrev = (prevFlags & KeyToFlag(key)) == KeyToFlag(key);
         const auto pressedNow  = (keyFlags & KeyToFlag(key)) == KeyToFlag(key);

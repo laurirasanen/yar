@@ -4,39 +4,26 @@
 
 #include "cgltf.h"
 
+#include "../public/inode.h"
+#include "../renderer/material.h"
+#include "../renderer/mesh.h"
 #include "../renderer/renderer.h"
+#include "../renderer/texture.h"
 #include "../ui/ui.h"
-#include "material.h"
-#include "mesh.h"
-#include "texture.h"
 
 namespace yar
 {
-class Scene
+class GLTFNode : public INode
 {
   public:
-    Scene() = delete;
-    Scene(std::shared_ptr<Renderer> renderer, std::shared_ptr<UI> ui, std::string path);
-    ~Scene();
+    GLTFNode() = delete;
+    GLTFNode(std::shared_ptr<Renderer> renderer, std::string path);
+    ~GLTFNode();
 
-    Scene(const Scene&)            = delete;
-    Scene(Scene&&)                 = delete;
-    Scene& operator=(const Scene&) = delete;
-    Scene& operator=(Scene&&)      = delete;
-
-    std::vector<std::shared_ptr<Mesh<VertexShaded>>> GetMeshes()
-    {
-        return m_meshes;
-    }
-
-    void SetTransform(const Transform& trans)
-    {
-        for (const auto& mesh : m_meshes)
-        {
-            mesh->GetTransform()->CopyFrom(trans);
-            mesh->UpdateAABB();
-        }
-    }
+    GLTFNode(const GLTFNode&)            = delete;
+    GLTFNode(GLTFNode&&)                 = delete;
+    GLTFNode& operator=(const GLTFNode&) = delete;
+    GLTFNode& operator=(GLTFNode&&)      = delete;
 
   private:
     bool ReadIndices(const cgltf_primitive& primitive, std::vector<Index>& indices);
@@ -45,13 +32,11 @@ class Scene
 
     std::shared_ptr<Material> ReadMaterial(
         std::shared_ptr<Renderer> renderer,
-        std::shared_ptr<UI>       ui,
         const cgltf_primitive&    primitive
     );
 
     std::shared_ptr<Texture> ReadTexture(
         std::shared_ptr<Renderer> renderer,
-        std::shared_ptr<UI>       ui,
         const cgltf_texture_view* view,
         TextureType               type
     );

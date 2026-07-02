@@ -68,9 +68,9 @@ int YAR_Init(int argc, char** argv)
     return 1;
 }
 
-int YAR_Run()
+int YAR_Run(std::shared_ptr<IApplication> app)
 {
-    auto code = g_engine->Run();
+    auto code = g_engine->Run(app);
     g_engine.reset();
     return code;
 }

@@ -10,7 +10,7 @@ namespace yar
 class VulkanInstance
 {
   public:
-    VulkanInstance(std::shared_ptr<Window> window);
+    VulkanInstance(std::shared_ptr<SDLWindow> window);
     ~VulkanInstance();
 
     VulkanInstance(const VulkanInstance&)            = delete;
@@ -33,7 +33,7 @@ class VulkanInstance
         m_window->GetFramebufferSize(width, height);
     }
 
-    void SetWindow(std::shared_ptr<Window> window);
+    void SetWindow(std::shared_ptr<SDLWindow> window);
 
   private:
     bool                     ValidationLayersSupported();
@@ -42,7 +42,7 @@ class VulkanInstance
     void SetupDebugMessenger();
     void CreateSurface();
 
-    std::shared_ptr<Window> m_window;
+    std::shared_ptr<SDLWindow> m_window;
 
     VkInstance               m_vkInstance;
     VkDebugUtilsMessengerEXT m_vkDebugMessenger;

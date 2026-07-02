@@ -4,7 +4,7 @@
 
 #include <vulkan/vulkan_core.h>
 
-#include "../components/rect.h"
+#include "../public/geometry.h"
 #include "instance.h"
 #include "vma.h"
 

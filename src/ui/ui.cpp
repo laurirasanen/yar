@@ -4,22 +4,15 @@
 #include <imgui_internal.h>
 #include <SDL3/SDL_events.h>
 
-#include "../public/log.h"
 #include "../platform/memory.h"
+#include "../public/log.h"
+#include "../renderer/renderer.h"
 #include "ui.h"
 
 namespace yar
 {
 
-UI::UI(
-    std::shared_ptr<Window>   window,
-    std::shared_ptr<Renderer> renderer,
-    std::shared_ptr<Camera>   camera
-) :
-    m_window(window),
-    m_renderer(renderer),
-    m_camera(camera),
-    m_state({})
+UI::UI() : m_state({})
 {
     LOG_INFO("Creating UI");
 
@@ -30,7 +23,9 @@ UI::UI(
     io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;
     io.ConfigDebugIsDebuggerPresent = true;
 
-    ImGui_ImplSDL3_InitForVulkan(m_window->GetSDLWindow());
+    const auto window = static_pointer_cast<SDLWindow>(g_window);
+    ImGui_ImplSDL3_InitForVulkan(window->GetSDLWindow());
+    const auto renderer = static_pointer_cast<Renderer>(g_renderer);
     renderer->GetImGuiInfo(m_info);
     ImGui_ImplVulkan_Init(&m_info.imInit);
 
@@ -58,7 +53,7 @@ void UI::Render()
     ImGui::Render();
 
     auto data     = ImGui::GetDrawData();
-    auto renderer = std::static_pointer_cast<Renderer>(m_renderer);
+    auto renderer = std::static_pointer_cast<Renderer>(g_renderer);
     ImGui_ImplVulkan_RenderDrawData(data, renderer->GetVkCommandBuffer());
 }
 
@@ -78,8 +73,8 @@ void UI::DebugWindow()
                 | ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoInputs
         ))
     {
-        const auto renderStats = m_renderer->GetRenderStats();
-        const auto cullStats   = m_renderer->GetCullStats();
+        const auto renderStats = g_renderer->GetRenderStats();
+        const auto cullStats   = g_renderer->GetCullStats();
 
         ImGui::Text("FPS: %.2f (%.2fms)", 1.0 / Time::DeltaFrame, Time::DeltaFrame * 1000.0);
         ImGui::Text("  Render: %.2fms", Time::DeltaRender * 1000.0);
@@ -106,20 +101,28 @@ void UI::DebugWindow()
         ImGui::Text("  Indices: %zu", cullStats.IndexCount);
         ImGui::Text("  Vertices: %zu", cullStats.VertexCount);
 
-        const auto pos = m_camera->transform.GetPosition();
         ImGui::Text("Camera:");
-        ImGui::Text(
-            "  pos: [%.2f, %.2f, %.2f]",
-            static_cast<double>(pos.x),
-            static_cast<double>(pos.y),
-            static_cast<double>(pos.z)
-        );
-        ImGui::Text(
-            "  ang: [%.2f, %.2f, %.2f]",
-            static_cast<double>(m_camera->Pitch),
-            static_cast<double>(m_camera->Yaw),
-            static_cast<double>(m_camera->Roll)
-        );
+        const auto camera = g_renderer->GetCamera();
+        if (camera == nullptr)
+        {
+            ImGui::Text("  None");
+        }
+        else
+        {
+            const auto pos = camera->transform.GetPosition();
+            ImGui::Text(
+                "  pos: [%.2f, %.2f, %.2f]",
+                static_cast<double>(pos.x),
+                static_cast<double>(pos.y),
+                static_cast<double>(pos.z)
+            );
+            ImGui::Text(
+                "  ang: [%.2f, %.2f, %.2f]",
+                static_cast<double>(camera->Pitch),
+                static_cast<double>(camera->Yaw),
+                static_cast<double>(camera->Roll)
+            );
+        }
 
         ImGui::End();
     }
@@ -147,10 +150,7 @@ void UI::LoadingWindow()
         ImGui::Text("Loading...");
         ImGui::SetWindowFontScale(1.0f);
         ImGui::Text("elapsed: %.2fs", Time::Now() - m_loadingStartTime);
-        ImGui::Text("scene: %s", m_loadingScene.c_str());
-        ImGui::Text("mesh: %s", m_loadingMesh.c_str());
-        ImGui::Text("material: %s", m_loadingMaterial.c_str());
-        ImGui::Text("texture: %s", m_loadingTexture.c_str());
+        ImGui::Text("%s", m_loadingText.c_str());
         ImGui::End();
     }
 }

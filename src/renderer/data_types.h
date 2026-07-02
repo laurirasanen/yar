@@ -14,17 +14,10 @@
 #include <glm/matrix.hpp>
 #include <glm/vec3.hpp>
 
-#include "../components/camera.h"
+#include "../public/camera.h"
 
 namespace yar
 {
-enum VertexType
-{
-    Sky,
-    Unlit,
-    Shaded,
-};
-
 struct VertexSky
 {
     glm::vec2 position;

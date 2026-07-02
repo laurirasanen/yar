@@ -1,5 +1,6 @@
 #pragma once
 
+#include "../public/imaterial.h"
 #include "texture.h"
 
 #include <cstring>
@@ -8,14 +9,7 @@
 
 namespace yar
 {
-enum MaterialQueue
-{
-    QUEUE_OPAQUE,
-    QUEUE_TRANSPARENT,
-    QUEUE_MAX
-};
-
-class Material
+class Material : public IMaterial
 {
   public:
     Material() = delete;
@@ -30,7 +24,7 @@ class Material
         float                    roughnessFactor,
         float*                   emissiveFactor
     ) :
-        m_name(name),
+        IMaterial(name),
         m_albedo(albedo),
         m_orm(orm),
         m_normal(normal),
@@ -59,11 +53,6 @@ class Material
     Material& operator=(const Material&) = delete;
     Material& operator=(Material&&)      = delete;
 
-    std::string Name() const
-    {
-        return m_name;
-    }
-
     std::shared_ptr<Texture> GetAlbedo()
     {
         return m_albedo;
@@ -82,11 +71,6 @@ class Material
     std::shared_ptr<Texture> GetEmissive()
     {
         return m_emissive;
-    }
-
-    MaterialQueue GetQueue() const
-    {
-        return m_queue;
     }
 
     float GetMetalnessFactor() const
@@ -110,8 +94,6 @@ class Material
     }
 
   private:
-    std::string m_name;
-
     std::shared_ptr<Texture> m_albedo;
     std::shared_ptr<Texture> m_orm;
     std::shared_ptr<Texture> m_normal;
@@ -120,7 +102,5 @@ class Material
     float m_metalnessFactor;
     float m_roughnessFactor;
     float m_emissiveFactor[3];
-
-    MaterialQueue m_queue;
 };
 }; // namespace yar

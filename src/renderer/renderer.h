@@ -8,10 +8,10 @@
 #include <imgui_impl_vulkan.h>
 #include <vulkan/vulkan_core.h>
 
-#include "../components/camera.h"
-#include "../components/mesh.h"
-#include "../components/rect.h"
+#include "../public/geometry.h"
+#include "../public/irenderer.h"
 #include "../window/window.h"
+#include "../world/sky.h"
 #include "buffer.h"
 #include "common.h"
 #include "data_types.h"
@@ -19,40 +19,20 @@
 #include "device.h"
 #include "image.h"
 #include "instance.h"
+#include "mesh.h"
 #include "pipeline.h"
+#include "scene.h"
+
+#include <memory>
 
 namespace yar
 {
 #define MAX_FRAMES_IN_FLIGHT 2
 
-struct RenderStats
-{
-    size_t MeshCount;
-    size_t VertexCount;
-    size_t IndexCount;
-    double SortTime;
-};
-
-struct CullStats
-{
-    size_t MeshCount;
-    size_t VertexCount;
-    size_t IndexCount;
-    double CullTime;
-};
-
-enum RenderPipeline
-{
-    NONE,
-    SKY,
-    UNLIT,
-    SHADED,
-};
-
-class Renderer
+class Renderer : public IRenderer
 {
   public:
-    Renderer(std::shared_ptr<Window> window);
+    Renderer(std::shared_ptr<SDLWindow> window);
     ~Renderer();
 
     Renderer(const Renderer&)            = delete;
@@ -60,7 +40,7 @@ class Renderer
     Renderer& operator=(const Renderer&) = delete;
     Renderer& operator=(Renderer&&)      = delete;
 
-    void SetWindow(std::shared_ptr<Window> window);
+    void SetWindow(std::shared_ptr<SDLWindow> window);
 
     void ResetViewport()
     {
@@ -72,13 +52,19 @@ class Renderer
         m_device.SetViewport(rect);
     }
 
-    void  Resize();
-    float GetAspect();
-    void  Begin();
-    void  Submit();
-    void  Present();
-    void  UpdateUniforms(const std::shared_ptr<Camera> camera);
-    void  WaitForIdle();
+    void Resize() override;
+
+    float GetAspect() override;
+
+    void Begin() override;
+
+    void Submit() override;
+
+    void Present() override;
+
+    void UpdateUniforms() override;
+
+    void WaitForIdle() override;
 
     void* GetCommandBuffer()
     {
@@ -103,12 +89,12 @@ class Renderer
     }
 
     void CreateBuffer(
-        std::shared_ptr<Buffer>& buffer,
-        BufferType               bufferType,
-        void*                    data,
-        uint32_t                 elementSize,
-        uint32_t                 elementCount
-    )
+        std::shared_ptr<IBuffer>& buffer,
+        BufferType                bufferType,
+        void*                     data,
+        uint32_t                  elementSize,
+        uint32_t                  elementCount
+    ) override
     {
         auto vkBuffer = std::make_shared<Buffer>(
             m_device.GetVkDevice(),
@@ -118,10 +104,10 @@ class Renderer
             elementCount
         );
         std::memcpy(vkBuffer->GetAllocationInfo().pMappedData, data, elementSize * elementCount);
-        buffer = static_pointer_cast<Buffer>(vkBuffer);
+        buffer = vkBuffer;
     }
 
-    void BindPipeline(RenderPipeline pipe)
+    void BindPipeline(RenderPipeline pipe) override
     {
         if (m_currentPipeline == pipe)
         {
@@ -184,74 +170,13 @@ class Renderer
         }
     }
 
-    void CullMeshes(
-        std::shared_ptr<Camera>                           camera,
-        std::vector<std::shared_ptr<Mesh<VertexShaded>>>& meshes
-    )
-    {
-        const auto                                       startTime = Time::Now();
-        std::vector<std::shared_ptr<Mesh<VertexShaded>>> visible   = {};
-        for (const auto& mesh : meshes)
-        {
-            mesh->FrustumCull(camera);
-            if (mesh->Culled)
-            {
-                AddCulledMesh(mesh->GetVertexBuffer(), mesh->GetIndexBuffer());
-            }
-            else
-            {
-                visible.push_back(mesh);
-            }
-        }
-        meshes               = visible;
-        m_cullStats.CullTime = Time::Now() - startTime;
-    }
-
-    void SortMeshes(
-        std::shared_ptr<Camera>                           camera,
-        std::vector<std::shared_ptr<Mesh<VertexShaded>>>& meshes
-    )
-    {
-        const auto startTime = Time::Now();
-
-        const auto cameraPos = camera->transform.GetPosition();
-
-        std::sort(
-            meshes.begin(),
-            meshes.end(),
-            [&cameraPos](
-                std::shared_ptr<Mesh<VertexShaded>> a,
-                std::shared_ptr<Mesh<VertexShaded>> b
-            ) {
-                const auto queueA = a->GetMaterial()->GetQueue();
-                const auto queueB = b->GetMaterial()->GetQueue();
-
-                if (queueA < queueB)
-                {
-                    return true;
-                }
-
-                if (queueA == queueB)
-                {
-                    const auto distA = glm::length(cameraPos - a->GetAABB().center);
-                    const auto distB = glm::length(cameraPos - b->GetAABB().center);
-                    return distA < distB;
-                }
-
-                return false;
-            }
-        );
-
-        m_renderStats.SortTime = Time::Now() - startTime;
-    }
-
-    void UpdateDescriptor(const std::vector<std::shared_ptr<Mesh<VertexShaded>>>& meshes)
+    void UpdateDescriptor(const std::vector<std::shared_ptr<INode>>& nodes)
     {
         const auto currentFrame = m_device.GetCurrentFrame();
-        m_descriptorSet->Update(currentFrame, meshes);
+        m_descriptorSet->Update(currentFrame, nodes);
     }
 
-    void BindDescriptor(uint32_t objectIndex)
+    void BindDescriptor(uint32_t objectIndex) override
     {
         const auto currentFrame  = m_device.GetCurrentFrame();
         auto       commandBuffer = GetVkCommandBuffer();
@@ -298,7 +223,10 @@ class Renderer
         }
     }
 
-    void DrawWithBuffers(std::shared_ptr<Buffer> vertexBuffer, std::shared_ptr<Buffer> indexBuffer)
+    void DrawWithBuffers(
+        std::shared_ptr<IBuffer> vertexBuffer,
+        std::shared_ptr<IBuffer> indexBuffer
+    ) override
     {
         if (m_currentPipeline == RenderPipeline::NONE)
         {
@@ -306,50 +234,24 @@ class Renderer
             return;
         }
 
+        auto vertex = static_pointer_cast<Buffer>(vertexBuffer);
+        auto index  = static_pointer_cast<Buffer>(indexBuffer);
+
         auto commandBuffer = GetCommandBuffer();
         if (commandBuffer != nullptr)
         {
-            vertexBuffer->Bind(commandBuffer);
+            vertex->Bind(commandBuffer);
 
-            indexBuffer->Bind(commandBuffer);
-            indexBuffer->Draw(commandBuffer, 0, 1);
+            index->Bind(commandBuffer);
+            index->Draw(commandBuffer, 0, 1);
 
-            m_frameBuffers.push_back(vertexBuffer);
-            m_frameBuffers.push_back(indexBuffer);
+            m_frameBuffers.push_back(vertex);
+            m_frameBuffers.push_back(index);
 
             m_renderStats.MeshCount++;
-            m_renderStats.IndexCount += indexBuffer->GetElementCount();
-            m_renderStats.VertexCount += vertexBuffer->GetElementCount();
+            m_renderStats.IndexCount += index->GetElementCount();
+            m_renderStats.VertexCount += vertex->GetElementCount();
         }
-    }
-
-    RenderStats GetRenderStats()
-    {
-        return m_renderStats;
-    }
-
-    CullStats GetCullStats()
-    {
-        return m_cullStats;
-    }
-
-    void ResetFrameStats()
-    {
-        m_renderStats.MeshCount   = 0;
-        m_renderStats.IndexCount  = 0;
-        m_renderStats.VertexCount = 0;
-        m_renderStats.SortTime    = 0.0;
-        m_cullStats.MeshCount     = 0;
-        m_cullStats.IndexCount    = 0;
-        m_cullStats.VertexCount   = 0;
-        m_cullStats.CullTime      = 0.0;
-    }
-
-    void AddCulledMesh(std::shared_ptr<Buffer> vertexBuffer, std::shared_ptr<Buffer> indexBuffer)
-    {
-        m_cullStats.MeshCount++;
-        m_cullStats.IndexCount += indexBuffer->GetElementCount();
-        m_cullStats.VertexCount += vertexBuffer->GetElementCount();
     }
 
     VulkanDevice& GetDevice()
@@ -357,29 +259,15 @@ class Renderer
         return m_device;
     }
 
-    bool IsDrawing() const
+    void SetSky(std::shared_ptr<ISky> sky)
     {
-        return m_drawing;
-    }
+        m_descriptorSet->SetSky(sky);
 
-    void SetIBL(
-        std::shared_ptr<Texture> texColor,
-        std::shared_ptr<Texture> texLUT,
-        std::shared_ptr<Texture> texDiffuse,
-        std::shared_ptr<Texture> texSpecular
-    )
-    {
-        m_iblColor    = texColor;
-        m_iblLUT      = texLUT;
-        m_iblDiffuse  = texDiffuse;
-        m_iblSpecular = texSpecular;
-        m_descriptorSet->SetIBL(texColor, texLUT, texDiffuse, texSpecular);
+        auto mips = sky->GetSpecular()->GetImage()->GetMips();
 
         for (uint32_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++)
         {
-            m_shaderGlobalData[i]->SetIBLMips(
-                static_cast<float>(m_iblSpecular->GetImage()->GetMips())
-            );
+            m_shaderGlobalData[i]->SetIBLMips(static_cast<float>(mips));
         }
     }
 
@@ -449,7 +337,7 @@ class Renderer
         }
     }
 
-    void SetExposure(float exposure)
+    void SetExposure(float exposure) override
     {
         LOG_INFO("Set exposure to {}", exposure);
         for (uint32_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++)
@@ -458,12 +346,12 @@ class Renderer
         }
     }
 
-    float GetExposure()
+    float GetExposure() override
     {
         return m_shaderGlobalData[0]->GetExposure();
     }
 
-    void SetContrast(float contrast)
+    void SetContrast(float contrast) override
     {
         LOG_INFO("Set contrast to {}", contrast);
         for (uint32_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++)
@@ -472,12 +360,12 @@ class Renderer
         }
     }
 
-    float GetContrast()
+    float GetContrast() override
     {
         return m_shaderGlobalData[0]->GetContrast();
     }
 
-    void SetIBLStrength(float strength)
+    void SetIBLStrength(float strength) override
     {
         LOG_INFO("Set IBL strength to {}", strength);
         for (uint32_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++)
@@ -486,7 +374,7 @@ class Renderer
         }
     }
 
-    float GetIBLStrength()
+    float GetIBLStrength() override
     {
         return m_shaderGlobalData[0]->GetIBLStrength();
     }
@@ -521,15 +409,5 @@ class Renderer
     std::shared_ptr<Texture> m_missingMetalness;
     std::shared_ptr<Texture> m_missingNormal;
     std::shared_ptr<Texture> m_missingEmissive;
-
-    std::shared_ptr<Texture> m_iblColor;
-    std::shared_ptr<Texture> m_iblLUT;
-    std::shared_ptr<Texture> m_iblDiffuse;
-    std::shared_ptr<Texture> m_iblSpecular;
-
-    RenderStats m_renderStats;
-    CullStats   m_cullStats;
-
-    bool m_drawing;
 };
 } // namespace yar

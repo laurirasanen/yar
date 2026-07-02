@@ -130,8 +130,9 @@ engine_deps = [
 ]
 
 engine_src = files([
-  'src/components/scene.cpp',
-  'src/components/texture.cpp',
+  'src/engine/assets.cpp',
+  'src/engine/engine.cpp',
+  'src/engine/entry.cpp',
 
   'src/platform/fs.cpp',
 
@@ -141,6 +142,8 @@ engine_src = files([
   'src/renderer/image.cpp',
   'src/renderer/instance.cpp',
   'src/renderer/renderer.cpp',
+  'src/renderer/scene.cpp',
+  'src/renderer/texture.cpp',
   'src/renderer/vma.cpp',
 
   'src/shader/compiler.cpp',
@@ -149,10 +152,9 @@ engine_src = files([
 
   'src/window/window.cpp',
 
+  'src/world/gltf_node.cpp',
+  'src/world/sky.cpp',
   'src/world/world.cpp',
-
-  'src/engine/engine.cpp',
-  'src/engine/entry.cpp',
 ])
 
 engine_lib = library(

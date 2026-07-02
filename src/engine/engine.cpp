@@ -6,10 +6,20 @@
 #include <imgui.h>
 
 #include "../public/log.h"
+#include "../ui/ui.h"
+#include "../window/window.h"
+#include "../world/world.h"
+#include "assets.h"
 #include "engine.h"
 
 namespace yar
 {
+std::shared_ptr<IUI>       g_ui;
+std::shared_ptr<IWindow>   g_window;
+std::shared_ptr<IWorld>    g_world;
+std::shared_ptr<IAssets>   g_assets;
+std::shared_ptr<IRenderer> g_renderer;
+
 Engine::Engine()
 {
     LOG_INFO("Creating Engine");
@@ -17,23 +27,23 @@ Engine::Engine()
     Time::SetStart();
 
     m_inputSettings = std::make_shared<InputSettings>();
-    m_window        = std::make_shared<Window>(m_inputSettings);
-    m_camera        = std::make_shared<NoclipCamera>();
-    m_camera->transform.SetPosition({0.0f, 0.15f, -0.6f});
-    m_camera->transform.SetEulerRotation({-10.0f, 0.0f, 0.0f});
+    g_window        = std::make_shared<SDLWindow>(m_inputSettings);
 
-    m_renderer = std::make_shared<Renderer>(m_window);
+    g_renderer = std::make_shared<Renderer>(static_pointer_cast<SDLWindow>(g_window));
 
-    m_ui = std::make_shared<UI>(m_window, m_renderer, m_camera);
+    g_ui = std::make_shared<UI>();
 
-    m_world = std::make_shared<World>(m_renderer, m_ui);
+    g_assets = std::make_shared<Assets>();
+    g_assets->Initialize();
+
+    g_world = std::make_shared<World>();
 
     m_frameInput.Clear();
     m_tickInput.Clear();
 
-    m_window->SetMouseGrab(true);
+    g_window->SetMouseGrab(true);
 
-    auto fps = m_window->GetRefreshRate();
+    auto fps = g_window->GetRefreshRate();
     LOG_DEBUG("Setting framerate to {}", fps);
     Time::SetFrameRate(fps);
 
@@ -56,16 +66,31 @@ Engine::~Engine()
     m_renderThread.join();
 
     LOG_DEBUG("Waiting for renderer idle");
-    m_renderer->WaitForIdle();
+    g_renderer->WaitForIdle();
+
+    m_app.reset();
+    g_scene.reset();
+    g_world.reset();
+    g_ui.reset();
+    g_window.reset();
+    g_assets.reset();
+    g_renderer.reset();
 }
 
-int Engine::Run()
+int Engine::Run(std::shared_ptr<IApplication> app)
 {
     m_mainFrameSemaphore.release();
     m_mainTickSemaphore.release();
 
     Time::UpdateTickDelta();
     Time::UpdateFrameDelta();
+
+    m_app      = app;
+    auto start = m_app->Start();
+    if (start != 0)
+    {
+        return start;
+    }
 
     while (true)
     {
@@ -101,63 +126,39 @@ void Engine::Frame()
 
     UpdateInput();
 
-    m_camera->HandleInput(m_frameInput);
+    m_app->Frame();
+
+    const auto camera = g_renderer->GetCamera();
+    camera->HandleInput(m_frameInput);
 
     if (m_frameInput.wantsResize)
     {
         int width;
         int height;
-        m_window->GetFramebufferSize(&width, &height);
-        m_camera->UpdateViewport(width, height);
-        m_renderer->Resize();
+        g_window->GetFramebufferSize(&width, &height);
+        camera->UpdateViewport(width, height);
+        g_renderer->Resize();
     }
 
-    m_world->Frame();
+    g_world->Frame();
 
     if (m_frameInput.WasPressed(Key::KEY_MOUSE_GRAB))
     {
-        m_window->SetMouseGrab(!m_window->IsMouseGrabbed());
+        g_window->SetMouseGrab(!g_window->IsMouseGrabbed());
         m_frameInput.Clear(true);
     }
 
     if (m_frameInput.WasPressed(Key::KEY_WINDOW_DEBUG))
     {
-        m_ui->ToggleWindow(UIWindow::DEBUG);
+        g_ui->ToggleWindow(UIWindow::DEBUG);
         m_frameInput.SetKeyUp(Key::KEY_WINDOW_DEBUG);
     }
 
     if (m_frameInput.WasPressed(Key::KEY_WINDOW_DEMO))
     {
-        m_window->SetMouseGrab(false);
+        g_window->SetMouseGrab(false);
         m_frameInput.Clear();
-        m_ui->ToggleWindow(UIWindow::DEMO);
-    }
-
-    if (m_frameInput.WasPressed(Key::KEY_EXPOSURE_UP))
-    {
-        m_renderer->SetExposure(m_renderer->GetExposure() + 0.05f);
-    }
-    else if (m_frameInput.WasPressed(Key::KEY_EXPOSURE_DOWN))
-    {
-        m_renderer->SetExposure(m_renderer->GetExposure() - 0.05f);
-    }
-
-    if (m_frameInput.WasPressed(Key::KEY_CONTRAST_UP))
-    {
-        m_renderer->SetContrast(m_renderer->GetContrast() + 0.05f);
-    }
-    else if (m_frameInput.WasPressed(Key::KEY_CONTRAST_DOWN))
-    {
-        m_renderer->SetContrast(m_renderer->GetContrast() - 0.05f);
-    }
-
-    if (m_frameInput.WasPressed(Key::KEY_IBL_UP))
-    {
-        m_renderer->SetIBLStrength(m_renderer->GetIBLStrength() + 0.05f);
-    }
-    else if (m_frameInput.WasPressed(Key::KEY_IBL_DOWN))
-    {
-        m_renderer->SetIBLStrength(m_renderer->GetIBLStrength() - 0.05f);
+        g_ui->ToggleWindow(UIWindow::DEMO);
     }
 
     m_frameInput.Clear();
@@ -198,7 +199,7 @@ bool Engine::Tick()
 
 void Engine::UpdateInput()
 {
-    m_window->AggregateInput(m_frameInput);
+    static_pointer_cast<SDLWindow>(g_window)->AggregateInput(m_frameInput);
     m_tickInput.Aggregate(m_frameInput);
 }
 
@@ -214,7 +215,9 @@ void Engine::TickThread(const std::stop_token token)
             break;
         }
 
-        m_world->Tick();
+        m_app->Tick();
+
+        g_world->Tick();
 
         m_mainTickSemaphore.release();
     }
@@ -236,24 +239,24 @@ void Engine::RenderThread(const std::stop_token token)
 
         Time::StartRender();
 
-        if (m_window->IsMinimized())
+        if (g_window->IsMinimized())
         {
             Time::StopRender();
             m_mainFrameSemaphore.release();
             continue;
         }
 
-        m_renderer->ResetFrameStats();
-        m_renderer->Begin();
-        m_renderer->UpdateUniforms(m_camera);
+        g_renderer->ResetFrameStats();
+        g_renderer->Begin();
+        g_renderer->UpdateUniforms();
 
-        m_world->Render(m_camera);
+        g_world->Render();
 
-        m_ui->Render();
+        g_ui->Render();
 
-        m_renderer->Submit();
+        g_renderer->Submit();
 
-        m_renderer->Present();
+        g_renderer->Present();
 
         Time::StopRender();
 

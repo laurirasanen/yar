@@ -70,7 +70,7 @@ constexpr static void _DestroyDebugUtilsMessengerEXT(
     }
 }
 
-VulkanInstance::VulkanInstance(std::shared_ptr<Window> window) : m_window(window)
+VulkanInstance::VulkanInstance(std::shared_ptr<SDLWindow> window) : m_window(window)
 {
     LOG_DEBUG("Creating VulkanInstance");
 
@@ -134,7 +134,7 @@ VulkanInstance::~VulkanInstance()
     vkDestroyInstance(m_vkInstance, nullptr);
 }
 
-void VulkanInstance::SetWindow(std::shared_ptr<Window> window)
+void VulkanInstance::SetWindow(std::shared_ptr<SDLWindow> window)
 {
     m_window = window;
     vkDestroySurfaceKHR(m_vkInstance, m_vkSurface, nullptr);

@@ -2,10 +2,14 @@
 
 #include <vulkan/vulkan_core.h>
 
-#include "../components/mesh.h"
+#include "../public/inode.h"
+#include "../public/isky.h"
+#include "../renderer/mesh.h"
 #include "buffer.h"
 #include "data_types.h"
 #include "device.h"
+
+#include <memory>
 
 namespace yar
 {
@@ -39,17 +43,9 @@ class DescriptorSet
 
     void Alloc();
 
-    void Update(
-        uint32_t                                                frameIndex,
-        const std::vector<std::shared_ptr<Mesh<VertexShaded>>>& meshes
-    );
+    void Update(uint32_t frameIndex, const std::vector<std::shared_ptr<INode>>& nodes);
 
-    void SetIBL(
-        std::shared_ptr<Texture> texColor,
-        std::shared_ptr<Texture> texLUT,
-        std::shared_ptr<Texture> texDiffuse,
-        std::shared_ptr<Texture> texSpecular
-    );
+    void SetSky(std::shared_ptr<ISky> sky);
 
     void Bind(
         VkCommandBuffer     commandBuffer,

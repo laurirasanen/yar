@@ -3,17 +3,19 @@
 #include <memory>
 #include <mutex>
 
-#include "../components/scene.h"
+#include "../public/irenderer.h"
+#include "../public/iworld.h"
 #include "../renderer/renderer.h"
 #include "../ui/ui.h"
+#include "gltf_node.h"
+#include "sky.h"
 
 namespace yar
 {
-class World
+class World : public IWorld
 {
   public:
-    World() = delete;
-    World(std::shared_ptr<Renderer> renderer, std::shared_ptr<UI> ui);
+    World();
     ~World();
 
     World(const World&)            = delete;
@@ -21,23 +23,24 @@ class World
     World& operator=(const World&) = delete;
     World& operator=(World&&)      = delete;
 
-    void Load();
+    void AddNode(std::shared_ptr<INode> node) override;
 
-    void Frame();
-    void Tick();
-    void Render(std::shared_ptr<Camera> camera);
+    void SetSky(std::shared_ptr<ISky> sky) override
+    {
+        m_sky         = static_pointer_cast<Sky>(sky);
+        auto renderer = static_pointer_cast<Renderer>(g_renderer);
+        renderer->SetSky(m_sky);
+    }
+
+    void Frame() override;
+    void Tick() override;
+    void Render() override;
 
   private:
     std::mutex m_worldMutex;
 
-    std::shared_ptr<Renderer> m_renderer;
-    std::shared_ptr<UI>       m_ui;
+    std::vector<std::shared_ptr<INode>> m_nodes;
 
-    std::shared_ptr<Buffer> m_skyVertexBuffer;
-    std::shared_ptr<Buffer> m_skyIndexBuffer;
-
-    std::vector<std::shared_ptr<Scene>> m_scenes;
-
-    bool m_loaded;
+    std::shared_ptr<Sky> m_sky;
 };
 } // namespace yar

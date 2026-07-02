@@ -11,7 +11,9 @@
 
 namespace yar
 {
-Renderer::Renderer(std::shared_ptr<Window> window) :
+std::shared_ptr<Scene> g_scene;
+
+Renderer::Renderer(std::shared_ptr<SDLWindow> window) :
     m_instance(window),
     m_device(m_instance, MAX_FRAMES_IN_FLIGHT)
 {
@@ -109,6 +111,8 @@ Renderer::Renderer(std::shared_ptr<Window> window) :
         m_pipelineShaded =
             std::make_shared<VulkanPipeline<VertexShaded>>(m_device, m_descriptorSet, stages);
     }
+
+    g_scene = std::make_shared<Scene>();
 }
 
 Renderer::~Renderer()
@@ -116,6 +120,8 @@ Renderer::~Renderer()
     LOG_INFO("Destroying Renderer");
 
     vkDeviceWaitIdle(m_device.GetVkDevice());
+
+    g_scene.reset();
 
     m_pipelineUnlit.reset();
     m_pipelineShaded.reset();
@@ -125,7 +131,7 @@ Renderer::~Renderer()
     m_frameBuffers.clear();
 }
 
-void Renderer::SetWindow(std::shared_ptr<Window> window)
+void Renderer::SetWindow(std::shared_ptr<SDLWindow> window)
 {
     LOG_INFO("Setting window");
     m_instance.SetWindow(window);
@@ -145,7 +151,6 @@ float Renderer::GetAspect()
 
 void Renderer::Begin()
 {
-    m_drawing = true;
     m_descriptorSet->NewFrame();
     m_currentPipeline = RenderPipeline::NONE;
     m_device.Begin();
@@ -160,14 +165,13 @@ void Renderer::Submit()
 void Renderer::Present()
 {
     m_device.Present();
-    m_drawing = false;
 }
 
-void Renderer::UpdateUniforms(const std::shared_ptr<Camera> camera)
+void Renderer::UpdateUniforms()
 {
     auto currentFrame = m_device.GetCurrentFrame();
 
-    m_shaderGlobalData[currentFrame]->Update(camera);
+    m_shaderGlobalData[currentFrame]->Update(m_camera);
 
     std::memcpy(
         m_shaderGlobalBuffers[currentFrame]->GetAllocationInfo().pMappedData,

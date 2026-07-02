@@ -118,8 +118,8 @@ std::filesystem::path fs_program_root()
 
 std::filesystem::path fs_relative_path(const char* path)
 {
-    auto root = fs_program_root();
-    return root.append(path);
+    std::filesystem::path p(path);
+    return fs_relative_path(p);
 }
 
 std::filesystem::path fs_relative_path(const std::filesystem::path path)
@@ -128,6 +128,14 @@ std::filesystem::path fs_relative_path(const std::filesystem::path path)
     {
         return path;
     }
-    return fs_relative_path(path.c_str());
+    auto root = fs_program_root();
+    return root.append(path.c_str());
+}
+
+std::filesystem::path fs_append(const std::filesystem::path path, const char* append)
+{
+    auto newPath = std::filesystem::path(path);
+    newPath.append(append);
+    return newPath;
 }
 } // namespace yar

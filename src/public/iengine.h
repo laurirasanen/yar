@@ -1,5 +1,7 @@
 #pragma once
 
+#include "iapp.h"
+#include "input.h"
 #include "iwindow.h"
 
 #include <memory>
@@ -17,8 +19,11 @@ class IEngine
     IEngine& operator=(const IEngine&) = delete;
     IEngine& operator=(IEngine&&)      = delete;
 
-    virtual int Run() = 0;
+    virtual int Run(std::shared_ptr<IApplication> app) = 0;
 
-    virtual std::shared_ptr<IWindow> GetWindow() = 0;
+    virtual WindowInput GetFrameInput() = 0;
+    virtual WindowInput GetTickInput()  = 0;
 };
+
+extern std::shared_ptr<IEngine> g_engine;
 }; // namespace yar

@@ -1,11 +1,12 @@
 #include "image.h"
-#include "../components/texture.h"
+#include "../renderer/texture.h"
 #include "renderer.h"
 
 #include <vulkan/vulkan_core.h>
 
 namespace yar
 {
+
 VulkanImage::VulkanImage(
     std::shared_ptr<Renderer> renderer,
     const void*               pixels,
@@ -15,10 +16,8 @@ VulkanImage::VulkanImage(
     size_t                    size,
     TextureType               type
 ) :
+    IImage(width, height, channels, 1),
     m_renderer(renderer),
-    m_width(width),
-    m_height(height),
-    m_mips(1),
     ktx(false)
 {
     VkFormat format = VK_FORMAT_UNDEFINED;
@@ -218,11 +217,14 @@ VulkanImage::VulkanImage(
     std::shared_ptr<Renderer>         renderer,
     std::shared_ptr<ktxVulkanTexture> texture
 ) :
+    IImage(
+        texture->width,
+        texture->height,
+        VkFormatChannels(texture->imageFormat),
+        texture->levelCount
+    ),
     m_renderer(renderer),
-    m_width(texture->width),
-    m_height(texture->height),
-    m_mips(texture->levelCount),
-    ktx(false)
+    ktx(true)
 {
     m_image = texture->image;
 

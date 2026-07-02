@@ -20,4 +20,6 @@ std::filesystem::path              fs_program_root();
 
 std::filesystem::path fs_relative_path(const char* path);
 std::filesystem::path fs_relative_path(const std::filesystem::path path);
+
+std::filesystem::path fs_append(const std::filesystem::path path, const char* append);
 } // namespace yar

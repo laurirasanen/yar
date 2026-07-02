@@ -20,7 +20,8 @@ Texture::Texture(
     TextureType               type,
     bool                      skipConvert
 ) :
-    m_name(name),
+    ITexture(name),
+    m_renderer(renderer),
     m_type(type)
 {
     if (type == TextureType::TEX_KTX)

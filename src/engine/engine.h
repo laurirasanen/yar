@@ -8,12 +8,10 @@
 #include <glm/gtc/quaternion.hpp>
 #include <glm/vec3.hpp>
 
+#include "../public/iapp.h"
 #include "../public/iengine.h"
+#include "../public/input.h"
 #include "../renderer/renderer.h"
-#include "../ui/ui.h"
-#include "../window/input.h"
-#include "../window/window.h"
-#include "../world/world.h"
 
 namespace yar
 {
@@ -23,11 +21,16 @@ class Engine : public IEngine
     Engine();
     ~Engine();
 
-    int Run() override;
+    int Run(std::shared_ptr<IApplication> app) override;
 
-    std::shared_ptr<IWindow> GetWindow() override
+    WindowInput GetFrameInput() override
     {
-        return m_window;
+        return m_frameInput;
+    }
+
+    WindowInput GetTickInput() override
+    {
+        return m_tickInput;
     }
 
   private:
@@ -40,11 +43,6 @@ class Engine : public IEngine
     void RenderThread(const std::stop_token token);
 
     std::shared_ptr<InputSettings> m_inputSettings;
-    std::shared_ptr<Window>        m_window;
-    std::shared_ptr<Camera>        m_camera;
-    std::shared_ptr<Renderer>      m_renderer;
-    std::shared_ptr<World>         m_world;
-    std::shared_ptr<UI>            m_ui;
 
     WindowInput m_frameInput;
     WindowInput m_tickInput;
@@ -57,5 +55,7 @@ class Engine : public IEngine
 
     std::binary_semaphore m_mainFrameSemaphore {0};
     std::binary_semaphore m_threadFrameSemaphore {0};
+
+    std::shared_ptr<IApplication> m_app;
 };
 } // namespace yar

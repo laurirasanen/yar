@@ -1,23 +1,24 @@
-#include <cstdint>
 #define CGLTF_IMPLEMENTATION
-#include "scene.h"
+#include "gltf_node.h"
 
-#include "../public/log.h"
 #include "../platform/fs.h"
 #include "../platform/memory.h"
+#include "../public/log.h"
 #include "../public/util.h"
+#include "mesh_node.h"
 
 #include <glm/geometric.hpp>
 
+#include <cstdint>
+
 namespace yar
 {
-Scene::Scene(std::shared_ptr<Renderer> renderer, std::shared_ptr<UI> ui, std::string path) :
-    m_path(path)
+GLTFNode::GLTFNode(std::shared_ptr<Renderer> renderer, std::string path) : INode(path), m_path(path)
 {
     const auto  full_path = fs_relative_path(path);
     const char* cpath     = full_path.c_str();
     LOG_DEBUG("Loading scene {}", cpath);
-    ui->SetLoadingScene(cpath);
+    g_ui->SetLoadingText(cpath);
 
     if (!fs_exists(full_path))
     {
@@ -68,7 +69,6 @@ Scene::Scene(std::shared_ptr<Renderer> renderer, std::shared_ptr<UI> ui, std::st
         for (size_t primIdx = 0; primIdx < data->meshes[i].primitives_count; primIdx++)
         {
             loadedPrimCount++;
-            ui->SetLoadingMesh(std::format("{}/{}", loadedPrimCount, totalPrimCount));
 
             const auto&               primitive = data->meshes[i].primitives[primIdx];
             std::vector<Index>        indices   = {};
@@ -149,7 +149,7 @@ Scene::Scene(std::shared_ptr<Renderer> renderer, std::shared_ptr<UI> ui, std::st
                     * sign;
             }
 
-            std::shared_ptr<Buffer> vertexBuffer;
+            std::shared_ptr<IBuffer> vertexBuffer;
             renderer->CreateBuffer(
                 vertexBuffer,
                 VertexBuffer,
@@ -157,7 +157,7 @@ Scene::Scene(std::shared_ptr<Renderer> renderer, std::shared_ptr<UI> ui, std::st
                 sizeof(VertexShaded),
                 static_cast<uint32_t>(vertices.size())
             );
-            std::shared_ptr<Buffer> indexBuffer;
+            std::shared_ptr<IBuffer> indexBuffer;
             renderer->CreateBuffer(
                 indexBuffer,
                 IndexBuffer,
@@ -166,16 +166,16 @@ Scene::Scene(std::shared_ptr<Renderer> renderer, std::shared_ptr<UI> ui, std::st
                 static_cast<uint32_t>(indices.size())
             );
 
-            std::shared_ptr<Material> material = ReadMaterial(renderer, ui, primitive);
+            std::shared_ptr<Material> material = ReadMaterial(renderer, primitive);
+            m_materials.push_back(material);
 
-            auto mesh = std::make_shared<Mesh<VertexShaded>>(
-                vertices,
-                indices,
-                vertexBuffer,
-                indexBuffer,
-                material
-            );
+            auto mesh =
+                std::make_shared<Mesh<VertexShaded>>(vertices, indices, vertexBuffer, indexBuffer);
             m_meshes.push_back(mesh);
+
+            auto name     = std::format("{} primitive {}", path, primIdx);
+            auto meshNode = std::make_shared<MeshNode<VertexShaded>>(name, mesh, material);
+            AddChild(static_pointer_cast<INode>(meshNode));
 
             totalIndexCount += indices.size();
             totalVertexCount += vertices.size();
@@ -200,11 +200,11 @@ Scene::Scene(std::shared_ptr<Renderer> renderer, std::shared_ptr<UI> ui, std::st
     cgltf_free(data);
 }
 
-Scene::~Scene()
+GLTFNode::~GLTFNode()
 {
 }
 
-bool Scene::ReadIndices(const cgltf_primitive& primitive, std::vector<Index>& indices)
+bool GLTFNode::ReadIndices(const cgltf_primitive& primitive, std::vector<Index>& indices)
 {
     const auto indexCount =
         cgltf_accessor_unpack_indices(primitive.indices, nullptr, sizeof(Index), 0);
@@ -217,7 +217,7 @@ bool Scene::ReadIndices(const cgltf_primitive& primitive, std::vector<Index>& in
     return readCount == indexCount;
 }
 
-bool Scene::ReadVertices(const cgltf_primitive& primitive, std::vector<VertexShaded>& vertices)
+bool GLTFNode::ReadVertices(const cgltf_primitive& primitive, std::vector<VertexShaded>& vertices)
 {
     std::vector<float> vertPositions = {};
     std::vector<float> vertNormals   = {};
@@ -320,7 +320,7 @@ bool Scene::ReadVertices(const cgltf_primitive& primitive, std::vector<VertexSha
     return true;
 }
 
-bool Scene::ReadFloats(cgltf_accessor* accessor, std::vector<float>& floats)
+bool GLTFNode::ReadFloats(cgltf_accessor* accessor, std::vector<float>& floats)
 {
     const auto floatCount = cgltf_accessor_unpack_floats(accessor, nullptr, 0);
     floats.resize(floatCount);
@@ -328,9 +328,8 @@ bool Scene::ReadFloats(cgltf_accessor* accessor, std::vector<float>& floats)
     return readCount == floatCount;
 }
 
-std::shared_ptr<Material> Scene::ReadMaterial(
+std::shared_ptr<Material> GLTFNode::ReadMaterial(
     std::shared_ptr<Renderer> renderer,
-    std::shared_ptr<UI>       ui,
     const cgltf_primitive&    primitive
 )
 {
@@ -350,8 +349,6 @@ std::shared_ptr<Material> Scene::ReadMaterial(
         RAND_STR(16, name);
         LOG_WARN("Material has no name, rand: {}", name);
     };
-
-    ui->SetLoadingMaterial(name);
 
     for (const auto& mat : m_materials)
     {
@@ -389,10 +386,10 @@ std::shared_ptr<Material> Scene::ReadMaterial(
         }
     }
 
-    auto albedoTex   = ReadTexture(renderer, ui, albedoView, TextureType::TEX_ALBEDO);
-    auto ormTex      = ReadTexture(renderer, ui, ormView, TextureType::TEX_ORM);
-    auto normalTex   = ReadTexture(renderer, ui, normalView, TextureType::TEX_NORMAL);
-    auto emissiveTex = ReadTexture(renderer, ui, emissiveView, TextureType::TEX_EMISSIVE);
+    auto albedoTex   = ReadTexture(renderer, albedoView, TextureType::TEX_ALBEDO);
+    auto ormTex      = ReadTexture(renderer, ormView, TextureType::TEX_ORM);
+    auto normalTex   = ReadTexture(renderer, normalView, TextureType::TEX_NORMAL);
+    auto emissiveTex = ReadTexture(renderer, emissiveView, TextureType::TEX_EMISSIVE);
 
     if (!albedoTex)
     {
@@ -426,9 +423,8 @@ std::shared_ptr<Material> Scene::ReadMaterial(
     return m_materials.back();
 }
 
-std::shared_ptr<Texture> Scene::ReadTexture(
+std::shared_ptr<Texture> GLTFNode::ReadTexture(
     std::shared_ptr<Renderer> renderer,
-    std::shared_ptr<UI>       ui,
     const cgltf_texture_view* view,
     TextureType               type
 )
@@ -471,8 +467,6 @@ std::shared_ptr<Texture> Scene::ReadTexture(
         RAND_STR(16, name);
         LOG_WARN("Texture has no name, rand: {}", name);
     }
-
-    ui->SetLoadingTexture(name);
 
     for (const auto& tex : m_textures)
     {
