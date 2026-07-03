@@ -9,7 +9,7 @@ VertexOutSky vertex(
 ) {
     VertexOutSky output;
 
-    output.pos = float4(input.pos, 0.99, 1.0);
+    output.pos = float4(input.pos, 1.0 - 1e-5, 1.0);
 
     return output;
 }

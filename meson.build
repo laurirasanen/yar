@@ -7,7 +7,8 @@ project(
     'cpp_std=c++23',
     'b_ndebug=if-release',
     'warning_level=3',
-  ]
+  ],
+  meson_version: '>1.1',
 )
 
 cpp = meson.get_compiler('cpp')
@@ -122,17 +123,38 @@ ktx_lib = cpp.find_library(
   dirs: [source_dir + '/thirdparty/KTX-Software/lib/build']
 )
 
+box3d_opt = cmake.subproject_options()
+box3d_opt.add_cmake_defines({
+  'BUILD_SHARED_LIBS': true,
+  'BOX3D_SANITIZE': false,
+  'BOX3D_DISABLE_SIMD': false,
+  'BOX3D_COMPILE_WARNING_AS_ERROR': false,
+  'BOX3D_DOUBLE_PRECISION': false,
+  'BOX3D_SAMPLES': false,
+  'BOX3D_BENCHMARKS': false,
+  'BOX3D_DOCS': false,
+  'BOX3D_PROFILE': false,
+  'BOX3D_VALIDATE': false,
+  'BOX3D_UNIT_TESTS': false,
+  'BOX3D_BUILD_SHADERS': false,
+})
+box3d_proj = cmake.subproject('box3d', options: box3d_opt)
+box3d_lib = box3d_proj.dependency('box3d')
+
 engine_deps = [
     sdl_dep,
     vk_dep,
     slang_lib,
     ktx_lib,
+    box3d_lib,
 ]
 
 engine_src = files([
   'src/engine/assets.cpp',
   'src/engine/engine.cpp',
   'src/engine/entry.cpp',
+  'src/engine/physics.cpp',
+  'src/engine/time.cpp',
 
   'src/platform/fs.cpp',
 

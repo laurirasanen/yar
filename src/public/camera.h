@@ -11,7 +11,7 @@
 #include <glm/matrix.hpp>
 
 #include "../public/input.h"
-#include "../public/util.h"
+#include "../public/time_util.h"
 #include "geometry.h"
 #include "transform.h"
 

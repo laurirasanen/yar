@@ -68,7 +68,7 @@ class INode
         return m_parent;
     }
 
-    void SetParent(INode* parent)
+    virtual void SetParent(INode* parent)
     {
         m_parent = parent;
         UpdateGlobalTransform();
@@ -127,18 +127,27 @@ class INode
         return nullptr;
     }
 
+    virtual void Tick()
+    {
+        for (const auto& child : m_children)
+        {
+            child->Tick();
+        }
+    };
+
     virtual void Render() {};
 
     void UpdateGlobalTransform()
     {
         if (m_parent)
         {
-            m_globalTransform = m_transform * m_parent->GetGlobalTransform();
+            m_globalTransform = m_parent->GetGlobalTransform() * m_transform;
         }
         else
         {
             m_globalTransform = m_transform;
         }
+
         for (const auto& child : m_children)
         {
             child->UpdateGlobalTransform();
@@ -147,18 +156,10 @@ class INode
 
     virtual void UpdateAABB()
     {
-        m_aabb.min = {};
-        m_aabb.max = {};
-
         for (const auto& child : m_children)
         {
             child->UpdateAABB();
-            const auto aabb = child->GetAABB();
-            m_aabb.min      = glm::min(m_aabb.min, aabb.min);
-            m_aabb.max      = glm::max(m_aabb.max, aabb.max);
         }
-
-        m_aabb.center = m_aabb.min + 0.5f * (m_aabb.max - m_aabb.min);
     }
 
   protected:

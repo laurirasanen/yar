@@ -1,6 +1,7 @@
 #include "scene.h"
 #include "../public/irenderer.h"
 #include "../public/log.h"
+#include "../public/time_util.h"
 #include "../renderer/renderer.h"
 
 namespace yar
@@ -56,7 +57,7 @@ void Scene::CullNodes()
     const auto startTime = Time::Now();
 
     const auto camera = g_renderer->GetCamera();
-    auto       stats  = g_renderer->GetCullStats();
+    auto&      stats  = g_renderer->GetCullStats();
 
     std::vector<std::shared_ptr<INode>> visible;
     for (const auto& node : m_nodes)
@@ -83,6 +84,7 @@ void Scene::CullNodes()
             visible.push_back(node);
         }
     }
+    m_nodes = visible;
 
     stats.CullTime = Time::Now() - startTime;
 }

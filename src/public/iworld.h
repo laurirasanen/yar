@@ -1,6 +1,7 @@
 #pragma once
 
 #include "inode.h"
+#include "iphysics.h"
 #include "isky.h"
 
 #include <memory>
@@ -24,6 +25,15 @@ class IWorld
     virtual void AddNode(std::shared_ptr<INode> node) = 0;
 
     virtual void SetSky(std::shared_ptr<ISky> sky) = 0;
+
+    virtual std::shared_ptr<INode> AddPhysicsNode(
+        std::string      name,
+        PhysicsBodyType  type,
+        PhysicsBodyShape shape,
+        const glm::vec3& position,
+        const glm::quat& rotation,
+        const glm::vec3  extent
+    ) = 0;
 
     virtual void Frame()  = 0;
     virtual void Tick()   = 0;

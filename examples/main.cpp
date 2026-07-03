@@ -4,14 +4,14 @@
 #include "iassets.h"
 #include "iengine.h"
 #include "input.h"
+#include "iphysics.h"
 #include "irenderer.h"
 #include "iui.h"
 #include "iwindow.h"
 #include "iworld.h"
 #include "log.h"
+#include "time_util.h"
 #include "transform.h"
-
-#include <array>
 
 using namespace yar;
 
@@ -69,17 +69,10 @@ class ExampleApp : public IApplication
             g_renderer->SetIBLStrength(g_renderer->GetIBLStrength() - 0.05f);
         }
 
-        const std::array<std::shared_ptr<INode>, 2> nodes = {m_flightHelmet, m_damagedHelmet};
-        const float rotateSpeeds[]                        = {12.5f, -12.5f, 25.0f, -25.0f, 50.0f};
-        for (size_t i = 0; i < nodes.size(); i++)
-        {
-            const float delta =
-                static_cast<float>(Time::DeltaFrame) * rotateSpeeds[i % ARRAY_SIZE(rotateSpeeds)];
-            const auto& node = nodes[i];
-            Transform   t    = node->GetTransform();
-            t.AddRotation(delta, VEC_UP);
-            node->SetTransform(t);
-        }
+        const float delta = static_cast<float>(Time::DeltaFrame) * 10.0f;
+        Transform   t     = m_flightHelmet->GetTransform();
+        t.AddRotation(delta, VEC_UP);
+        m_flightHelmet->SetTransform(t);
     }
 
     void Tick() override
@@ -100,23 +93,39 @@ class ExampleApp : public IApplication
 
         m_flightHelmet = g_assets->LoadGLTF("assets/scenes/FlightHelmet.glb");
         trans.SetEulerRotation({0, 0, 0});
-        trans.SetPosition({-0.4, -0.3, 0});
+        trans.SetPosition({-0.4f, -0.3f, 0});
         m_flightHelmet->SetTransform(trans);
         g_world->AddNode(m_flightHelmet);
 
-        m_damagedHelmet = g_assets->LoadGLTF("assets/scenes/DamagedHelmet.glb");
-        trans           = {};
-        trans.SetEulerRotation({90, 0, 0});
-        trans.SetScale({0.3, 0.3, 0.3});
-        trans.SetPosition({0.4, 0, 0});
-        m_damagedHelmet->SetTransform(trans);
-        g_world->AddNode(m_damagedHelmet);
+        m_damagedHelmet = g_world->AddPhysicsNode(
+            "helmet",
+            PhysicsBodyType::BODY_DYNAMIC,
+            PhysicsBodyShape::SHAPE_SPHERE,
+            {0, 2.0f, 0},
+            glm::identity<glm::quat>(),
+            {0.5f, 0.5f, 0.5f}
+        );
+        auto meshNode = g_assets->LoadGLTF("assets/scenes/DamagedHelmet.glb");
+        trans         = {};
+        trans.SetEulerRotation({90.0f, 180.0f, 0});
+        trans.SetScale({0.3f, 0.3f, 0.3f});
+        meshNode->SetTransform(trans);
+        m_damagedHelmet->AddChild(meshNode);
 
         auto sky = g_assets->LoadSky("assets/ibl/cobble");
         g_world->SetSky(sky);
         g_renderer->SetIBLStrength(1.0f);
         g_renderer->SetExposure(1.0f);
         g_renderer->SetContrast(1.0f);
+
+        m_floor = g_world->AddPhysicsNode(
+            "floor",
+            PhysicsBodyType::BODY_STATIC,
+            PhysicsBodyShape::SHAPE_BOX,
+            {0, -1.0f, 0},
+            glm::angleAxis(-glm::radians(1.0f), VEC_Z),
+            {5.0f, 0.1f, 5.0f}
+        );
     }
 
   private:
@@ -124,6 +133,7 @@ class ExampleApp : public IApplication
 
     std::shared_ptr<INode> m_flightHelmet;
     std::shared_ptr<INode> m_damagedHelmet;
+    std::shared_ptr<INode> m_floor;
 
     std::shared_ptr<Camera> m_camera;
 };

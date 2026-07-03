@@ -5,6 +5,7 @@
 #include <SDL3/SDL_events.h>
 
 #include "../platform/memory.h"
+#include "../public/iphysics.h"
 #include "../public/log.h"
 #include "../renderer/renderer.h"
 #include "ui.h"
@@ -83,13 +84,14 @@ void UI::DebugWindow()
 
         ImGui::Text("TPS: %.0f (%.2fms)", 1.0 / Time::DeltaTick, Time::DeltaTick * 1000.0);
 
-        const auto mem     = std::format("Resident: {}", Memory::GetPrettyUsage());
         const auto vkStats = GetVulkanAllocatorTotalStatistics();
-        const auto vkMem =
-            std::format("Vulkan: {}", Memory::Pretty(vkStats.total.statistics.allocationBytes));
         ImGui::Text("Memory:");
-        ImGui::Text("  %s", mem.c_str());
-        ImGui::Text("  %s", vkMem.c_str());
+        ImGui::Text("  Resident: %s", Memory::GetPrettyUsage().c_str());
+        ImGui::Text("  Physics: %s", Memory::Pretty(g_physics->MemoryUsage()).c_str());
+        ImGui::Text(
+            "  Vulkan: %s",
+            Memory::Pretty(vkStats.total.statistics.allocationBytes).c_str()
+        );
 
         ImGui::Text("Visible:");
         ImGui::Text("  Meshes: %zu", renderStats.MeshCount);

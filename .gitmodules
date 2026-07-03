@@ -25,3 +25,6 @@
 [submodule "thirdparty/glTF-IBL-Sampler"]
 	path = thirdparty/glTF-IBL-Sampler
 	url = https://github.com/KhronosGroup/glTF-IBL-Sampler
+[submodule "thirdparty/box3d"]
+	path = subprojects/box3d
+	url = https://github.com/erincatto/box3d.git

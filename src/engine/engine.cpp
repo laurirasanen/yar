@@ -6,6 +6,7 @@
 #include <imgui.h>
 
 #include "../public/log.h"
+#include "../public/time_util.h"
 #include "../ui/ui.h"
 #include "../window/window.h"
 #include "../world/world.h"
@@ -181,13 +182,6 @@ bool Engine::Tick()
     if (!acquired)
     {
         return true;
-    }
-
-    const auto delta         = Time::TimeSinceEngineTick();
-    const auto slowThreshold = Time::TickInterval * 2.0;
-    if (delta > slowThreshold)
-    {
-        LOG_WARN("Tick thread ran slow: {:.2f}ms", 1000 * Time::TimeSinceEngineTick());
     }
 
     Time::UpdateTickDelta();

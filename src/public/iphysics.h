@@ -1,0 +1,70 @@
+#pragma once
+
+#include "transform.h"
+
+#include <memory>
+
+namespace yar
+{
+enum PhysicsBodyType
+{
+    BODY_STATIC,
+    BODY_KINEMATIC,
+    BODY_DYNAMIC,
+};
+
+enum PhysicsBodyShape
+{
+    SHAPE_BOX,
+    SHAPE_SPHERE,
+    SHAPE_CAPSULE,
+};
+
+class IPhysicsBody
+{
+  public:
+    IPhysicsBody()          = default;
+    virtual ~IPhysicsBody() = default;
+
+    IPhysicsBody(const IPhysicsBody&)            = delete;
+    IPhysicsBody(IPhysicsBody&&)                 = delete;
+    IPhysicsBody& operator=(const IPhysicsBody&) = delete;
+    IPhysicsBody& operator=(IPhysicsBody&&)      = delete;
+};
+
+class IPhysics
+{
+  public:
+    IPhysics()          = default;
+    virtual ~IPhysics() = default;
+
+    IPhysics(const IPhysics&)            = delete;
+    IPhysics(IPhysics&&)                 = delete;
+    IPhysics& operator=(const IPhysics&) = delete;
+    IPhysics& operator=(IPhysics&&)      = delete;
+
+    virtual void Step() = 0;
+
+    virtual std::shared_ptr<IPhysicsBody> CreateBody(
+        PhysicsBodyType  type,
+        PhysicsBodyShape shape,
+        const glm::vec3& position,
+        const glm::quat& rotation,
+        const glm::vec3  extent
+    ) = 0;
+
+    virtual void DestroyBody(std::shared_ptr<IPhysicsBody> body) = 0;
+
+    virtual void EnableBody(std::shared_ptr<IPhysicsBody> body) = 0;
+
+    virtual void DisableBody(std::shared_ptr<IPhysicsBody> body) = 0;
+
+    virtual Transform GetTransform(std::shared_ptr<IPhysicsBody> body) = 0;
+
+    virtual void SetTransform(std::shared_ptr<IPhysicsBody> body, const Transform& t) = 0;
+
+    virtual size_t MemoryUsage() = 0;
+};
+
+extern std::shared_ptr<IPhysics> g_physics;
+}; // namespace yar
