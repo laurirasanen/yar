@@ -75,6 +75,10 @@ constexpr std::vector<VkVertexInputAttributeDescription> GetVulkanAttributeDescr
             .offset   = offsetof(T, uv),
         });
     }
+    else
+    {
+        static_assert(false);
+    }
 
     return desc;
 }

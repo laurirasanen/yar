@@ -103,12 +103,12 @@ class ExampleApp : public IApplication
             PhysicsBodyShape::SHAPE_SPHERE,
             {0, 2.0f, 0},
             glm::identity<glm::quat>(),
-            {0.5f, 0.5f, 0.5f}
+            {0.2f, 0.2f, 0.2f}
         );
         auto meshNode = g_assets->LoadGLTF("assets/scenes/DamagedHelmet.glb");
         trans         = {};
         trans.SetEulerRotation({90.0f, 180.0f, 0});
-        trans.SetScale({0.3f, 0.3f, 0.3f});
+        trans.SetScale({0.25f, 0.25f, 0.25f});
         meshNode->SetTransform(trans);
         m_damagedHelmet->AddChild(meshNode);
 
@@ -123,9 +123,22 @@ class ExampleApp : public IApplication
             PhysicsBodyType::BODY_STATIC,
             PhysicsBodyShape::SHAPE_BOX,
             {0, -1.0f, 0},
-            glm::angleAxis(-glm::radians(1.0f), VEC_Z),
+            glm::angleAxis(-glm::radians(5.0f), VEC_Z),
             {5.0f, 0.1f, 5.0f}
         );
+        auto floorMesh = g_assets->CreateBox({5.0f, 0.1f, 5.0f}, {0.5f, 0.5f, 0.5f});
+        m_floor->AddChild(floorMesh);
+
+        m_wall = g_world->AddPhysicsNode(
+            "wall",
+            PhysicsBodyType::BODY_STATIC,
+            PhysicsBodyShape::SHAPE_BOX,
+            {5.0f, 0, 0},
+            glm::identity<glm::quat>(),
+            {0.1f, 5.0f, 5.0f}
+        );
+        auto wallMesh = g_assets->CreateBox({0.1f, 5.0f, 5.0f}, {0.8f, 0.0f, 0.0f});
+        m_wall->AddChild(wallMesh);
     }
 
   private:
@@ -134,6 +147,7 @@ class ExampleApp : public IApplication
     std::shared_ptr<INode> m_flightHelmet;
     std::shared_ptr<INode> m_damagedHelmet;
     std::shared_ptr<INode> m_floor;
+    std::shared_ptr<INode> m_wall;
 
     std::shared_ptr<Camera> m_camera;
 };

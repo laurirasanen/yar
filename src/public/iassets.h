@@ -23,6 +23,8 @@ class IAssets
     virtual std::shared_ptr<INode> LoadGLTF(const char* path) = 0;
 
     virtual std::shared_ptr<ISky> LoadSky(const char* folder) = 0;
+
+    virtual std::shared_ptr<INode> CreateBox(const glm::vec3& extents, const glm::vec3& color) = 0;
 };
 
 extern std::shared_ptr<IAssets> g_assets;

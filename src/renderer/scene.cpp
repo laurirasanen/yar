@@ -3,6 +3,7 @@
 #include "../public/log.h"
 #include "../public/time_util.h"
 #include "../renderer/renderer.h"
+#include "../world/mesh_node.h"
 
 namespace yar
 {
@@ -22,6 +23,8 @@ void Scene::SetNodes(std::vector<std::shared_ptr<INode>> nodes)
     {
         m_nodes.append_range(node->GetChildrenRecursive());
     }
+
+    // TODO: batching
 
     CullNodes();
     SortNodes();
@@ -46,7 +49,8 @@ void Scene::Render()
     {
         stats.VertexCount += m_nodes[i]->GetVertexCount();
         stats.IndexCount += m_nodes[i]->GetIndexCount();
-        g_renderer->BindPipeline(RenderPipeline::SHADED); // TODO
+        // TODO this sucks
+        m_nodes[i]->BindPipeline();
         g_renderer->BindDescriptor(i);
         m_nodes[i]->Render();
     }

@@ -135,6 +135,8 @@ class INode
         }
     };
 
+    virtual void BindPipeline() {};
+
     virtual void Render() {};
 
     void UpdateGlobalTransform()

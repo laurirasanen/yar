@@ -32,7 +32,16 @@ class Material : public IMaterial
         m_metalnessFactor(metalnessFactor),
         m_roughnessFactor(roughnessFactor)
     {
-        memcpy(m_emissiveFactor, emissiveFactor, sizeof(m_emissiveFactor));
+        if (emissiveFactor != nullptr)
+        {
+            memcpy(m_emissiveFactor, emissiveFactor, sizeof(m_emissiveFactor));
+        }
+        else
+        {
+            m_emissiveFactor[0] = 0;
+            m_emissiveFactor[1] = 0;
+            m_emissiveFactor[2] = 0;
+        }
 
         if (albedo->HasTransparency())
         {

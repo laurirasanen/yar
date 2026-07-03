@@ -7,7 +7,7 @@ VertexOutUnlit vertex(
 ) {
     VertexOutUnlit output;
 
-    output.pos   = mul(float4(input.pos, 1.0), globalData->viewProj);
+    output.pos   = mul(float4(input.pos, 1.0), MAT_MVP);
     output.color = input.color;
 
     return output;

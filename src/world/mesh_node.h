@@ -16,6 +16,18 @@ class MeshNode : public INode
         m_mesh(mesh),
         m_material(material)
     {
+        if constexpr (std::is_same_v<V, VertexUnlit>)
+        {
+            m_pipeline = RenderPipeline::UNLIT;
+        }
+        else if constexpr (std::is_same_v<V, VertexShaded>)
+        {
+            m_pipeline = RenderPipeline::SHADED;
+        }
+        else
+        {
+            static_assert(false);
+        }
     }
 
     void UpdateAABB() override
@@ -53,6 +65,11 @@ class MeshNode : public INode
         return m_material;
     }
 
+    void BindPipeline() override
+    {
+        g_renderer->BindPipeline(m_pipeline);
+    }
+
     void Render() override
     {
         g_renderer->DrawWithBuffers(m_mesh->GetVertexBuffer(), m_mesh->GetIndexBuffer());
@@ -61,5 +78,6 @@ class MeshNode : public INode
   private:
     std::shared_ptr<Mesh<V>>  m_mesh;
     std::shared_ptr<Material> m_material;
+    RenderPipeline            m_pipeline;
 };
 }; // namespace yar
