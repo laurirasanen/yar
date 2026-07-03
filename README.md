@@ -44,6 +44,7 @@ meson compile -C build
 - [Krzysztof Narkowicz: ACES Filmic Tone Mapping Curve](https://knarkowicz.wordpress.com/2016/01/06/aces-filmic-tone-mapping-curve/) (CC0 / MIT)
 
 ### Third-party depedencies
+- [Box3D](https://github.com/erincatto/box3d) (MIT)
 - [cgltf](https://github.com/jkuhlmann/cgltf) (MIT)
 - [glm](https://github.com/g-truc/glm) (MIT)
 - [glTF-IBL-Sampler](https://github.com/KhronosGroup/glTF-IBL-Sampler) (Apache 2.0)
