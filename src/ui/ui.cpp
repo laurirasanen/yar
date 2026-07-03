@@ -84,10 +84,25 @@ void UI::DebugWindow()
 
         ImGui::Text("TPS: %.0f (%.2fms)", 1.0 / Time::DeltaTick, Time::DeltaTick * 1000.0);
 
+        const auto phyStats = g_physics->GetStats();
+        ImGui::Text("Physics:");
+        ImGui::Text("  Memory: %s", Memory::Pretty(phyStats.MemoryBytes).c_str());
+        ImGui::Text("  Bodies: %u", phyStats.Bodies);
+        ImGui::Text("  Shapes: %u", phyStats.Shapes);
+        ImGui::Text(
+            "  Contacts: %u (a: %u, r: %u)",
+            phyStats.Contacts,
+            phyStats.ContactsAwake,
+            phyStats.ContactsRecycled
+        );
+        ImGui::Text("  Joints: %u", phyStats.Joints);
+        ImGui::Text("  Islands: %u", phyStats.Islands);
+        ImGui::Text("  Tasks: %u", phyStats.Tasks);
+        ImGui::Text("  Time: %.2fms", phyStats.UpdateTime * 1000.0);
+
         const auto vkStats = GetVulkanAllocatorTotalStatistics();
         ImGui::Text("Memory:");
         ImGui::Text("  Resident: %s", Memory::GetPrettyUsage().c_str());
-        ImGui::Text("  Physics: %s", Memory::Pretty(g_physics->MemoryUsage()).c_str());
         ImGui::Text(
             "  Vulkan: %s",
             Memory::Pretty(vkStats.total.statistics.allocationBytes).c_str()

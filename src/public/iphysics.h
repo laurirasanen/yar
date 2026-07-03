@@ -20,6 +20,20 @@ enum PhysicsBodyShape
     SHAPE_CAPSULE,
 };
 
+struct PhysicsStats
+{
+    size_t   MemoryBytes;
+    uint32_t Bodies;
+    uint32_t Shapes;
+    uint32_t Contacts;
+    uint32_t ContactsAwake;
+    uint32_t ContactsRecycled;
+    uint32_t Joints;
+    uint32_t Islands;
+    uint32_t Tasks;
+    double   UpdateTime;
+};
+
 class IPhysicsBody
 {
   public:
@@ -63,7 +77,7 @@ class IPhysics
 
     virtual void SetTransform(std::shared_ptr<IPhysicsBody> body, const Transform& t) = 0;
 
-    virtual size_t MemoryUsage() = 0;
+    virtual const PhysicsStats& GetStats() const = 0;
 };
 
 extern std::shared_ptr<IPhysics> g_physics;

@@ -76,22 +76,22 @@ constexpr glm::quat B3ToGlm(const b3Quat& q)
     return g;
 }
 
-Physics::Physics()
+Physics::Physics() : m_stats({})
 {
     auto worldDef    = b3DefaultWorldDef();
     worldDef.gravity = {0, -9.81f, 0};
 
-    uint32_t cores       = std::thread::hardware_concurrency();
+    uint32_t cores       = std::thread::hardware_concurrency() / 2;
     cores                = CLAMP(cores, 1, 8);
     worldDef.workerCount = cores;
 
     // Initial capacity to avoid allocs at runtime.
     // TODO: adjust
-    worldDef.capacity.contactCount      = 1024;
-    worldDef.capacity.dynamicBodyCount  = 64;
-    worldDef.capacity.dynamicShapeCount = 64;
-    worldDef.capacity.staticBodyCount   = 256;
-    worldDef.capacity.staticShapeCount  = 256;
+    worldDef.capacity.contactCount      = 256;
+    worldDef.capacity.dynamicBodyCount  = 32;
+    worldDef.capacity.dynamicShapeCount = 32;
+    worldDef.capacity.staticBodyCount   = 128;
+    worldDef.capacity.staticShapeCount  = 128;
 
     m_worldId = b3CreateWorld(&worldDef);
 }
@@ -103,9 +103,23 @@ Physics::~Physics()
 
 void Physics::Step()
 {
+    const auto  startTime    = Time::Now();
     const int   subStepCount = 4;
     const float timeStep     = static_cast<float>(Time::DeltaTick);
+
     b3World_Step(m_worldId, timeStep, subStepCount);
+
+    const auto counters      = b3World_GetCounters(m_worldId);
+    m_stats.MemoryBytes      = static_cast<size_t>(counters.byteCount);
+    m_stats.Bodies           = static_cast<uint32_t>(counters.bodyCount);
+    m_stats.Shapes           = static_cast<uint32_t>(counters.shapeCount);
+    m_stats.Contacts         = static_cast<uint32_t>(counters.contactCount);
+    m_stats.ContactsAwake    = static_cast<uint32_t>(counters.awakeContactCount);
+    m_stats.ContactsRecycled = static_cast<uint32_t>(counters.recycledContactCount);
+    m_stats.Joints           = static_cast<uint32_t>(counters.jointCount);
+    m_stats.Islands          = static_cast<uint32_t>(counters.islandCount);
+    m_stats.Tasks            = static_cast<uint32_t>(counters.taskCount);
+    m_stats.UpdateTime       = Time::Now() - startTime;
 }
 
 std::shared_ptr<IPhysicsBody> Physics::CreateBody(
@@ -199,10 +213,5 @@ void Physics::SetTransform(std::shared_ptr<IPhysicsBody> body, const Transform& 
 {
     const auto b = InternalBody(body);
     b3Body_SetTransform(b->GetBodyID(), GlmToB3(t.GetPosition()), GlmToB3(t.GetRotation()));
-}
-
-size_t Physics::MemoryUsage()
-{
-    return static_cast<size_t>(b3GetByteCount());
 }
 }; // namespace yar

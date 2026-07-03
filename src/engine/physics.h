@@ -65,9 +65,13 @@ class Physics : public IPhysics
 
     void SetTransform(std::shared_ptr<IPhysicsBody> body, const Transform& t) override;
 
-    size_t MemoryUsage() override;
+    const PhysicsStats& GetStats() const override
+    {
+        return m_stats;
+    }
 
   private:
-    b3WorldId m_worldId;
+    b3WorldId    m_worldId;
+    PhysicsStats m_stats;
 };
 }; // namespace yar
