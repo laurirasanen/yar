@@ -70,6 +70,8 @@ bool Time::TimeForEngineTick()
 void Time::SetStart()
 {
     startTime = Now();
+    prevTick  = startTime - TickInterval;
+    prevFrame = startTime - FrameInterval;
 }
 
 void Time::SetFrameRate(unsigned int fps)
