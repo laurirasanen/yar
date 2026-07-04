@@ -72,7 +72,7 @@ class ExampleApp : public IApplication
         const float delta = static_cast<float>(Time::DeltaFrame) * 10.0f;
         Transform   t     = m_flightHelmet->GetTransform();
         t.AddRotation(delta, VEC_UP);
-        m_flightHelmet->SetTransform(t);
+        m_flightHelmet->SetTransform(t, true);
     }
 
     void Tick() override
@@ -94,7 +94,7 @@ class ExampleApp : public IApplication
         m_flightHelmet = g_assets->LoadGLTF("assets/scenes/FlightHelmet.glb");
         trans.SetEulerRotation({0, 0, 0});
         trans.SetPosition({-0.4f, -0.3f, 0});
-        m_flightHelmet->SetTransform(trans);
+        m_flightHelmet->SetTransform(trans, true);
         g_world->AddNode(m_flightHelmet);
 
         m_damagedHelmet = g_world->AddPhysicsNode(
@@ -109,7 +109,7 @@ class ExampleApp : public IApplication
         trans         = {};
         trans.SetEulerRotation({90.0f, 180.0f, 0});
         trans.SetScale({0.25f, 0.25f, 0.25f});
-        meshNode->SetTransform(trans);
+        meshNode->SetTransform(trans, true);
         m_damagedHelmet->AddChild(meshNode);
 
         auto sky = g_assets->LoadSky("assets/ibl/cobble");

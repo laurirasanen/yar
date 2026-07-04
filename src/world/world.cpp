@@ -33,7 +33,14 @@ void World::Frame()
 void World::Tick()
 {
     std::scoped_lock worldLock {m_worldMutex};
+
+    for (const auto& node : m_nodes)
+    {
+        node->EarlyTick();
+    }
+
     g_physics->Step();
+
     for (const auto& node : m_nodes)
     {
         node->Tick();

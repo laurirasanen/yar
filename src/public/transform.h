@@ -7,6 +7,8 @@
 #include <glm/matrix.hpp>
 #include <glm/vec3.hpp>
 
+#include "util.h"
+
 namespace yar
 {
 #define VEC_X glm::vec3(1.0f, 0.0f, 0.0f)
@@ -33,6 +35,18 @@ struct Transform
         t.m_model    = lhs.m_model / rhs.m_model;
         t.m_rotation = lhs.m_rotation * glm::inverse(rhs.m_rotation);
         return t;
+    }
+
+    static Transform Lerp(const Transform& start, const Transform& end, float lerp)
+    {
+        Transform result = {};
+        for (uint8_t i = 0; i < 16; i++)
+        {
+            result.m_model[i / 4][i % 4] =
+                LERP(start.m_model[i / 4][i % 4], end.m_model[i / 4][i % 4], lerp);
+        }
+        result.m_rotation = glm::slerp(start.m_rotation, end.m_rotation, lerp);
+        return result;
     }
 
     void SetPosition(glm::vec3 pos)

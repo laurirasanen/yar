@@ -26,4 +26,6 @@ namespace yar
 #define MAX(A, B) (A > B ? A : B)
 
 #define CLAMP(VAL, LOW, HIGH) (MIN(HIGH, MAX(LOW, VAL)))
+
+#define LERP(A, B, T) (A + T * (B - A))
 }; // namespace yar

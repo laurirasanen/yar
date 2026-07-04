@@ -33,6 +33,8 @@ class Time
 
     static double TimeSinceEngineTick();
 
+    static double TickFraction();
+
     static bool TimeForEngineFrame();
 
     static bool TimeForEngineTick();

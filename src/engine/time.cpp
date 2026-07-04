@@ -50,6 +50,11 @@ double Time::TimeSinceEngineTick()
     return Now() - prevTick;
 }
 
+double Time::TickFraction()
+{
+    return TimeSinceEngineTick() / TickInterval;
+}
+
 bool Time::TimeForEngineFrame()
 {
     return TimeSinceEngineFrame() >= FrameInterval;

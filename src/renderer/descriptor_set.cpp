@@ -188,8 +188,10 @@ void DescriptorSet::Update(uint32_t frameIndex, const std::vector<std::shared_pt
         const auto normal   = static_pointer_cast<VulkanImage>(mat->GetNormal()->GetImage());
         const auto emissive = static_pointer_cast<VulkanImage>(mat->GetEmissive()->GetImage());
 
-        objects[i].model            = nodes[i]->GetGlobalTransform().GetCombinedMatrix();
-        objects[i].normal           = nodes[i]->GetGlobalTransform().GetRotationMatrix();
+        const auto lerp             = static_cast<float>(Time::TickFraction());
+        const auto rt               = nodes[i]->GetRenderTransform(lerp);
+        objects[i].model            = rt.GetCombinedMatrix();
+        objects[i].normal           = rt.GetRotationMatrix();
         objects[i].index            = static_cast<uint32_t>(i);
         objects[i].materialParams.x = mat->GetOcclusionFactor();
         objects[i].materialParams.y = mat->GetRoughnessFactor();

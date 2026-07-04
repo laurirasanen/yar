@@ -16,6 +16,7 @@ class INode
     INode(std::string name) :
         m_name(name),
         m_transform({}),
+        m_oldGlobalTransform({}),
         m_globalTransform({}),
         m_aabb({}),
         m_parent(nullptr),
@@ -40,10 +41,10 @@ class INode
         return m_transform;
     }
 
-    void SetTransform(const Transform& transform)
+    void SetTransform(const Transform& transform, bool teleport = false)
     {
         m_transform = transform;
-        UpdateGlobalTransform();
+        UpdateGlobalTransform(teleport);
         UpdateAABB();
     }
 
@@ -52,15 +53,25 @@ class INode
         return m_globalTransform;
     }
 
-    void SetGlobalTransform(const Transform& transform)
+    Transform GetRenderTransform(float lerp)
+    {
+        if (m_interpolate)
+        {
+            return Transform::Lerp(m_oldGlobalTransform, m_globalTransform, lerp);
+        }
+
+        return m_globalTransform;
+    }
+
+    void SetGlobalTransform(const Transform& transform, bool teleport = false)
     {
         if (m_parent == nullptr)
         {
-            SetTransform(transform);
+            SetTransform(transform, teleport);
             return;
         }
 
-        SetTransform(transform / m_parent->GetGlobalTransform());
+        SetTransform(transform / m_parent->GetGlobalTransform(), teleport);
     }
 
     INode* GetParent()
@@ -71,7 +82,7 @@ class INode
     virtual void SetParent(INode* parent)
     {
         m_parent = parent;
-        UpdateGlobalTransform();
+        UpdateGlobalTransform(true);
         UpdateAABB();
     }
 
@@ -127,6 +138,11 @@ class INode
         return nullptr;
     }
 
+    virtual void EarlyTick()
+    {
+        m_interpolate = false;
+    }
+
     virtual void Tick()
     {
         for (const auto& child : m_children)
@@ -139,8 +155,14 @@ class INode
 
     virtual void Render() {};
 
-    void UpdateGlobalTransform()
+    void UpdateGlobalTransform(bool teleport = false)
     {
+        if (!teleport)
+        {
+            m_oldGlobalTransform = m_globalTransform;
+            m_interpolate        = true;
+        }
+
         if (m_parent)
         {
             m_globalTransform = m_parent->GetGlobalTransform() * m_transform;
@@ -150,9 +172,14 @@ class INode
             m_globalTransform = m_transform;
         }
 
+        if (teleport)
+        {
+            m_oldGlobalTransform = m_globalTransform;
+        }
+
         for (const auto& child : m_children)
         {
-            child->UpdateGlobalTransform();
+            child->UpdateGlobalTransform(teleport);
         }
     }
 
@@ -167,9 +194,11 @@ class INode
   protected:
     std::string                         m_name;
     Transform                           m_transform;
+    Transform                           m_oldGlobalTransform;
     Transform                           m_globalTransform;
     AABB                                m_aabb;
     INode*                              m_parent;
     std::vector<std::shared_ptr<INode>> m_children;
+    bool                                m_interpolate;
 };
 }; // namespace yar
