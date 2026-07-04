@@ -43,7 +43,7 @@ class DescriptorSet
 
     void Alloc();
 
-    void Update(uint32_t frameIndex, const std::vector<std::shared_ptr<INode>>& nodes);
+    void Update(uint32_t frameIndex, const std::vector<std::shared_ptr<IRenderNode>>& nodes);
 
     void SetSky(std::shared_ptr<ISky> sky);
 

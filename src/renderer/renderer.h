@@ -170,7 +170,7 @@ class Renderer : public IRenderer
         }
     }
 
-    void UpdateDescriptor(const std::vector<std::shared_ptr<INode>>& nodes)
+    void UpdateDescriptor(const std::vector<std::shared_ptr<IRenderNode>>& nodes)
     {
         const auto currentFrame = m_device.GetCurrentFrame();
         m_descriptorSet->Update(currentFrame, nodes);

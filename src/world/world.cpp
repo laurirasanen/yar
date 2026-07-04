@@ -54,12 +54,9 @@ void World::Render()
         return;
     }
 
-    if (m_nodes.size() > 0)
-    {
-        g_scene->SetNodes(m_nodes);
-        g_scene->UpdateDescriptor();
-        g_scene->Render();
-    }
+    g_scene->Update(m_nodes);
+    g_scene->UpdateDescriptor();
+    g_scene->Render();
 
     if (m_sky)
     {

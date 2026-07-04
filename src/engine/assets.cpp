@@ -130,6 +130,6 @@ std::shared_ptr<INode> Assets::CreateBox(const glm::vec3& extents, const glm::ve
         1.0f,
         nullptr
     );
-    return std::make_shared<MeshNode<VertexUnlit>>("box", mesh, material);
+    return std::make_shared<MeshNode<VertexUnlit>>("box", mesh, material, RenderPipeline::UNLIT);
 }
 }; // namespace yar

@@ -18,7 +18,7 @@ class Scene
     Scene& operator=(const Scene&) = delete;
     Scene& operator=(Scene&&)      = delete;
 
-    void SetNodes(std::vector<std::shared_ptr<INode>> nodes);
+    void Update(std::vector<std::shared_ptr<INode>> worldNodes);
 
     void UpdateDescriptor();
 
@@ -29,7 +29,7 @@ class Scene
 
     void SortNodes();
 
-    std::vector<std::shared_ptr<INode>> m_nodes;
+    std::vector<std::shared_ptr<IRenderNode>> m_nodes;
 };
 
 extern std::shared_ptr<Scene> g_scene;

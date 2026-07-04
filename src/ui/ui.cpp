@@ -83,6 +83,7 @@ void UI::DebugWindow()
             Time::Pretty(Time::DeltaFrame).c_str()
         );
         ImGui::Text("  Render: %s", Time::Pretty(Time::DeltaRender).c_str());
+        ImGui::Text("  Scene: %s", Time::Pretty(renderStats.SceneUpdateTime).c_str());
         ImGui::Text("  Cull: %s", Time::Pretty(cullStats.CullTime).c_str());
         ImGui::Text("  Sort: %s", Time::Pretty(renderStats.SortTime).c_str());
 

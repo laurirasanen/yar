@@ -14,6 +14,7 @@ struct RenderStats
     size_t MeshCount;
     size_t VertexCount;
     size_t IndexCount;
+    double SceneUpdateTime;
     double SortTime;
 };
 
@@ -91,14 +92,15 @@ class IRenderer
 
     void ResetFrameStats()
     {
-        m_renderStats.MeshCount   = 0;
-        m_renderStats.IndexCount  = 0;
-        m_renderStats.VertexCount = 0;
-        m_renderStats.SortTime    = 0.0;
-        m_cullStats.MeshCount     = 0;
-        m_cullStats.IndexCount    = 0;
-        m_cullStats.VertexCount   = 0;
-        m_cullStats.CullTime      = 0.0;
+        m_renderStats.MeshCount       = 0;
+        m_renderStats.IndexCount      = 0;
+        m_renderStats.VertexCount     = 0;
+        m_renderStats.SceneUpdateTime = 0.0;
+        m_renderStats.SortTime        = 0.0;
+        m_cullStats.MeshCount         = 0;
+        m_cullStats.IndexCount        = 0;
+        m_cullStats.VertexCount       = 0;
+        m_cullStats.CullTime          = 0.0;
     }
 
     void AddCulledMesh(std::shared_ptr<IBuffer> vertexBuffer, std::shared_ptr<IBuffer> indexBuffer)

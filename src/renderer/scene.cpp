@@ -15,14 +15,35 @@ Scene::~Scene()
 {
 }
 
-void Scene::SetNodes(std::vector<std::shared_ptr<INode>> nodes)
+void Scene::Update(std::vector<std::shared_ptr<INode>> worldNodes)
 {
-    m_nodes.clear();
-
-    for (const auto& node : nodes)
+    auto& stats = g_renderer->GetRenderStats();
+    if (worldNodes.size() <= 0)
     {
-        m_nodes.append_range(node->GetChildrenRecursive());
+        stats.SceneUpdateTime = 0;
+        return;
     }
+
+    const auto startTime = Time::Now();
+
+    std::vector<std::shared_ptr<INode>> flattened = {};
+    for (const auto& node : worldNodes)
+    {
+        flattened.append_range(node->GetChildrenRecursive());
+    }
+    flattened.append_range(worldNodes);
+
+    m_nodes.clear();
+    for (const auto& node : flattened)
+    {
+        const auto& r = dynamic_pointer_cast<IRenderNode>(node);
+        if (r != nullptr)
+        {
+            m_nodes.push_back(r);
+        }
+    }
+
+    stats.SceneUpdateTime = Time::Now() - startTime;
 
     // TODO: batching
 
@@ -32,6 +53,11 @@ void Scene::SetNodes(std::vector<std::shared_ptr<INode>> nodes)
 
 void Scene::UpdateDescriptor()
 {
+    if (m_nodes.size() <= 0)
+    {
+        return;
+    }
+
     const auto renderer = static_pointer_cast<Renderer>(g_renderer);
     renderer->UpdateDescriptor(m_nodes);
 }
@@ -50,7 +76,7 @@ void Scene::Render()
         stats.VertexCount += m_nodes[i]->GetVertexCount();
         stats.IndexCount += m_nodes[i]->GetIndexCount();
         // TODO this sucks
-        m_nodes[i]->BindPipeline();
+        g_renderer->BindPipeline(m_nodes[i]->GetPipeline());
         g_renderer->BindDescriptor(i);
         m_nodes[i]->Render();
     }
@@ -63,14 +89,9 @@ void Scene::CullNodes()
     const auto camera = g_renderer->GetCamera();
     auto&      stats  = g_renderer->GetCullStats();
 
-    std::vector<std::shared_ptr<INode>> visible;
+    std::vector<std::shared_ptr<IRenderNode>> visible;
     for (const auto& node : m_nodes)
     {
-        if (!node->Renderable())
-        {
-            continue;
-        }
-
         if (node->GetMaterial() == nullptr)
         {
             LOG_ERROR("Node is missing a material: {}", node->GetName());
@@ -103,7 +124,7 @@ void Scene::SortNodes()
     std::sort(
         m_nodes.begin(),
         m_nodes.end(),
-        [&cameraPos](std::shared_ptr<INode> a, std::shared_ptr<INode> b) {
+        [&cameraPos](std::shared_ptr<IRenderNode> a, std::shared_ptr<IRenderNode> b) {
             const auto queueA = a->GetMaterial()->GetQueue();
             const auto queueB = b->GetMaterial()->GetQueue();
 

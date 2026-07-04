@@ -174,7 +174,12 @@ GLTFNode::GLTFNode(std::shared_ptr<Renderer> renderer, std::string path) : INode
             m_meshes.push_back(mesh);
 
             auto name     = std::format("{} primitive {}", path, primIdx);
-            auto meshNode = std::make_shared<MeshNode<VertexShaded>>(name, mesh, material);
+            auto meshNode = std::make_shared<MeshNode<VertexShaded>>(
+                name,
+                mesh,
+                material,
+                RenderPipeline::SHADED
+            );
             AddChild(static_pointer_cast<INode>(meshNode));
 
             totalIndexCount += indices.size();

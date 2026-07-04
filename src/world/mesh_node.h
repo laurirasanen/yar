@@ -8,26 +8,18 @@
 namespace yar
 {
 template<class V>
-class MeshNode : public INode
+class MeshNode : public IRenderNode
 {
   public:
-    MeshNode(std::string name, std::shared_ptr<Mesh<V>> mesh, std::shared_ptr<Material> material) :
-        INode(name),
-        m_mesh(mesh),
-        m_material(material)
+    MeshNode(
+        std::string               name,
+        std::shared_ptr<Mesh<V>>  mesh,
+        std::shared_ptr<Material> material,
+        RenderPipeline            pipeline
+    ) :
+        IRenderNode(name, material, pipeline),
+        m_mesh(mesh)
     {
-        if constexpr (std::is_same_v<V, VertexUnlit>)
-        {
-            m_pipeline = RenderPipeline::UNLIT;
-        }
-        else if constexpr (std::is_same_v<V, VertexShaded>)
-        {
-            m_pipeline = RenderPipeline::SHADED;
-        }
-        else
-        {
-            static_assert(false);
-        }
     }
 
     void UpdateAABB() override
@@ -45,11 +37,6 @@ class MeshNode : public INode
         }
     }
 
-    bool Renderable() const override
-    {
-        return true;
-    }
-
     uint32_t GetVertexCount() const override
     {
         return m_mesh->GetVertexCount();
@@ -60,24 +47,12 @@ class MeshNode : public INode
         return m_mesh->GetIndexCount();
     }
 
-    std::shared_ptr<IMaterial> GetMaterial() override
-    {
-        return m_material;
-    }
-
-    void BindPipeline() override
-    {
-        g_renderer->BindPipeline(m_pipeline);
-    }
-
     void Render() override
     {
         g_renderer->DrawWithBuffers(m_mesh->GetVertexBuffer(), m_mesh->GetIndexBuffer());
     }
 
   private:
-    std::shared_ptr<Mesh<V>>  m_mesh;
-    std::shared_ptr<Material> m_material;
-    RenderPipeline            m_pipeline;
+    std::shared_ptr<Mesh<V>> m_mesh;
 };
 }; // namespace yar

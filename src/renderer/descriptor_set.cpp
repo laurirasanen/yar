@@ -157,7 +157,10 @@ void DescriptorSet::Alloc()
     );
 }
 
-void DescriptorSet::Update(uint32_t frameIndex, const std::vector<std::shared_ptr<INode>>& nodes)
+void DescriptorSet::Update(
+    uint32_t                                         frameIndex,
+    const std::vector<std::shared_ptr<IRenderNode>>& nodes
+)
 {
     if (nodes.size() <= 0)
     {
@@ -189,7 +192,7 @@ void DescriptorSet::Update(uint32_t frameIndex, const std::vector<std::shared_pt
         const auto emissive = static_pointer_cast<VulkanImage>(mat->GetEmissive()->GetImage());
 
         const auto lerp             = static_cast<float>(Time::TickFraction());
-        const auto rt               = nodes[i]->GetRenderTransform(lerp);
+        const auto rt               = nodes[i]->GetInterpolatedTransform(lerp);
         objects[i].model            = rt.GetCombinedMatrix();
         objects[i].normal           = rt.GetRotationMatrix();
         objects[i].index            = static_cast<uint32_t>(i);

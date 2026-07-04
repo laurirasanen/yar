@@ -3,6 +3,7 @@
 #include "camera.h"
 #include "geometry.h"
 #include "imaterial.h"
+#include "irenderer.h"
 #include "transform.h"
 
 #include <glm/gtc/constants.hpp>
@@ -53,7 +54,7 @@ class INode
         return m_globalTransform;
     }
 
-    Transform GetRenderTransform(float lerp)
+    Transform GetInterpolatedTransform(float lerp)
     {
         if (m_interpolate)
         {
@@ -108,34 +109,14 @@ class INode
         m_children.push_back(node);
     }
 
-    virtual AABB GetAABB()
-    {
-        return m_aabb;
-    }
-
-    virtual bool Renderable() const
-    {
-        return false;
-    }
-
     bool FrustumCull(const std::shared_ptr<Camera>& camera)
     {
         return !camera->IsInFrustum(m_aabb);
     }
 
-    virtual uint32_t GetVertexCount() const
+    virtual AABB GetAABB()
     {
-        return 0;
-    }
-
-    virtual uint32_t GetIndexCount() const
-    {
-        return 0;
-    }
-
-    virtual std::shared_ptr<IMaterial> GetMaterial()
-    {
-        return nullptr;
+        return m_aabb;
     }
 
     virtual void EarlyTick()
@@ -150,10 +131,6 @@ class INode
             child->Tick();
         }
     };
-
-    virtual void BindPipeline() {};
-
-    virtual void Render() {};
 
     void UpdateGlobalTransform(bool teleport = false)
     {
@@ -200,5 +177,49 @@ class INode
     INode*                              m_parent;
     std::vector<std::shared_ptr<INode>> m_children;
     bool                                m_interpolate;
+};
+
+class IRenderNode : public INode
+{
+  public:
+    IRenderNode(std::string name, std::shared_ptr<IMaterial> material, RenderPipeline pipe) :
+        INode(name),
+        m_material(material),
+        m_pipeline(pipe)
+    {
+    }
+
+    virtual ~IRenderNode() = default;
+
+    IRenderNode(const IRenderNode&)            = delete;
+    IRenderNode(IRenderNode&&)                 = delete;
+    IRenderNode& operator=(const IRenderNode&) = delete;
+    IRenderNode& operator=(IRenderNode&&)      = delete;
+
+    virtual uint32_t GetVertexCount() const
+    {
+        return 0;
+    }
+
+    virtual uint32_t GetIndexCount() const
+    {
+        return 0;
+    }
+
+    std::shared_ptr<IMaterial> GetMaterial()
+    {
+        return m_material;
+    }
+
+    RenderPipeline GetPipeline()
+    {
+        return m_pipeline;
+    }
+
+    virtual void Render() = 0;
+
+  private:
+    std::shared_ptr<IMaterial> m_material;
+    RenderPipeline             m_pipeline;
 };
 }; // namespace yar
