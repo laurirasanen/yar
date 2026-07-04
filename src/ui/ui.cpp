@@ -118,14 +118,14 @@ void UI::DebugWindow()
 
         ImGui::Text("Visible:");
         ImGui::Text("  Nodes: %u", renderStats.NodeCount);
-        ImGui::Text("  Indices: %zu", renderStats.IndexCount);
         ImGui::Text("  Vertices: %zu", renderStats.VertexCount);
+        ImGui::Text("  Indices: %zu", renderStats.IndexCount);
         ImGui::Text("  Textures: %u", renderStats.TextureCount);
 
         ImGui::Text("Culled:");
         ImGui::Text("  Nodes: %zu", renderStats.CulledNodeCount);
-        ImGui::Text("  Indices: %zu", renderStats.CulledIndexCount);
         ImGui::Text("  Vertices: %zu", renderStats.CulledVertexCount);
+        ImGui::Text("  Indices: %zu", renderStats.CulledIndexCount);
 
         ImGui::Text("Camera:");
         const auto camera = g_renderer->GetCamera();
