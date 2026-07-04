@@ -271,7 +271,7 @@ void TonemapPass::Render(uint32_t frameIndex)
     vkCmdPushConstants(
         device.GetCommandBuffer(),
         m_pipeline->GetVkPipelineLayout(),
-        VK_SHADER_STAGE_FRAGMENT_BIT,
+        VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT,
         0,
         sizeof(VkDeviceAddress),
         renderer->GetShaderGlobalBuffer()->GetDeviceAddress()
