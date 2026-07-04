@@ -8,7 +8,6 @@
 #include <vulkan/vulkan_core.h>
 
 #include "../public/log.h"
-#include "../shader/compiler.h"
 #include "common.h"
 #include "device.h"
 
@@ -43,11 +42,15 @@ VulkanDevice::~VulkanDevice()
     vkDestroyDescriptorPool(m_vkDevice, m_vkDescriptorPool, nullptr);
     vkDestroyDescriptorPool(m_vkDevice, m_vkImGuiDescriptorPool, nullptr);
 
-    for (auto& fence : m_vkInFlightFences)
+    for (auto& fence : m_inFlightFences)
     {
         vkDestroyFence(m_vkDevice, fence, nullptr);
     }
-    for (auto& semaphore : m_vkImageSemaphores)
+    for (auto& semaphore : m_acquireSemaphores)
+    {
+        vkDestroySemaphore(m_vkDevice, semaphore, nullptr);
+    }
+    for (auto& semaphore : m_releaseSemaphores)
     {
         vkDestroySemaphore(m_vkDevice, semaphore, nullptr);
     }
@@ -76,12 +79,12 @@ void VulkanDevice::Setup()
 void VulkanDevice::Begin()
 {
     VK_CHECK(
-        vkWaitForFences(m_vkDevice, 1, &m_vkInFlightFences[m_currentFrame], VK_TRUE, UINT64_MAX),
+        vkWaitForFences(m_vkDevice, 1, &m_inFlightFences[m_currentFrame], VK_TRUE, UINT64_MAX),
         "Failed waiting for in flight fence"
     );
 
     VK_CHECK(
-        vkResetFences(m_vkDevice, 1, &m_vkInFlightFences[m_currentFrame]),
+        vkResetFences(m_vkDevice, 1, &m_inFlightFences[m_currentFrame]),
         "Failed to reset in flight fence"
     );
 
@@ -89,7 +92,7 @@ void VulkanDevice::Begin()
         m_vkDevice,
         m_vkSwapchain,
         UINT64_MAX,
-        m_vkImageSemaphores[m_currentFrame],
+        m_acquireSemaphores[m_currentFrame],
         VK_NULL_HANDLE,
         &m_swapchainImageIndex
     );
@@ -293,12 +296,12 @@ void VulkanDevice::Submit()
 
     VkSemaphoreSubmitInfo waitInfo {};
     waitInfo.sType     = VK_STRUCTURE_TYPE_SEMAPHORE_SUBMIT_INFO;
-    waitInfo.semaphore = m_vkImageSemaphores[m_currentFrame];
+    waitInfo.semaphore = m_acquireSemaphores[m_currentFrame];
     waitInfo.stageMask = VK_PIPELINE_STAGE_2_COLOR_ATTACHMENT_OUTPUT_BIT;
 
     VkSemaphoreSubmitInfo signalInfo {};
     signalInfo.sType     = VK_STRUCTURE_TYPE_SEMAPHORE_SUBMIT_INFO;
-    signalInfo.semaphore = m_vkRenderSemaphores[m_swapchainImageIndex];
+    signalInfo.semaphore = m_releaseSemaphores[m_currentFrame];
 
     VkSubmitInfo2 submitInfo {};
     submitInfo.sType                    = VK_STRUCTURE_TYPE_SUBMIT_INFO_2;
@@ -310,14 +313,14 @@ void VulkanDevice::Submit()
     submitInfo.signalSemaphoreInfoCount = 1;
 
     VK_CHECK(
-        vkQueueSubmit2(m_vkGraphicsQueue, 1, &submitInfo, m_vkInFlightFences[m_currentFrame]),
+        vkQueueSubmit2(m_vkGraphicsQueue, 1, &submitInfo, m_inFlightFences[m_currentFrame]),
         "Failed to submit queue"
     );
 }
 
 void VulkanDevice::Present()
 {
-    VkSemaphore    renderSemaphores[] = {m_vkRenderSemaphores[m_swapchainImageIndex]};
+    VkSemaphore    renderSemaphores[] = {m_releaseSemaphores[m_currentFrame]};
     VkSwapchainKHR swapchains[]       = {m_vkSwapchain};
 
     VkPresentInfoKHR presentInfo {};
@@ -403,11 +406,6 @@ void VulkanDevice::RecreateSwapchain()
 
 void VulkanDevice::DestroySwapchain()
 {
-    for (auto& semaphore : m_vkRenderSemaphores)
-    {
-        vkDestroySemaphore(m_vkDevice, semaphore, nullptr);
-    }
-
     for (auto view : m_vkSwapchainImageViews)
     {
         vkDestroyImageView(m_vkDevice, view, nullptr);
@@ -758,17 +756,6 @@ void VulkanDevice::CreateSwapchain()
         GetDepthFormat(),
         VK_IMAGE_ASPECT_DEPTH_BIT | VK_IMAGE_ASPECT_STENCIL_BIT
     );
-
-    m_vkRenderSemaphores.resize(imageCount);
-    VkSemaphoreCreateInfo semaphoreInfo {};
-    semaphoreInfo.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO;
-    for (uint32_t i = 0; i < m_vkSwapchainImages.size(); i++)
-    {
-        VK_CHECK(
-            vkCreateSemaphore(m_vkDevice, &semaphoreInfo, nullptr, &m_vkRenderSemaphores[i]),
-            "Failed to create render semaphore"
-        );
-    }
 }
 
 void VulkanDevice::CreateLogicalDevice()
@@ -879,8 +866,9 @@ void VulkanDevice::CreateCommandBuffers()
 
 void VulkanDevice::CreateSyncObjects()
 {
-    m_vkImageSemaphores.resize(m_maxFramesInFlight);
-    m_vkInFlightFences.resize(m_maxFramesInFlight);
+    m_acquireSemaphores.resize(m_maxFramesInFlight);
+    m_releaseSemaphores.resize(m_maxFramesInFlight);
+    m_inFlightFences.resize(m_maxFramesInFlight);
 
     VkSemaphoreCreateInfo semaphoreInfo {};
     semaphoreInfo.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO;
@@ -892,11 +880,15 @@ void VulkanDevice::CreateSyncObjects()
     for (uint32_t i = 0; i < m_maxFramesInFlight; i++)
     {
         VK_CHECK(
-            vkCreateSemaphore(m_vkDevice, &semaphoreInfo, nullptr, &m_vkImageSemaphores[i]),
-            "Failed to create image semaphore"
+            vkCreateSemaphore(m_vkDevice, &semaphoreInfo, nullptr, &m_acquireSemaphores[i]),
+            "Failed to create acquire semaphore"
         );
         VK_CHECK(
-            vkCreateFence(m_vkDevice, &fenceInfo, nullptr, &m_vkInFlightFences[i]),
+            vkCreateSemaphore(m_vkDevice, &semaphoreInfo, nullptr, &m_releaseSemaphores[i]),
+            "Failed to create release semaphore"
+        );
+        VK_CHECK(
+            vkCreateFence(m_vkDevice, &fenceInfo, nullptr, &m_inFlightFences[i]),
             "Failed to create in flight fence"
         );
     }

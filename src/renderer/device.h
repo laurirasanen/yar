@@ -186,12 +186,9 @@ class VulkanDevice
     VkCommandPool                m_vkCommandPool;
     std::vector<VkCommandBuffer> m_vkCommandBuffers;
 
-    // These should be indexed by m_currentFrame
-    std::vector<VkSemaphore> m_vkImageSemaphores;
-    std::vector<VkFence>     m_vkInFlightFences;
-
-    // These should be indexed by m_swapchainImageIndex
-    std::vector<VkSemaphore> m_vkRenderSemaphores;
+    std::vector<VkFence>     m_inFlightFences;
+    std::vector<VkSemaphore> m_acquireSemaphores;
+    std::vector<VkSemaphore> m_releaseSemaphores;
 
     VkDescriptorPool m_vkDescriptorPool;
     VkDescriptorPool m_vkImGuiDescriptorPool;
