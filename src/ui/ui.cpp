@@ -90,6 +90,7 @@ void UI::DebugWindow()
         ImGui::Text("    Sort: %s", Time::Pretty(renderStats.SceneSortTime).c_str());
         ImGui::Text("    Desc: %s", Time::Pretty(renderStats.SceneDescriptorTime).c_str());
         ImGui::Text("    Render: %s", Time::Pretty(renderStats.SceneRenderTime).c_str());
+        ImGui::Text("    PP: %s", Time::Pretty(renderStats.PostProcessTime).c_str());
 
         ImGui::Text("TPS: %.0f (%s)", 1.0 / Time::DeltaTick, Time::Pretty(Time::DeltaTick).c_str());
 

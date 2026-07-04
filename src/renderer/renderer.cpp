@@ -178,7 +178,9 @@ void Renderer::Begin()
 
 void Renderer::PostProcess()
 {
+    const auto startTime = Time::Now();
     m_device.PostProcess();
+    m_renderStats.PostProcessTime = Time::Now() - startTime;
 }
 
 void Renderer::Submit()
