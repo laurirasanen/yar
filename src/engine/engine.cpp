@@ -31,6 +31,7 @@ Engine::Engine()
     g_window        = std::make_shared<SDLWindow>(m_inputSettings);
 
     g_renderer = std::make_shared<Renderer>(static_pointer_cast<SDLWindow>(g_window));
+    g_renderer->Setup();
 
     g_ui = std::make_shared<UI>();
 
@@ -245,6 +246,8 @@ void Engine::RenderThread(const std::stop_token token)
         g_renderer->UpdateUniforms();
 
         g_world->Render();
+
+        g_renderer->PostProcess();
 
         g_ui->Render();
 

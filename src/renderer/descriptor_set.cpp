@@ -1,5 +1,6 @@
 #include <cstdint>
 #include <cstring>
+#include <memory>
 
 #include "common.h"
 #include "data_types.h"
@@ -10,8 +11,11 @@
 
 namespace yar
 {
-DescriptorSet::DescriptorSet(const VulkanDevice& device, uint32_t maxFrames) : m_device(device)
+DescriptorSet::DescriptorSet(uint32_t maxFrames)
 {
+    const auto  renderer = static_pointer_cast<Renderer>(g_renderer);
+    const auto& device   = renderer->GetDevice();
+
     VkDescriptorSetLayoutBinding uboBinding = {};
     uboBinding.binding                      = BINDING_UBO;
     uboBinding.descriptorType               = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC;
@@ -94,27 +98,33 @@ DescriptorSet::DescriptorSet(const VulkanDevice& device, uint32_t maxFrames) : m
 
 DescriptorSet::~DescriptorSet()
 {
+    const auto  renderer = static_pointer_cast<Renderer>(g_renderer);
+    const auto& device   = renderer->GetDevice();
+
     m_objectBuffers.clear();
 
     for (auto& layout : m_vkLayouts)
     {
-        vkDestroyDescriptorSetLayout(m_device.GetVkDevice(), layout, nullptr);
+        vkDestroyDescriptorSetLayout(device.GetVkDevice(), layout, nullptr);
     }
 }
 
 void DescriptorSet::Alloc()
 {
+    const auto  renderer = static_pointer_cast<Renderer>(g_renderer);
+    const auto& device   = renderer->GetDevice();
+
     const uint32_t setCount = static_cast<uint32_t>(m_vkLayouts.size());
     m_vkSets.resize(setCount);
 
     VkDescriptorSetAllocateInfo allocInfo {};
     allocInfo.sType              = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
-    allocInfo.descriptorPool     = m_device.GetUboDescriptorPool();
+    allocInfo.descriptorPool     = device.GetDescriptorPool();
     allocInfo.descriptorSetCount = setCount;
     allocInfo.pSetLayouts        = m_vkLayouts.data();
 
     VK_CHECK(
-        vkAllocateDescriptorSets(m_device.GetVkDevice(), &allocInfo, m_vkSets.data()),
+        vkAllocateDescriptorSets(device.GetVkDevice(), &allocInfo, m_vkSets.data()),
         "Failed to allocate descriptor sets"
     );
 
@@ -127,7 +137,7 @@ void DescriptorSet::Alloc()
     {
         m_objectBuffers.push_back(
             std::make_shared<Buffer>(
-                m_device.GetVkDevice(),
+                device.GetVkDevice(),
                 UniformBuffer,
                 SecretThirdOption,
                 sizeof(ShaderObjectData),
@@ -149,7 +159,7 @@ void DescriptorSet::Alloc()
     }
 
     vkUpdateDescriptorSets(
-        m_device.GetVkDevice(),
+        device.GetVkDevice(),
         static_cast<uint32_t>(writes.size()),
         writes.data(),
         0,
@@ -191,6 +201,9 @@ void DescriptorSet::Update(
         throw std::runtime_error("exceeded max object count");
     }
 
+    const auto  renderer = static_pointer_cast<Renderer>(g_renderer);
+    const auto& device   = renderer->GetDevice();
+
     std::vector<ShaderObjectData>      objects       = {};
     std::vector<VkDescriptorImageInfo> albedoInfos   = {};
     std::vector<VkDescriptorImageInfo> ormInfos      = {};
@@ -202,7 +215,6 @@ void DescriptorSet::Update(
     normalInfos.reserve(nodes.size() + 1);
     emissiveInfos.reserve(nodes.size() + 1);
 
-    auto renderer = static_pointer_cast<Renderer>(g_renderer);
     FillImageInfo(albedoInfos, renderer->GetMissingTexture(TextureType::TEX_ALBEDO));
     FillImageInfo(ormInfos, renderer->GetMissingTexture(TextureType::TEX_ORM));
     FillImageInfo(normalInfos, renderer->GetMissingTexture(TextureType::TEX_NORMAL));
@@ -280,7 +292,7 @@ void DescriptorSet::Update(
         {albedoWrite, ormWrite, normalWrite, emissiveWrite};
 
     vkUpdateDescriptorSets(
-        m_device.GetVkDevice(),
+        device.GetVkDevice(),
         static_cast<uint32_t>(writes.size()),
         writes.data(),
         0,
@@ -296,6 +308,9 @@ void DescriptorSet::Update(
 
 void DescriptorSet::SetSky(std::shared_ptr<ISky> sky)
 {
+    auto        renderer = static_pointer_cast<Renderer>(g_renderer);
+    const auto& device   = renderer->GetDevice();
+
     const auto     color    = static_pointer_cast<VulkanImage>(sky->GetColor()->GetImage());
     const auto     lut      = static_pointer_cast<VulkanImage>(sky->GetLUT()->GetImage());
     const auto     diffuse  = static_pointer_cast<VulkanImage>(sky->GetDiffuse()->GetImage());
@@ -380,7 +395,7 @@ void DescriptorSet::SetSky(std::shared_ptr<ISky> sky)
     }
 
     vkUpdateDescriptorSets(
-        m_device.GetVkDevice(),
+        device.GetVkDevice(),
         static_cast<uint32_t>(writes.size()),
         writes.data(),
         0,

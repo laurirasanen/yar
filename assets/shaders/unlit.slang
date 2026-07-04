@@ -1,4 +1,17 @@
+#include "bindings.slang"
 #include "common.slang"
+
+struct VertexUnlit
+{
+    float3 pos    : POSITION;
+    float3 color;
+};
+
+struct VertexOutUnlit
+{
+    float4 pos : SV_Position;
+    float3 color;
+};
 
 [shader("vertex")]
 VertexOutUnlit vertex(

@@ -6,6 +6,7 @@
 
 #include "../public/geometry.h"
 #include "instance.h"
+#include "post_process.h"
 #include "vma.h"
 
 namespace yar
@@ -39,9 +40,12 @@ class VulkanDevice
     VulkanDevice& operator=(const VulkanDevice&) = delete;
     VulkanDevice& operator=(VulkanDevice&&)      = delete;
 
+    void Setup();
+
     void Begin();
     void ResetViewport();
     void SetViewport(Rect rect);
+    void PostProcess();
     void Submit();
     void Present();
 
@@ -89,14 +93,19 @@ class VulkanDevice
         return m_vkSwapchainImageFormat;
     }
 
+    VkFormat GetColorFormat() const
+    {
+        return VK_FORMAT_R32G32B32A32_SFLOAT;
+    }
+
     VkFormat GetDepthFormat() const
     {
         return VK_FORMAT_D32_SFLOAT_S8_UINT;
     }
 
-    VkDescriptorPool GetUboDescriptorPool() const
+    VkDescriptorPool GetDescriptorPool() const
     {
-        return m_vkUboDescriptorPool;
+        return m_vkDescriptorPool;
     }
 
     VkDescriptorPool GetImGuiDescriptorPool() const
@@ -143,23 +152,6 @@ class VulkanDevice
     constexpr VkExtent2D ChooseSwapExtent(const VkSurfaceCapabilitiesKHR& capabilities);
     void                 CreateSwapchain();
 
-    void CreateImage(
-        VkImage*          image,
-        VmaAllocation*    imageAllocation,
-        VkImageType       imageType,
-        VkFormat          format,
-        VkImageUsageFlags usage,
-        uint32_t          width,
-        uint32_t          height
-    );
-    void CreateImageView(
-        VkImage            image,
-        VkImageView*       imageView,
-        VkImageViewType    viewType,
-        VkFormat           format,
-        VkImageAspectFlags aspect
-    );
-
     void CreateLogicalDevice();
 
     void CreateCommandPool();
@@ -188,9 +180,8 @@ class VulkanDevice
     VkExtent2D               m_vkSwapchainExtent;
     std::vector<VkImageView> m_vkSwapchainImageViews;
 
-    VkImage       m_vkDepthImage;
-    VmaAllocation m_vmaDepthAllocation;
-    VkImageView   m_vkDepthImageView;
+    RenderAttachment m_colorAttachment;
+    RenderAttachment m_depthAttachment;
 
     VkCommandPool                m_vkCommandPool;
     std::vector<VkCommandBuffer> m_vkCommandBuffers;
@@ -199,17 +190,19 @@ class VulkanDevice
     std::vector<VkSemaphore> m_vkImageSemaphores;
     std::vector<VkFence>     m_vkInFlightFences;
 
-    // These should be indexed by m_currentImageIndex
+    // These should be indexed by m_swapchainImageIndex
     std::vector<VkSemaphore> m_vkRenderSemaphores;
 
-    VkDescriptorPool m_vkUboDescriptorPool;
+    VkDescriptorPool m_vkDescriptorPool;
     VkDescriptorPool m_vkImGuiDescriptorPool;
 
-    uint32_t       m_currentImageIndex;
-    uint32_t       m_currentFrame = 0;
+    uint32_t       m_swapchainImageIndex;
+    uint32_t       m_currentFrame;
     const uint32_t m_maxFramesInFlight;
 
     bool m_frameBufferResized = false;
+
+    std::shared_ptr<TonemapPass> m_tonemapPass;
 
     const std::vector<const char*> m_requiredExtensions = {
         VK_KHR_SWAPCHAIN_EXTENSION_NAME,

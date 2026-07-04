@@ -1,3 +1,4 @@
+#include "bindings.slang"
 #include "common.slang"
 
 float D_GGX(float roughness, float NoH, float3 N, float3 H)

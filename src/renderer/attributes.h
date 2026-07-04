@@ -24,7 +24,10 @@ constexpr std::vector<VkVertexInputAttributeDescription> GetVulkanAttributeDescr
 {
     std::vector<VkVertexInputAttributeDescription> desc {};
 
-    if constexpr (std::is_same_v<T, VertexSky>)
+    if constexpr (std::is_same_v<T, VertexEmpty>)
+    {
+    }
+    else if constexpr (std::is_same_v<T, VertexSky>)
     {
         desc.push_back({
             .location = 0,

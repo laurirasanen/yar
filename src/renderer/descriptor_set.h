@@ -7,7 +7,6 @@
 #include "../renderer/mesh.h"
 #include "buffer.h"
 #include "data_types.h"
-#include "device.h"
 
 #include <memory>
 
@@ -28,7 +27,7 @@ class DescriptorSet
 {
   public:
     DescriptorSet() = delete;
-    DescriptorSet(const VulkanDevice& device, uint32_t maxFrames);
+    DescriptorSet(uint32_t maxFrames);
     ~DescriptorSet();
 
     DescriptorSet(const DescriptorSet&)            = delete;
@@ -55,13 +54,12 @@ class DescriptorSet
         uint32_t            objectIndex
     );
 
-    std::vector<VkDescriptorSetLayout> GetLayouts() const
+    const std::vector<VkDescriptorSetLayout>& GetLayouts() const
     {
         return m_vkLayouts;
     }
 
   private:
-    const VulkanDevice&                  m_device;
     std::vector<VkDescriptorSetLayout>   m_vkLayouts;
     std::vector<VkDescriptorSet>         m_vkSets;
     std::vector<std::shared_ptr<Buffer>> m_objectBuffers;

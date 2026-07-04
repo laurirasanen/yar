@@ -8,6 +8,7 @@
 #include <vulkan/vulkan_core.h>
 
 #include "../public/log.h"
+#include "../shader/compiler.h"
 #include "common.h"
 #include "device.h"
 
@@ -15,6 +16,8 @@ namespace yar
 {
 VulkanDevice::VulkanDevice(const VulkanInstance& instance, uint32_t maxFramesInFlight) :
     m_instance(instance),
+    m_swapchainImageIndex(0),
+    m_currentFrame(0),
     m_maxFramesInFlight(maxFramesInFlight)
 {
     LOG_INFO("Creating VulkanDevice");
@@ -37,7 +40,7 @@ VulkanDevice::~VulkanDevice()
 
     vkDeviceWaitIdle(m_vkDevice);
 
-    vkDestroyDescriptorPool(m_vkDevice, m_vkUboDescriptorPool, nullptr);
+    vkDestroyDescriptorPool(m_vkDevice, m_vkDescriptorPool, nullptr);
     vkDestroyDescriptorPool(m_vkDevice, m_vkImGuiDescriptorPool, nullptr);
 
     for (auto& fence : m_vkInFlightFences)
@@ -65,6 +68,11 @@ VulkanDevice::~VulkanDevice()
     vkDestroyDevice(m_vkDevice, nullptr);
 }
 
+void VulkanDevice::Setup()
+{
+    m_tonemapPass = std::make_shared<TonemapPass>(GetSwapchainImageFormat());
+}
+
 void VulkanDevice::Begin()
 {
     VK_CHECK(
@@ -83,7 +91,7 @@ void VulkanDevice::Begin()
         UINT64_MAX,
         m_vkImageSemaphores[m_currentFrame],
         VK_NULL_HANDLE,
-        &m_currentImageIndex
+        &m_swapchainImageIndex
     );
     if (imageResult == VK_ERROR_OUT_OF_DATE_KHR)
     {
@@ -111,10 +119,10 @@ void VulkanDevice::Begin()
 
     TransitionImageLayout(
         m_vkCommandBuffers[m_currentFrame],
-        m_vkSwapchainImages[m_currentImageIndex],
+        m_colorAttachment.Image,
         VK_IMAGE_LAYOUT_UNDEFINED,
         VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL,
-        m_vkDepthImage,
+        m_depthAttachment.Image,
         VK_IMAGE_LAYOUT_UNDEFINED,
         VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL
     );
@@ -131,7 +139,7 @@ void VulkanDevice::Begin()
     colorAttachment.clearValue  = clearColor;
     colorAttachment.loadOp      = VK_ATTACHMENT_LOAD_OP_CLEAR;
     colorAttachment.storeOp     = VK_ATTACHMENT_STORE_OP_STORE;
-    colorAttachment.imageView   = m_vkSwapchainImageViews[m_currentImageIndex];
+    colorAttachment.imageView   = m_colorAttachment.ImageView;
     colorAttachment.imageLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
     colorAttachment.resolveMode = VK_RESOLVE_MODE_NONE;
 
@@ -140,7 +148,7 @@ void VulkanDevice::Begin()
     depthAttachment.clearValue  = clearDepth;
     depthAttachment.loadOp      = VK_ATTACHMENT_LOAD_OP_CLEAR;
     depthAttachment.storeOp     = VK_ATTACHMENT_STORE_OP_STORE;
-    depthAttachment.imageView   = m_vkDepthImageView;
+    depthAttachment.imageView   = m_depthAttachment.ImageView;
     depthAttachment.imageLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
     depthAttachment.resolveMode = VK_RESOLVE_MODE_NONE;
 
@@ -198,15 +206,80 @@ void VulkanDevice::SetViewport(Rect rect)
     vkCmdSetScissor(m_vkCommandBuffers[m_currentFrame], 0, 1, &scissor);
 }
 
+void VulkanDevice::PostProcess()
+{
+    vkCmdEndRendering(m_vkCommandBuffers[m_currentFrame]);
+
+    TransitionImageLayout(
+        m_vkCommandBuffers[m_currentFrame],
+        m_vkSwapchainImages[m_swapchainImageIndex],
+        VK_IMAGE_LAYOUT_UNDEFINED,
+        VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL,
+        VK_PIPELINE_STAGE_2_COLOR_ATTACHMENT_OUTPUT_BIT,
+        VK_PIPELINE_STAGE_2_COLOR_ATTACHMENT_OUTPUT_BIT,
+        VK_ACCESS_2_NONE,
+        VK_ACCESS_2_COLOR_ATTACHMENT_WRITE_BIT
+    );
+
+    TransitionImageLayout(
+        m_vkCommandBuffers[m_currentFrame],
+        m_colorAttachment.Image,
+        VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL,
+        VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL,
+        m_depthAttachment.Image,
+        VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL,
+        VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL
+    );
+
+    VkClearValue clearColor {};
+    clearColor.color = {
+        {0.0f, 0.0f, 0.0f, 1.0f}
+    };
+
+    VkRenderingAttachmentInfo colorAttachment {};
+    colorAttachment.sType       = VK_STRUCTURE_TYPE_RENDERING_ATTACHMENT_INFO;
+    colorAttachment.clearValue  = clearColor;
+    colorAttachment.loadOp      = VK_ATTACHMENT_LOAD_OP_CLEAR;
+    colorAttachment.storeOp     = VK_ATTACHMENT_STORE_OP_STORE;
+    colorAttachment.imageView   = m_vkSwapchainImageViews[m_swapchainImageIndex];
+    colorAttachment.imageLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+    colorAttachment.resolveMode = VK_RESOLVE_MODE_NONE;
+
+    VkRect2D renderArea {};
+    renderArea.extent = m_vkSwapchainExtent;
+    renderArea.offset = {0, 0};
+
+    VkRenderingInfo renderingInfo {};
+    renderingInfo.sType                = VK_STRUCTURE_TYPE_RENDERING_INFO;
+    renderingInfo.renderArea           = renderArea;
+    renderingInfo.viewMask             = 0;
+    renderingInfo.layerCount           = 1;
+    renderingInfo.colorAttachmentCount = 1;
+    renderingInfo.pColorAttachments    = &colorAttachment;
+    renderingInfo.pDepthAttachment     = nullptr;
+    renderingInfo.pStencilAttachment   = nullptr;
+    renderingInfo.flags                = 0;
+
+    vkCmdBeginRendering(m_vkCommandBuffers[m_currentFrame], &renderingInfo);
+
+    m_tonemapPass->SetInputs(m_colorAttachment, m_depthAttachment, m_currentFrame);
+    m_tonemapPass->SetOutput(m_vkSwapchainImages[m_swapchainImageIndex]);
+    m_tonemapPass->Render(m_currentFrame);
+}
+
 void VulkanDevice::Submit()
 {
     vkCmdEndRendering(m_vkCommandBuffers[m_currentFrame]);
 
     TransitionImageLayout(
         m_vkCommandBuffers[m_currentFrame],
-        m_vkSwapchainImages[m_currentImageIndex],
+        m_vkSwapchainImages[m_swapchainImageIndex],
         VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL,
-        VK_IMAGE_LAYOUT_PRESENT_SRC_KHR
+        VK_IMAGE_LAYOUT_PRESENT_SRC_KHR,
+        VK_PIPELINE_STAGE_2_COLOR_ATTACHMENT_OUTPUT_BIT,
+        VK_PIPELINE_STAGE_2_BOTTOM_OF_PIPE_BIT,
+        VK_ACCESS_2_COLOR_ATTACHMENT_WRITE_BIT,
+        VK_ACCESS_2_NONE
     );
 
     VK_CHECK(
@@ -225,7 +298,7 @@ void VulkanDevice::Submit()
 
     VkSemaphoreSubmitInfo signalInfo {};
     signalInfo.sType     = VK_STRUCTURE_TYPE_SEMAPHORE_SUBMIT_INFO;
-    signalInfo.semaphore = m_vkRenderSemaphores[m_currentImageIndex];
+    signalInfo.semaphore = m_vkRenderSemaphores[m_swapchainImageIndex];
 
     VkSubmitInfo2 submitInfo {};
     submitInfo.sType                    = VK_STRUCTURE_TYPE_SUBMIT_INFO_2;
@@ -244,7 +317,7 @@ void VulkanDevice::Submit()
 
 void VulkanDevice::Present()
 {
-    VkSemaphore    renderSemaphores[] = {m_vkRenderSemaphores[m_currentImageIndex]};
+    VkSemaphore    renderSemaphores[] = {m_vkRenderSemaphores[m_swapchainImageIndex]};
     VkSwapchainKHR swapchains[]       = {m_vkSwapchain};
 
     VkPresentInfoKHR presentInfo {};
@@ -253,7 +326,7 @@ void VulkanDevice::Present()
     presentInfo.pWaitSemaphores    = renderSemaphores;
     presentInfo.swapchainCount     = 1;
     presentInfo.pSwapchains        = swapchains;
-    presentInfo.pImageIndices      = &m_currentImageIndex;
+    presentInfo.pImageIndices      = &m_swapchainImageIndex;
 
     auto presentResult = vkQueuePresentKHR(m_vkPresentQueue, &presentInfo);
     if (presentResult == VK_ERROR_OUT_OF_DATE_KHR || presentResult == VK_SUBOPTIMAL_KHR
@@ -342,8 +415,10 @@ void VulkanDevice::DestroySwapchain()
 
     vkDestroySwapchainKHR(m_vkDevice, m_vkSwapchain, nullptr);
 
-    vkDestroyImageView(m_vkDevice, m_vkDepthImageView, nullptr);
-    vmaDestroyImage(g_vma, m_vkDepthImage, m_vmaDepthAllocation);
+    vkDestroyImageView(m_vkDevice, m_colorAttachment.ImageView, nullptr);
+    vkDestroyImageView(m_vkDevice, m_depthAttachment.ImageView, nullptr);
+    vmaDestroyImage(g_vma, m_colorAttachment.Image, m_colorAttachment.Allocation);
+    vmaDestroyImage(g_vma, m_depthAttachment.Image, m_depthAttachment.Allocation);
 }
 
 void VulkanDevice::PickPhysicalDevice()
@@ -587,10 +662,6 @@ void VulkanDevice::CreateSwapchain()
     auto imageCount    = support.capabilities.minImageCount;
 
     LOG_DEBUG("Using {} swapchain images", imageCount);
-    if (imageCount < m_maxFramesInFlight)
-    {
-        LOG_ERROR("This is probably bad");
-    }
 
     VkSwapchainCreateInfoKHR createInfo {};
     createInfo.sType            = VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR;
@@ -634,19 +705,34 @@ void VulkanDevice::CreateSwapchain()
     m_vkSwapchainExtent      = extent;
 
     CreateImage(
-        &m_vkDepthImage,
-        &m_vmaDepthAllocation,
+        &m_colorAttachment.Image,
+        &m_colorAttachment.Allocation,
         VK_IMAGE_TYPE_2D,
-        GetDepthFormat(),
-        VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT,
+        GetColorFormat(),
+        VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT,
         extent.width,
         extent.height
     );
+
+    CreateImage(
+        &m_depthAttachment.Image,
+        &m_depthAttachment.Allocation,
+        VK_IMAGE_TYPE_2D,
+        GetDepthFormat(),
+        VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT,
+        extent.width,
+        extent.height
+    );
+
+    const float maxSamplerAnisotropy = m_vkPhysicalDeviceProperties.limits.maxSamplerAnisotropy;
+    CreateImageSampler(m_vkDevice, maxSamplerAnisotropy, &m_colorAttachment.Sampler);
+    CreateImageSampler(m_vkDevice, maxSamplerAnisotropy, &m_depthAttachment.Sampler);
 
     m_vkSwapchainImageViews.resize(m_vkSwapchainImages.size());
     for (size_t i = 0; i < m_vkSwapchainImages.size(); i++)
     {
         CreateImageView(
+            m_vkDevice,
             m_vkSwapchainImages[i],
             &m_vkSwapchainImageViews[i],
             VK_IMAGE_VIEW_TYPE_2D,
@@ -656,8 +742,18 @@ void VulkanDevice::CreateSwapchain()
     }
 
     CreateImageView(
-        m_vkDepthImage,
-        &m_vkDepthImageView,
+        m_vkDevice,
+        m_colorAttachment.Image,
+        &m_colorAttachment.ImageView,
+        VK_IMAGE_VIEW_TYPE_2D,
+        GetColorFormat(),
+        VK_IMAGE_ASPECT_COLOR_BIT
+    );
+
+    CreateImageView(
+        m_vkDevice,
+        m_depthAttachment.Image,
+        &m_depthAttachment.ImageView,
         VK_IMAGE_VIEW_TYPE_2D,
         GetDepthFormat(),
         VK_IMAGE_ASPECT_DEPTH_BIT | VK_IMAGE_ASPECT_STENCIL_BIT
@@ -673,67 +769,6 @@ void VulkanDevice::CreateSwapchain()
             "Failed to create render semaphore"
         );
     }
-}
-
-void VulkanDevice::CreateImage(
-    VkImage*          image,
-    VmaAllocation*    imageAllocation,
-    VkImageType       imageType,
-    VkFormat          format,
-    VkImageUsageFlags usage,
-    uint32_t          width,
-    uint32_t          height
-)
-{
-    VkImageCreateInfo createInfo {};
-    createInfo.sType         = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
-    createInfo.imageType     = imageType;
-    createInfo.format        = format;
-    createInfo.extent.width  = width;
-    createInfo.extent.height = height;
-    createInfo.extent.depth  = 1;
-    createInfo.mipLevels     = 1;
-    createInfo.arrayLayers   = 1;
-    createInfo.tiling        = VK_IMAGE_TILING_OPTIMAL;
-    createInfo.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
-    createInfo.usage         = usage;
-    createInfo.sharingMode   = VK_SHARING_MODE_EXCLUSIVE;
-    createInfo.samples       = VK_SAMPLE_COUNT_1_BIT;
-    createInfo.flags         = 0;
-
-    VmaAllocationCreateInfo allocInfo {};
-    allocInfo.usage = VMA_MEMORY_USAGE_AUTO;
-
-    vmaCreateImage(g_vma, &createInfo, &allocInfo, image, imageAllocation, nullptr);
-}
-
-void VulkanDevice::CreateImageView(
-    VkImage            image,
-    VkImageView*       imageView,
-    VkImageViewType    viewType,
-    VkFormat           format,
-    VkImageAspectFlags aspect
-)
-{
-    VkImageViewCreateInfo createInfo {};
-    createInfo.sType                           = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
-    createInfo.image                           = image;
-    createInfo.viewType                        = viewType;
-    createInfo.format                          = format;
-    createInfo.components.r                    = VK_COMPONENT_SWIZZLE_IDENTITY;
-    createInfo.components.g                    = VK_COMPONENT_SWIZZLE_IDENTITY;
-    createInfo.components.b                    = VK_COMPONENT_SWIZZLE_IDENTITY;
-    createInfo.components.a                    = VK_COMPONENT_SWIZZLE_IDENTITY;
-    createInfo.subresourceRange.aspectMask     = aspect;
-    createInfo.subresourceRange.baseMipLevel   = 0;
-    createInfo.subresourceRange.levelCount     = 1;
-    createInfo.subresourceRange.baseArrayLayer = 0;
-    createInfo.subresourceRange.layerCount     = 1;
-
-    VK_CHECK(
-        vkCreateImageView(m_vkDevice, &createInfo, nullptr, imageView),
-        "Failed to create image view"
-    );
 }
 
 void VulkanDevice::CreateLogicalDevice()
@@ -766,8 +801,9 @@ void VulkanDevice::CreateLogicalDevice()
 
     // 1.1
     VkPhysicalDeviceVulkan11Features vk11Features {};
-    vk11Features.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_1_FEATURES;
-    vk11Features.pNext = &deviceFeatures;
+    vk11Features.sType                = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_1_FEATURES;
+    vk11Features.shaderDrawParameters = VK_TRUE;
+    vk11Features.pNext                = &deviceFeatures;
 
     // 1.2
     VkPhysicalDeviceVulkan12Features vk12Features {};
@@ -883,14 +919,15 @@ void VulkanDevice::CreateDescriptorPools()
 
     std::array<VkDescriptorPoolSize, 2> poolSizes = {uboPoolSize, imagePoolSize};
 
-    VkDescriptorPoolCreateInfo uboPoolInfo {};
-    uboPoolInfo.sType         = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
-    uboPoolInfo.poolSizeCount = static_cast<uint32_t>(poolSizes.size());
-    uboPoolInfo.pPoolSizes    = poolSizes.data();
-    uboPoolInfo.maxSets       = m_maxFramesInFlight;
+    VkDescriptorPoolCreateInfo poolInfo {};
+    poolInfo.sType                 = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
+    poolInfo.poolSizeCount         = static_cast<uint32_t>(poolSizes.size());
+    poolInfo.pPoolSizes            = poolSizes.data();
+    const uint32_t postProcessSets = 1;
+    poolInfo.maxSets               = m_maxFramesInFlight * (1 + postProcessSets);
 
     VK_CHECK(
-        vkCreateDescriptorPool(m_vkDevice, &uboPoolInfo, nullptr, &m_vkUboDescriptorPool),
+        vkCreateDescriptorPool(m_vkDevice, &poolInfo, nullptr, &m_vkDescriptorPool),
         "Failed to create descriptor pool"
     );
 

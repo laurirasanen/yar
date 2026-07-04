@@ -18,6 +18,10 @@
 
 namespace yar
 {
+struct VertexEmpty
+{
+};
+
 struct VertexSky
 {
     glm::vec2 position;

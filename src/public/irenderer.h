@@ -65,7 +65,9 @@ class IRenderer
 
     virtual void  Resize()         = 0;
     virtual float GetAspect()      = 0;
+    virtual void  Setup()          = 0;
     virtual void  Begin()          = 0;
+    virtual void  PostProcess()    = 0;
     virtual void  Submit()         = 0;
     virtual void  Present()        = 0;
     virtual void  UpdateUniforms() = 0;

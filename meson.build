@@ -163,6 +163,7 @@ engine_src = files([
   'src/renderer/device.cpp',
   'src/renderer/image.cpp',
   'src/renderer/instance.cpp',
+  'src/renderer/post_process.cpp',
   'src/renderer/renderer.cpp',
   'src/renderer/scene.cpp',
   'src/renderer/texture.cpp',

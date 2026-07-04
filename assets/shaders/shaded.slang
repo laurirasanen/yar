@@ -1,7 +1,26 @@
+#include "bindings.slang"
 #include "common.slang"
-#include "color.slang"
 #include "math.slang"
 #include "brdf.slang"
+
+struct VertexShaded
+{
+    float3 pos       : POSITION;
+    float3 normal    : NORMAL;
+    float3 tangent   : TANGENT;
+    float2 uv        : TEXCOORD;
+};
+
+struct VertexOutShaded
+{
+    float4 pos  : SV_Position;
+    float2 uv   : TEXCOORD;
+    float3 normal;
+    float3 viewDir;
+    float3 tangentPos;
+    float3 tangentLightDir;
+    float3 tangentEye;
+};
 
 [shader("vertex")] VertexOutShaded vertex(
     VertexShaded        input,
@@ -78,12 +97,6 @@
     const float4 emissiveStrength = float4(objectData.materialParams2.xyz, 1.0);
     const float4 emissive = emissiveTex * emissiveStrength;
     color += emissive.rgb * emissive.a;
-
-    const float exposure = globalData->settings[0];
-    color = color * exposure;
-    color = ACESTonemap(color);
-    const float contrast = globalData->settings[1];
-    color = pow(color, contrast);
 
     output.color.rgb = color;
     output.color.a = albedo.a;

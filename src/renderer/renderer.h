@@ -56,7 +56,11 @@ class Renderer : public IRenderer
 
     float GetAspect() override;
 
+    void Setup() override;
+
     void Begin() override;
+
+    void PostProcess() override;
 
     void Submit() override;
 
@@ -116,50 +120,31 @@ class Renderer : public IRenderer
 
         m_currentPipeline = pipe;
 
-        auto commandBuffer = m_device.GetCommandBuffer();
-        auto currentFrame  = m_device.GetCurrentFrame();
+        auto             commandBuffer = m_device.GetCommandBuffer();
+        auto             currentFrame  = m_device.GetCurrentFrame();
+        VkPipeline       pipeline;
+        VkPipelineLayout layout;
 
         switch (pipe)
         {
             case SKY:
             {
-                m_pipelineSky->Bind(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS);
-                vkCmdPushConstants(
-                    commandBuffer,
-                    m_pipelineSky->GetVkPipelineLayout(),
-                    VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT,
-                    0,
-                    sizeof(VkDeviceAddress),
-                    m_shaderGlobalBuffers[currentFrame]->GetDeviceAddress()
-                );
+                pipeline = m_pipelineSky->GetVkPipeline();
+                layout   = m_pipelineSky->GetVkPipelineLayout();
                 break;
             }
 
             case UNLIT:
             {
-                m_pipelineUnlit->Bind(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS);
-                vkCmdPushConstants(
-                    commandBuffer,
-                    m_pipelineUnlit->GetVkPipelineLayout(),
-                    VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT,
-                    0,
-                    sizeof(VkDeviceAddress),
-                    m_shaderGlobalBuffers[currentFrame]->GetDeviceAddress()
-                );
+                pipeline = m_pipelineUnlit->GetVkPipeline();
+                layout   = m_pipelineUnlit->GetVkPipelineLayout();
                 break;
             }
 
             case SHADED:
             {
-                m_pipelineShaded->Bind(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS);
-                vkCmdPushConstants(
-                    commandBuffer,
-                    m_pipelineShaded->GetVkPipelineLayout(),
-                    VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT,
-                    0,
-                    sizeof(VkDeviceAddress),
-                    m_shaderGlobalBuffers[currentFrame]->GetDeviceAddress()
-                );
+                pipeline = m_pipelineShaded->GetVkPipeline();
+                layout   = m_pipelineShaded->GetVkPipelineLayout();
                 break;
             }
 
@@ -168,6 +153,22 @@ class Renderer : public IRenderer
                 throw std::runtime_error("unknown pipeline");
             }
         }
+
+        vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline);
+        vkCmdPushConstants(
+            commandBuffer,
+            layout,
+            VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT,
+            0,
+            sizeof(VkDeviceAddress),
+            m_shaderGlobalBuffers[currentFrame]->GetDeviceAddress()
+        );
+    }
+
+    std::shared_ptr<Buffer> GetShaderGlobalBuffer()
+    {
+        auto currentFrame = m_device.GetCurrentFrame();
+        return m_shaderGlobalBuffers[currentFrame];
     }
 
     void UpdateDescriptor(const std::vector<std::shared_ptr<IRenderNode>>& nodes)
@@ -178,40 +179,27 @@ class Renderer : public IRenderer
 
     void BindDescriptor(uint32_t objectIndex) override
     {
-        const auto currentFrame  = m_device.GetCurrentFrame();
-        auto       commandBuffer = GetVkCommandBuffer();
+        const auto       currentFrame  = m_device.GetCurrentFrame();
+        auto             commandBuffer = GetVkCommandBuffer();
+        VkPipelineLayout layout;
+
         switch (m_currentPipeline)
         {
             case SKY:
             {
-                m_pipelineSky->BindDescriptor(
-                    commandBuffer,
-                    VK_PIPELINE_BIND_POINT_GRAPHICS,
-                    currentFrame,
-                    objectIndex
-                );
+                layout = m_pipelineSky->GetVkPipelineLayout();
                 break;
             }
 
             case UNLIT:
             {
-                m_pipelineUnlit->BindDescriptor(
-                    commandBuffer,
-                    VK_PIPELINE_BIND_POINT_GRAPHICS,
-                    currentFrame,
-                    objectIndex
-                );
+                layout = m_pipelineUnlit->GetVkPipelineLayout();
                 break;
             }
 
             case SHADED:
             {
-                m_pipelineShaded->BindDescriptor(
-                    commandBuffer,
-                    VK_PIPELINE_BIND_POINT_GRAPHICS,
-                    currentFrame,
-                    objectIndex
-                );
+                layout = m_pipelineShaded->GetVkPipelineLayout();
                 break;
             }
 
@@ -221,6 +209,14 @@ class Renderer : public IRenderer
                 break;
             }
         }
+
+        m_descriptorSet->Bind(
+            commandBuffer,
+            VK_PIPELINE_BIND_POINT_GRAPHICS,
+            layout,
+            currentFrame,
+            objectIndex
+        );
     }
 
     void DrawWithBuffers(
@@ -380,13 +376,6 @@ class Renderer : public IRenderer
     }
 
   private:
-    constexpr VkShaderModuleCreateInfo GetVulkanCreateInfo(const void* data, size_t size);
-
-    constexpr VkPipelineShaderStageCreateInfo FillShaderStageCreateInfo(
-        VkShaderModuleCreateInfo* module,
-        VkShaderStageFlagBits     stage
-    );
-
     VulkanInstance m_instance;
     VulkanDevice   m_device;
 

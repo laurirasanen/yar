@@ -1,11 +1,13 @@
 #pragma once
 
-#include <array>
-#include <format>
-#include <stdexcept>
+#include "vma.h"
 
 #include <imgui_impl_vulkan.h>
 #include <vulkan/vulkan_core.h>
+
+#include <array>
+#include <format>
+#include <stdexcept>
 
 namespace yar
 {
@@ -31,6 +33,14 @@ struct VulkanImGuiCreationInfo
     ImGui_ImplVulkan_InitInfo     imInit;
 };
 
+struct RenderAttachment
+{
+    VkImage       Image;
+    VkImageView   ImageView;
+    VmaAllocation Allocation;
+    VkSampler     Sampler;
+};
+
 constexpr static VkPipelineStageFlags2 GetPipelineStageFlags(const VkImageLayout imageLayout)
 {
     switch (imageLayout)
@@ -51,7 +61,7 @@ constexpr static VkPipelineStageFlags2 GetPipelineStageFlags(const VkImageLayout
         case VK_IMAGE_LAYOUT_FRAGMENT_SHADING_RATE_ATTACHMENT_OPTIMAL_KHR:
             return VK_PIPELINE_STAGE_2_FRAGMENT_SHADING_RATE_ATTACHMENT_BIT_KHR;
         case VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL:
-            return VK_PIPELINE_STAGE_2_VERTEX_SHADER_BIT | VK_PIPELINE_STAGE_2_FRAGMENT_SHADER_BIT;
+            return VK_PIPELINE_STAGE_2_FRAGMENT_SHADER_BIT;
         case VK_IMAGE_LAYOUT_PRESENT_SRC_KHR:
             return VK_PIPELINE_STAGE_2_BOTTOM_OF_PIPE_BIT;
         default:
@@ -77,7 +87,8 @@ constexpr static VkAccessFlags2 GetAccessFlags(const VkImageLayout imageLayout)
         case VK_IMAGE_LAYOUT_FRAGMENT_SHADING_RATE_ATTACHMENT_OPTIMAL_KHR:
             return VK_ACCESS_2_FRAGMENT_SHADING_RATE_ATTACHMENT_READ_BIT_KHR;
         case VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL:
-            return VK_ACCESS_2_SHADER_READ_BIT | VK_ACCESS_INPUT_ATTACHMENT_READ_BIT;
+            return VK_ACCESS_2_SHADER_READ_BIT | VK_ACCESS_2_INPUT_ATTACHMENT_READ_BIT
+                   | VK_ACCESS_2_COLOR_ATTACHMENT_READ_BIT;
         case VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL:
             return VK_ACCESS_2_TRANSFER_READ_BIT;
         case VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL:
@@ -117,7 +128,7 @@ constexpr static void TransitionImageLayout(
                                .pNext               = nullptr,
                                .srcStageMask        = VK_PIPELINE_STAGE_2_COLOR_ATTACHMENT_OUTPUT_BIT,
                                .srcAccessMask       = GetAccessFlags(oldColorLayout),
-                               .dstStageMask        = VK_PIPELINE_STAGE_2_COLOR_ATTACHMENT_OUTPUT_BIT,
+                               .dstStageMask        = GetPipelineStageFlags(newColorLayout),
                                .dstAccessMask       = GetAccessFlags(newColorLayout),
                                .oldLayout           = oldColorLayout,
                                .newLayout           = newColorLayout,
@@ -132,7 +143,7 @@ constexpr static void TransitionImageLayout(
                                .srcStageMask = VK_PIPELINE_STAGE_2_LATE_FRAGMENT_TESTS_BIT,
                                .srcAccessMask =
                                GetAccessFlags(oldDepthLayout) | VK_ACCESS_2_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT,
-                               .dstStageMask        = VK_PIPELINE_STAGE_2_EARLY_FRAGMENT_TESTS_BIT,
+                               .dstStageMask        = GetPipelineStageFlags(newDepthLayout),
                                .dstAccessMask       = GetAccessFlags(newDepthLayout),
                                .oldLayout           = oldDepthLayout,
                                .newLayout           = newDepthLayout,
@@ -153,32 +164,36 @@ constexpr static void TransitionImageLayout(
 }
 
 constexpr static void TransitionImageLayout(
-    VkCommandBuffer commandBuffer,
-    VkImage         color,
-    VkImageLayout   oldColorLayout,
-    VkImageLayout   newColorLayout
+    VkCommandBuffer       commandBuffer,
+    VkImage               color,
+    VkImageLayout         oldColorLayout,
+    VkImageLayout         newColorLayout,
+    VkPipelineStageFlags2 srcStage,
+    VkPipelineStageFlags2 dstStage,
+    VkAccessFlags2        srcAccess,
+    VkAccessFlags2        dstAccess
 )
 {
-    VkImageSubresourceRange colorRange {};
-    colorRange.aspectMask     = VK_IMAGE_ASPECT_COLOR_BIT;
-    colorRange.baseMipLevel   = 0;
-    colorRange.levelCount     = 1;
-    colorRange.baseArrayLayer = 0;
-    colorRange.layerCount     = 1;
+    VkImageSubresourceRange range {};
+    range.aspectMask     = VK_IMAGE_ASPECT_COLOR_BIT;
+    range.baseMipLevel   = 0;
+    range.levelCount     = 1;
+    range.baseArrayLayer = 0;
+    range.layerCount     = 1;
 
     VkImageMemoryBarrier2 barrier {
         .sType               = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER_2,
         .pNext               = nullptr,
-        .srcStageMask        = VK_PIPELINE_STAGE_2_COLOR_ATTACHMENT_OUTPUT_BIT,
-        .srcAccessMask       = GetAccessFlags(oldColorLayout),
-        .dstStageMask        = VK_PIPELINE_STAGE_2_COLOR_ATTACHMENT_OUTPUT_BIT,
-        .dstAccessMask       = GetAccessFlags(newColorLayout),
+        .srcStageMask        = srcStage,
+        .srcAccessMask       = srcAccess,
+        .dstStageMask        = dstStage,
+        .dstAccessMask       = dstAccess,
         .oldLayout           = oldColorLayout,
         .newLayout           = newColorLayout,
         .srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED,
         .dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED,
         .image               = color,
-        .subresourceRange    = colorRange,
+        .subresourceRange    = range,
     };
 
     VkDependencyInfo dep {};
@@ -217,5 +232,120 @@ constexpr static uint32_t VkFormatChannels(VkFormat format)
             );
         }
     }
+}
+
+constexpr static VkShaderModuleCreateInfo GetShaderCreateInfo(const void* data, size_t size)
+{
+    VkShaderModuleCreateInfo createInfo {};
+    createInfo.sType    = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO;
+    createInfo.codeSize = size;
+    createInfo.pCode    = static_cast<const uint32_t*>(data);
+    return createInfo;
+}
+
+constexpr static VkPipelineShaderStageCreateInfo FillShaderStageCreateInfo(
+    VkShaderModuleCreateInfo* module,
+    VkShaderStageFlagBits     stage
+)
+{
+    VkPipelineShaderStageCreateInfo createInfo {};
+    createInfo.sType  = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
+    createInfo.stage  = stage;
+    createInfo.module = VK_NULL_HANDLE;
+    createInfo.pName  = "main";
+    createInfo.pNext  = module;
+    return createInfo;
+}
+
+static void CreateImage(
+    VkImage*          image,
+    VmaAllocation*    imageAllocation,
+    VkImageType       imageType,
+    VkFormat          format,
+    VkImageUsageFlags usage,
+    uint32_t          width,
+    uint32_t          height
+)
+{
+    VkImageCreateInfo createInfo {};
+    createInfo.sType         = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
+    createInfo.imageType     = imageType;
+    createInfo.format        = format;
+    createInfo.extent.width  = width;
+    createInfo.extent.height = height;
+    createInfo.extent.depth  = 1;
+    createInfo.mipLevels     = 1;
+    createInfo.arrayLayers   = 1;
+    createInfo.tiling        = VK_IMAGE_TILING_OPTIMAL;
+    createInfo.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+    createInfo.usage         = usage;
+    createInfo.sharingMode   = VK_SHARING_MODE_EXCLUSIVE;
+    createInfo.samples       = VK_SAMPLE_COUNT_1_BIT;
+    createInfo.flags         = 0;
+
+    VmaAllocationCreateInfo allocInfo {};
+    allocInfo.usage = VMA_MEMORY_USAGE_AUTO;
+
+    vmaCreateImage(g_vma, &createInfo, &allocInfo, image, imageAllocation, nullptr);
+}
+
+static void CreateImageSampler(
+    const VkDevice device,
+    float          maxSamplerAnisotropy,
+    VkSampler*     sampler
+)
+{
+    VkSamplerCreateInfo samplerInfo     = {};
+    samplerInfo.sType                   = VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO;
+    samplerInfo.minFilter               = VK_FILTER_LINEAR;
+    samplerInfo.magFilter               = VK_FILTER_LINEAR;
+    samplerInfo.addressModeU            = VK_SAMPLER_ADDRESS_MODE_REPEAT;
+    samplerInfo.addressModeV            = VK_SAMPLER_ADDRESS_MODE_REPEAT;
+    samplerInfo.addressModeW            = VK_SAMPLER_ADDRESS_MODE_REPEAT;
+    samplerInfo.anisotropyEnable        = VK_TRUE;
+    samplerInfo.maxAnisotropy           = maxSamplerAnisotropy;
+    samplerInfo.borderColor             = VK_BORDER_COLOR_FLOAT_TRANSPARENT_BLACK;
+    samplerInfo.unnormalizedCoordinates = VK_FALSE;
+    samplerInfo.compareEnable           = VK_FALSE;
+    samplerInfo.compareOp               = VK_COMPARE_OP_ALWAYS;
+    samplerInfo.mipmapMode              = VK_SAMPLER_MIPMAP_MODE_LINEAR;
+    samplerInfo.mipLodBias              = 0.0f;
+    samplerInfo.minLod                  = 0.0f;
+    samplerInfo.maxLod                  = 0.0f;
+
+    VK_CHECK(
+        vkCreateSampler(device, &samplerInfo, nullptr, sampler),
+        "Failed to create image sampler"
+    );
+}
+
+static void CreateImageView(
+    VkDevice           device,
+    VkImage            image,
+    VkImageView*       imageView,
+    VkImageViewType    viewType,
+    VkFormat           format,
+    VkImageAspectFlags aspect
+)
+{
+    VkImageViewCreateInfo createInfo {};
+    createInfo.sType                           = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
+    createInfo.image                           = image;
+    createInfo.viewType                        = viewType;
+    createInfo.format                          = format;
+    createInfo.components.r                    = VK_COMPONENT_SWIZZLE_IDENTITY;
+    createInfo.components.g                    = VK_COMPONENT_SWIZZLE_IDENTITY;
+    createInfo.components.b                    = VK_COMPONENT_SWIZZLE_IDENTITY;
+    createInfo.components.a                    = VK_COMPONENT_SWIZZLE_IDENTITY;
+    createInfo.subresourceRange.aspectMask     = aspect;
+    createInfo.subresourceRange.baseMipLevel   = 0;
+    createInfo.subresourceRange.levelCount     = 1;
+    createInfo.subresourceRange.baseArrayLayer = 0;
+    createInfo.subresourceRange.layerCount     = 1;
+
+    VK_CHECK(
+        vkCreateImageView(device, &createInfo, nullptr, imageView),
+        "Failed to create image view"
+    );
 }
 } // namespace yar

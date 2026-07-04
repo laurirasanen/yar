@@ -1,49 +1,7 @@
 #ifndef COMMON_SLANG
 #define COMMON_SLANG
 
-#define MAT_MVP (mul(objectData.model, globalData->viewProj))
-
 #define PI 3.14159265358979323846
-
-#define TEX_ALBEDO   (  texAlbedo[objectData.texIndices.x])
-#define TEX_ORM      (     texORM[objectData.texIndices.y])
-#define TEX_NORMAL   (  texNormal[objectData.texIndices.z])
-#define TEX_EMISSIVE (texEmissive[objectData.texIndices.w])
-
-struct ObjectData
-{
-    float4x4 model;
-    float4x4 normal;
-    // albedo, orm, normal, emissive
-    uint4 texIndices;
-    // occlusion, roughness, metalness, unused
-    float4 materialParams;
-    // xyz = emissive factor, unused
-    float4 materialParams2;
-};
-
-layout(binding = 0, set = 0)
-ConstantBuffer<ObjectData> objectData;
-
-layout(binding = 1, set = 0)
-Sampler2D texAlbedo[];
-
-layout(binding = 2, set = 0)
-Sampler2D texORM[];
-
-layout(binding = 3, set = 0)
-Sampler2D texNormal[];
-
-layout(binding = 4, set = 0)
-Sampler2D texEmissive[];
-
-// Color, LUT
-layout(binding = 5, set = 0)
-Sampler2D texIBL[];
-
-// diffuse, specular
-layout(binding = 6, set = 0)
-SamplerCube texIBLFiltered[];
 
 struct GlobalData
 {
@@ -65,47 +23,6 @@ struct GlobalData
 
     // exposure, contrast, ibl specular mips, ibl strength
     float4 settings;
-};
-
-struct VertexSky
-{
-    float2 pos : POSITION;
-};
-
-struct VertexOutSky
-{
-    float4 pos : SV_Position;
-};
-
-struct VertexUnlit
-{
-    float3 pos    : POSITION;
-    float3 color;
-};
-
-struct VertexOutUnlit
-{
-    float4 pos : SV_Position;
-    float3 color;
-};
-
-struct VertexShaded
-{
-    float3 pos       : POSITION;
-    float3 normal    : NORMAL;
-    float3 tangent   : TANGENT;
-    float2 uv        : TEXCOORD;
-};
-
-struct VertexOutShaded
-{
-    float4 pos  : SV_Position;
-    float2 uv   : TEXCOORD;
-    float3 normal;
-    float3 viewDir;
-    float3 tangentPos;
-    float3 tangentLightDir;
-    float3 tangentEye;
 };
 
 struct PixelOut

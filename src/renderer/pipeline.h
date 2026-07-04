@@ -4,10 +4,10 @@
 
 #include "vulkan/vulkan_core.h"
 
+#include "../public/iwindow.h"
 #include "../public/log.h"
 #include "attributes.h"
-#include "descriptor_set.h"
-#include "device.h"
+#include "common.h"
 
 namespace yar
 {
@@ -17,11 +17,13 @@ class VulkanPipeline
   public:
     VulkanPipeline() = delete;
     VulkanPipeline(
-        const VulkanDevice&                          device,
-        std::shared_ptr<DescriptorSet>               descriptorSet,
-        std::vector<VkPipelineShaderStageCreateInfo> shaderStages,
-        bool                                         enableCulling = true,
-        bool                                         enableDepth   = true
+        const VkDevice                                      device,
+        const std::vector<VkPipelineShaderStageCreateInfo>& shaderStages,
+        const std::vector<VkDescriptorSetLayout>&           descriptorLayouts,
+        VkFormat                                            colorFormat,
+        VkFormat                                            depthFormat,
+        bool                                                enableCulling = true,
+        bool                                                enableDepth   = true
     );
     ~VulkanPipeline();
 
@@ -50,8 +52,7 @@ class VulkanPipeline
     }
 
   private:
-    const VulkanDevice&            m_device;
-    std::shared_ptr<DescriptorSet> m_descriptorSet;
+    VkDevice m_device;
 
     VkPipelineLayout m_vkPipelineLayout;
     VkPipeline       m_vkPipeline;
@@ -59,18 +60,21 @@ class VulkanPipeline
 
 template<typename V>
 VulkanPipeline<V>::VulkanPipeline(
-    const VulkanDevice&                          device,
-    std::shared_ptr<DescriptorSet>               descriptorSet,
-    std::vector<VkPipelineShaderStageCreateInfo> shaderStages,
-    bool                                         enableCulling,
-    bool                                         enableDepth
+    const VkDevice                                      device,
+    const std::vector<VkPipelineShaderStageCreateInfo>& shaderStages,
+    const std::vector<VkDescriptorSetLayout>&           descriptorLayouts,
+    VkFormat                                            colorFormat,
+    VkFormat                                            depthFormat,
+    bool                                                enableCulling,
+    bool                                                enableDepth
 ) :
-    m_device(device),
-    m_descriptorSet(descriptorSet)
+    m_device(device)
 {
     LOG_DEBUG("Creating VulkanPipeline");
 
-    const VkExtent2D swapchainExtent = m_device.GetSwapchainExtent();
+    int width;
+    int height;
+    g_window->GetFramebufferSize(&width, &height);
 
     const std::vector dynamicStates = {
         VK_DYNAMIC_STATE_VIEWPORT,
@@ -101,13 +105,14 @@ VulkanPipeline<V>::VulkanPipeline(
     VkViewport viewport {};
     viewport.x        = 0.0f;
     viewport.y        = 0.0f;
-    viewport.width    = static_cast<float>(swapchainExtent.width);
-    viewport.height   = static_cast<float>(swapchainExtent.height);
+    viewport.width    = static_cast<float>(width);
+    viewport.height   = static_cast<float>(height);
     viewport.minDepth = 0.0f;
     viewport.maxDepth = 1.0f;
 
     VkRect2D scissor {};
-    scissor.extent = swapchainExtent;
+    scissor.extent =
+        VkExtent2D {.width = static_cast<uint32_t>(width), .height = static_cast<uint32_t>(height)};
     scissor.offset = {0, 0};
 
     VkPipelineViewportStateCreateInfo viewportState {};
@@ -155,22 +160,15 @@ VulkanPipeline<V>::VulkanPipeline(
         .size       = sizeof(VkDeviceAddress)
     };
 
-    const auto descriptorSetLayouts = descriptorSet->GetLayouts();
-
     VkPipelineLayoutCreateInfo pipelineLayoutInfo {};
     pipelineLayoutInfo.sType                  = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
-    pipelineLayoutInfo.setLayoutCount         = static_cast<uint32_t>(descriptorSetLayouts.size());
-    pipelineLayoutInfo.pSetLayouts            = descriptorSetLayouts.data();
+    pipelineLayoutInfo.setLayoutCount         = static_cast<uint32_t>(descriptorLayouts.size());
+    pipelineLayoutInfo.pSetLayouts            = descriptorLayouts.data();
     pipelineLayoutInfo.pushConstantRangeCount = 1;
     pipelineLayoutInfo.pPushConstantRanges    = &pushConstantRange;
 
     VK_CHECK(
-        vkCreatePipelineLayout(
-            m_device.GetVkDevice(),
-            &pipelineLayoutInfo,
-            nullptr,
-            &m_vkPipelineLayout
-        ),
+        vkCreatePipelineLayout(m_device, &pipelineLayoutInfo, nullptr, &m_vkPipelineLayout),
         "Failed to create pipeline layout"
     );
 
@@ -185,9 +183,6 @@ VulkanPipeline<V>::VulkanPipeline(
     depthStencilState.stencilTestEnable     = VK_FALSE;
     depthStencilState.front                 = {};
     depthStencilState.back                  = {};
-
-    VkFormat colorFormat = m_device.GetSwapchainImageFormat();
-    VkFormat depthFormat = m_device.GetDepthFormat();
 
     VkPipelineRenderingCreateInfo pipelineCreateInfo {};
     pipelineCreateInfo.sType                   = VK_STRUCTURE_TYPE_PIPELINE_RENDERING_CREATE_INFO;
@@ -215,7 +210,7 @@ VulkanPipeline<V>::VulkanPipeline(
 
     VK_CHECK(
         vkCreateGraphicsPipelines(
-            m_device.GetVkDevice(),
+            m_device,
             VK_NULL_HANDLE,
             1,
             &graphicsCreateInfo,
@@ -231,24 +226,7 @@ VulkanPipeline<V>::~VulkanPipeline()
 {
     LOG_DEBUG("Destroying VulkanPipeline");
 
-    vkDestroyPipeline(m_device.GetVkDevice(), m_vkPipeline, nullptr);
-    vkDestroyPipelineLayout(m_device.GetVkDevice(), m_vkPipelineLayout, nullptr);
-}
-
-template<typename V>
-void VulkanPipeline<V>::Bind(VkCommandBuffer commandBuffer, VkPipelineBindPoint bindPoint)
-{
-    vkCmdBindPipeline(commandBuffer, bindPoint, m_vkPipeline);
-}
-
-template<typename V>
-void VulkanPipeline<V>::BindDescriptor(
-    VkCommandBuffer     commandBuffer,
-    VkPipelineBindPoint bindPoint,
-    uint32_t            frameIndex,
-    uint32_t            objectIndex
-)
-{
-    m_descriptorSet->Bind(commandBuffer, bindPoint, m_vkPipelineLayout, frameIndex, objectIndex);
+    vkDestroyPipeline(m_device, m_vkPipeline, nullptr);
+    vkDestroyPipelineLayout(m_device, m_vkPipelineLayout, nullptr);
 }
 } // namespace yar

@@ -1,6 +1,16 @@
+#include "bindings.slang"
 #include "common.slang"
 #include "math.slang"
-#include "color.slang"
+
+struct VertexSky
+{
+    float2 pos : POSITION;
+};
+
+struct VertexOutSky
+{
+    float4 pos : SV_Position;
+};
 
 [shader("vertex")]
 VertexOutSky vertex(
@@ -29,12 +39,6 @@ PixelOut pixel(
     uv.y = 1.0 -uv.y;
     // lod has to be explicit here to avoid seams
     float3 color = texIBL[0].SampleLevel(uv, 0).rgb * globalData->settings.w;
-
-    const float exposure = globalData->settings[0];
-    color = color * exposure;
-    color = ACESTonemap(color);
-    const float contrast = globalData->settings[1];
-    color = pow(color, contrast);
 
     output.color = float4(color, 1.0);
 
