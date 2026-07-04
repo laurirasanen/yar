@@ -98,12 +98,9 @@ void UI::DebugWindow()
         ImGui::Text("  Memory: %s", Memory::Pretty(phyStats.MemoryBytes).c_str());
         ImGui::Text("  Bodies: %s", Numbers::Pretty(phyStats.Bodies).c_str());
         ImGui::Text("  Shapes: %s", Numbers::Pretty(phyStats.Shapes).c_str());
-        ImGui::Text(
-            "  Contacts: %s (awake: %s, recycled: %s)",
-            Numbers::Pretty(phyStats.Contacts).c_str(),
-            Numbers::Pretty(phyStats.ContactsAwake).c_str(),
-            Numbers::Pretty(phyStats.ContactsRecycled).c_str()
-        );
+        ImGui::Text("  Contacts: %s", Numbers::Pretty(phyStats.Contacts).c_str());
+        ImGui::Text("    Awake: %s", Numbers::Pretty(phyStats.ContactsAwake).c_str());
+        ImGui::Text("    Recycled: %s", Numbers::Pretty(phyStats.ContactsRecycled).c_str());
         ImGui::Text("  Joints: %s", Numbers::Pretty(phyStats.Joints).c_str());
         ImGui::Text("  Islands: %s", Numbers::Pretty(phyStats.Islands).c_str());
         ImGui::Text("  Tasks: %s", Numbers::Pretty(phyStats.Tasks).c_str());
