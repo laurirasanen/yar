@@ -117,12 +117,13 @@ void UI::DebugWindow()
         );
 
         ImGui::Text("Visible:");
-        ImGui::Text("  Meshes: %zu", renderStats.MeshCount);
+        ImGui::Text("  Nodes: %u", renderStats.NodeCount);
         ImGui::Text("  Indices: %zu", renderStats.IndexCount);
         ImGui::Text("  Vertices: %zu", renderStats.VertexCount);
+        ImGui::Text("  Textures: %u", renderStats.TextureCount);
 
         ImGui::Text("Culled:");
-        ImGui::Text("  Meshes: %zu", renderStats.CulledMeshCount);
+        ImGui::Text("  Nodes: %zu", renderStats.CulledNodeCount);
         ImGui::Text("  Indices: %zu", renderStats.CulledIndexCount);
         ImGui::Text("  Vertices: %zu", renderStats.CulledVertexCount);
 

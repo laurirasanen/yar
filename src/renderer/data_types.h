@@ -120,11 +120,16 @@ struct ShaderGlobalData
     }
 };
 
+#define OBJECT_TEX_ALBEDO   0
+#define OBJECT_TEX_ORM      1
+#define OBJECT_TEX_NORMAL   2
+#define OBJECT_TEX_EMISSIVE 3
+
 struct ShaderObjectData
 {
     alignas(16) glm::mat4 model;
     alignas(16) glm::mat4 normal;
-    alignas(16) uint32_t index;
+    alignas(16) glm::uvec4 texIndices;
     alignas(16) glm::vec4 materialParams;
     alignas(16) glm::vec4 materialParams2;
 };

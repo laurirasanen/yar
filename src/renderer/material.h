@@ -43,7 +43,7 @@ class Material : public IMaterial
             m_emissiveFactor[2] = 0;
         }
 
-        if (albedo->HasTransparency())
+        if (albedo != nullptr && albedo->HasTransparency())
         {
             m_queue = MaterialQueue::QUEUE_TRANSPARENT;
         }

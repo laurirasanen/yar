@@ -248,7 +248,7 @@ class Renderer : public IRenderer
             m_frameBuffers.push_back(vertex);
             m_frameBuffers.push_back(index);
 
-            m_renderStats.MeshCount++;
+            m_renderStats.NodeCount++;
             m_renderStats.IndexCount += index->GetElementCount();
             m_renderStats.VertexCount += vertex->GetElementCount();
         }

@@ -118,18 +118,10 @@ std::shared_ptr<INode> Assets::CreateBox(const glm::vec3& extents, const glm::ve
         static_cast<uint32_t>(indices.size())
     );
     auto mesh = std::make_shared<Mesh<VertexUnlit>>(vertices, indices, vertexBuffer, indexBuffer);
-    // TODO this is silly
+    // TODO this is a bit silly
     auto renderer = static_pointer_cast<Renderer>(g_renderer);
-    auto material = std::make_shared<Material>(
-        "box",
-        renderer->GetMissingTexture(TextureType::TEX_ALBEDO),
-        renderer->GetMissingTexture(TextureType::TEX_ORM),
-        renderer->GetMissingTexture(TextureType::TEX_NORMAL),
-        renderer->GetMissingTexture(TextureType::TEX_EMISSIVE),
-        1.0f,
-        1.0f,
-        nullptr
-    );
+    auto material =
+        std::make_shared<Material>("box", nullptr, nullptr, nullptr, nullptr, 1.0f, 1.0f, nullptr);
     return std::make_shared<MeshNode<VertexUnlit>>("box", mesh, material, RenderPipeline::UNLIT);
 }
 }; // namespace yar

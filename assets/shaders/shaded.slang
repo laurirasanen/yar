@@ -44,23 +44,23 @@
 {
     PixelOut output;
 
-    float4 albedo = texAlbedo[objectData.index].Sample(input.uv);
+    float4 albedo = TEX_ALBEDO.Sample(input.uv);
     if (albedo.a < 0.01)
     {
         discard;
     }
 
-    float3 lightDir = input.tangentLightDir;
-    float3 viewDir = normalize(input.tangentEye - input.tangentPos);
-    float3 halfDir = normalize(viewDir + lightDir);
-
-    float3 normalMap = texNormal[objectData.index].Sample(input.uv).rgb;
-    float3 normalDir = normalize(normalMap * 2.0 - 1.0);
-
-    float3 orm = texMRAO[objectData.index].Sample(input.uv).rgb;
+    float3 orm = TEX_ORM.Sample(input.uv).rgb;
     float occlusion = pow(orm.r, objectData.materialParams.x);
     float roughness = orm.g * objectData.materialParams.y;
     float metalness = orm.b * objectData.materialParams.z;
+
+    float3 normalMap = TEX_NORMAL.Sample(input.uv).rgb;
+    float3 normalDir = normalize(normalMap * 2.0 - 1.0);
+
+    float3 lightDir = input.tangentLightDir;
+    float3 viewDir = normalize(input.tangentEye - input.tangentPos);
+    float3 halfDir = normalize(viewDir + lightDir);
 
     float3 color = BRDF_IBL(
         globalData,
@@ -74,8 +74,8 @@
         occlusion
     );
 
+    const float4 emissiveTex = TEX_EMISSIVE.Sample(input.uv).rgba;
     const float4 emissiveStrength = float4(objectData.materialParams2.xyz, 1.0);
-    const float4 emissiveTex = texEmissive[objectData.index].Sample(input.uv).rgba;
     const float4 emissive = emissiveTex * emissiveStrength;
     color += emissive.rgb * emissive.a;
 

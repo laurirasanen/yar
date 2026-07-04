@@ -396,23 +396,6 @@ std::shared_ptr<Material> GLTFNode::ReadMaterial(
     auto normalTex   = ReadTexture(renderer, normalView, TextureType::TEX_NORMAL);
     auto emissiveTex = ReadTexture(renderer, emissiveView, TextureType::TEX_EMISSIVE);
 
-    if (!albedoTex)
-    {
-        albedoTex = renderer->GetMissingTexture(TextureType::TEX_ALBEDO);
-    }
-    if (!ormTex)
-    {
-        ormTex = renderer->GetMissingTexture(TextureType::TEX_ORM);
-    }
-    if (!normalTex)
-    {
-        normalTex = renderer->GetMissingTexture(TextureType::TEX_NORMAL);
-    }
-    if (!emissiveTex)
-    {
-        emissiveTex = renderer->GetMissingTexture(TextureType::TEX_EMISSIVE);
-    }
-
     m_materials.push_back(
         std::make_shared<Material>(
             name,

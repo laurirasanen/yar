@@ -11,18 +11,19 @@ namespace yar
 {
 struct RenderStats
 {
-    size_t MeshCount;
-    size_t VertexCount;
-    size_t IndexCount;
-    size_t CulledMeshCount;
-    size_t CulledVertexCount;
-    size_t CulledIndexCount;
-    double SceneUpdateTime;
-    double SceneCullTime;
-    double SceneBatchTime;
-    double SceneSortTime;
-    double SceneDescriptorTime;
-    double SceneRenderTime;
+    uint32_t NodeCount;
+    size_t   VertexCount;
+    size_t   IndexCount;
+    uint32_t TextureCount;
+    size_t   CulledNodeCount;
+    size_t   CulledVertexCount;
+    size_t   CulledIndexCount;
+    double   SceneUpdateTime;
+    double   SceneCullTime;
+    double   SceneBatchTime;
+    double   SceneSortTime;
+    double   SceneDescriptorTime;
+    double   SceneRenderTime;
 };
 
 enum RenderPipeline
@@ -86,25 +87,19 @@ class IRenderer
 
     void ResetFrameStats()
     {
-        m_renderStats.MeshCount           = 0;
-        m_renderStats.IndexCount          = 0;
+        m_renderStats.NodeCount           = 0;
         m_renderStats.VertexCount         = 0;
-        m_renderStats.CulledMeshCount     = 0;
-        m_renderStats.CulledIndexCount    = 0;
+        m_renderStats.IndexCount          = 0;
+        m_renderStats.TextureCount        = 0;
+        m_renderStats.CulledNodeCount     = 0;
         m_renderStats.CulledVertexCount   = 0;
+        m_renderStats.CulledIndexCount    = 0;
         m_renderStats.SceneUpdateTime     = 0.0;
         m_renderStats.SceneCullTime       = 0.0;
         m_renderStats.SceneBatchTime      = 0.0;
         m_renderStats.SceneSortTime       = 0.0;
         m_renderStats.SceneDescriptorTime = 0.0;
         m_renderStats.SceneRenderTime     = 0.0;
-    }
-
-    void AddCulledMesh(std::shared_ptr<IBuffer> vertexBuffer, std::shared_ptr<IBuffer> indexBuffer)
-    {
-        m_renderStats.CulledMeshCount++;
-        m_renderStats.CulledIndexCount += indexBuffer->GetElementCount();
-        m_renderStats.CulledVertexCount += vertexBuffer->GetElementCount();
     }
 
     virtual void  SetExposure(float exposure)    = 0;

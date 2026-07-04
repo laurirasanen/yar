@@ -1,12 +1,12 @@
 #include <cstdint>
 #include <cstring>
-#include <vulkan/vulkan_core.h>
 
 #include "common.h"
 #include "data_types.h"
 #include "descriptor_set.h"
 #include "image.h"
 #include "material.h"
+#include "renderer.h"
 
 namespace yar
 {
@@ -157,6 +157,25 @@ void DescriptorSet::Alloc()
     );
 }
 
+constexpr uint32_t FillImageInfo(
+    std::vector<VkDescriptorImageInfo>& infos,
+    const std::shared_ptr<Texture>      tex
+)
+{
+    if (tex != nullptr)
+    {
+        const auto            image = static_pointer_cast<VulkanImage>(tex->GetImage());
+        VkDescriptorImageInfo info  = {};
+        info.imageLayout            = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+        info.imageView              = image->GetVkImageView();
+        info.sampler                = image->GetVkSampler();
+        infos.push_back(info);
+        return static_cast<uint32_t>(infos.size()) - 1;
+    }
+
+    return 0;
+}
+
 void DescriptorSet::Update(
     uint32_t                                         frameIndex,
     const std::vector<std::shared_ptr<IRenderNode>>& nodes
@@ -178,27 +197,35 @@ void DescriptorSet::Update(
     std::vector<VkDescriptorImageInfo> normalInfos   = {};
     std::vector<VkDescriptorImageInfo> emissiveInfos = {};
     objects.resize(nodes.size());
-    albedoInfos.resize(nodes.size());
-    ormInfos.resize(nodes.size());
-    normalInfos.resize(nodes.size());
-    emissiveInfos.resize(nodes.size());
+    albedoInfos.reserve(nodes.size() + 1);
+    ormInfos.reserve(nodes.size() + 1);
+    normalInfos.reserve(nodes.size() + 1);
+    emissiveInfos.reserve(nodes.size() + 1);
+
+    auto renderer = static_pointer_cast<Renderer>(g_renderer);
+    FillImageInfo(albedoInfos, renderer->GetMissingTexture(TextureType::TEX_ALBEDO));
+    FillImageInfo(ormInfos, renderer->GetMissingTexture(TextureType::TEX_ORM));
+    FillImageInfo(normalInfos, renderer->GetMissingTexture(TextureType::TEX_NORMAL));
+    FillImageInfo(emissiveInfos, renderer->GetMissingTexture(TextureType::TEX_EMISSIVE));
 
     for (size_t i = 0; i < nodes.size(); i++)
     {
-        // TODO: don't require all objects to have all textures...
-        // point to texture array idx in object data,
-        // uint max for missing?
         const auto mat      = static_pointer_cast<Material>(nodes[i]->GetMaterial());
-        const auto albedo   = static_pointer_cast<VulkanImage>(mat->GetAlbedo()->GetImage());
-        const auto orm      = static_pointer_cast<VulkanImage>(mat->GetORM()->GetImage());
-        const auto normal   = static_pointer_cast<VulkanImage>(mat->GetNormal()->GetImage());
-        const auto emissive = static_pointer_cast<VulkanImage>(mat->GetEmissive()->GetImage());
+        const auto albedo   = mat->GetAlbedo();
+        const auto orm      = mat->GetORM();
+        const auto normal   = mat->GetNormal();
+        const auto emissive = mat->GetEmissive();
 
-        const auto lerp             = static_cast<float>(Time::TickFraction());
-        const auto rt               = nodes[i]->GetInterpolatedTransform(lerp);
-        objects[i].model            = rt.GetCombinedMatrix();
-        objects[i].normal           = rt.GetRotationMatrix();
-        objects[i].index            = static_cast<uint32_t>(i);
+        objects[i].texIndices[OBJECT_TEX_ALBEDO]   = FillImageInfo(albedoInfos, albedo);
+        objects[i].texIndices[OBJECT_TEX_ORM]      = FillImageInfo(ormInfos, orm);
+        objects[i].texIndices[OBJECT_TEX_NORMAL]   = FillImageInfo(normalInfos, normal);
+        objects[i].texIndices[OBJECT_TEX_EMISSIVE] = FillImageInfo(emissiveInfos, emissive);
+
+        const auto lerp   = static_cast<float>(Time::TickFraction());
+        const auto rt     = nodes[i]->GetInterpolatedTransform(lerp);
+        objects[i].model  = rt.GetCombinedMatrix();
+        objects[i].normal = rt.GetRotationMatrix();
+
         objects[i].materialParams.x = mat->GetOcclusionFactor();
         objects[i].materialParams.y = mat->GetRoughnessFactor();
         objects[i].materialParams.z = mat->GetMetalnessFactor();
@@ -209,22 +236,6 @@ void DescriptorSet::Update(
         objects[i].materialParams2.y = emissiveFactor[1];
         objects[i].materialParams2.z = emissiveFactor[2];
         objects[i].materialParams2.w = 0.0f;
-
-        albedoInfos[i].imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-        albedoInfos[i].imageView   = albedo->GetVkImageView();
-        albedoInfos[i].sampler     = albedo->GetVkSampler();
-
-        ormInfos[i].imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-        ormInfos[i].imageView   = orm->GetVkImageView();
-        ormInfos[i].sampler     = orm->GetVkSampler();
-
-        normalInfos[i].imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-        normalInfos[i].imageView   = normal->GetVkImageView();
-        normalInfos[i].sampler     = normal->GetVkSampler();
-
-        emissiveInfos[i].imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-        emissiveInfos[i].imageView   = emissive->GetVkImageView();
-        emissiveInfos[i].sampler     = emissive->GetVkSampler();
     }
 
     m_objectBuffers[frameIndex]->Write(objects.data(), objects.size() * sizeof(ShaderObjectData));
@@ -275,6 +286,12 @@ void DescriptorSet::Update(
         0,
         nullptr
     );
+
+    auto& stats = g_renderer->GetRenderStats();
+    stats.TextureCount += static_cast<uint32_t>(albedoInfos.size());
+    stats.TextureCount += static_cast<uint32_t>(ormInfos.size());
+    stats.TextureCount += static_cast<uint32_t>(normalInfos.size());
+    stats.TextureCount += static_cast<uint32_t>(emissiveInfos.size());
 }
 
 void DescriptorSet::SetSky(std::shared_ptr<ISky> sky)

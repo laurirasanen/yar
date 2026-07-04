@@ -89,7 +89,7 @@ void Scene::Render()
     for (const auto& batch : m_batches)
     {
         const auto& nodes = batch.second.Nodes;
-        stats.MeshCount += nodes.size();
+        stats.NodeCount += nodes.size();
 
         if (nodes.size() > 0)
         {
@@ -126,9 +126,9 @@ void Scene::CullNodes()
 
         if (node->FrustumCull(camera))
         {
-            stats.MeshCount++;
-            stats.VertexCount += node->GetVertexCount();
-            stats.IndexCount += node->GetIndexCount();
+            stats.CulledNodeCount++;
+            stats.CulledVertexCount += node->GetVertexCount();
+            stats.CulledIndexCount += node->GetIndexCount();
         }
         else
         {
