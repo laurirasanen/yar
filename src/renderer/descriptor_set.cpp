@@ -185,6 +185,9 @@ void DescriptorSet::Update(
 
     for (size_t i = 0; i < nodes.size(); i++)
     {
+        // TODO: don't require all objects to have all textures...
+        // point to texture array idx in object data,
+        // uint max for missing?
         const auto mat      = static_pointer_cast<Material>(nodes[i]->GetMaterial());
         const auto albedo   = static_pointer_cast<VulkanImage>(mat->GetAlbedo()->GetImage());
         const auto orm      = static_pointer_cast<VulkanImage>(mat->GetORM()->GetImage());

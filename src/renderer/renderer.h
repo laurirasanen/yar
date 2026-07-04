@@ -224,8 +224,8 @@ class Renderer : public IRenderer
     }
 
     void DrawWithBuffers(
-        std::shared_ptr<IBuffer> vertexBuffer,
-        std::shared_ptr<IBuffer> indexBuffer
+        const std::shared_ptr<IBuffer> vertexBuffer,
+        const std::shared_ptr<IBuffer> indexBuffer
     ) override
     {
         if (m_currentPipeline == RenderPipeline::NONE)

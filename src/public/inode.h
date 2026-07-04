@@ -216,7 +216,7 @@ class IRenderNode : public INode
         return m_pipeline;
     }
 
-    virtual void Render() = 0;
+    virtual void Render() const = 0;
 
   private:
     std::shared_ptr<IMaterial> m_material;

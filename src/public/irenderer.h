@@ -14,16 +14,15 @@ struct RenderStats
     size_t MeshCount;
     size_t VertexCount;
     size_t IndexCount;
+    size_t CulledMeshCount;
+    size_t CulledVertexCount;
+    size_t CulledIndexCount;
     double SceneUpdateTime;
-    double SortTime;
-};
-
-struct CullStats
-{
-    size_t MeshCount;
-    size_t VertexCount;
-    size_t IndexCount;
-    double CullTime;
+    double SceneCullTime;
+    double SceneBatchTime;
+    double SceneSortTime;
+    double SceneDescriptorTime;
+    double SceneRenderTime;
 };
 
 enum RenderPipeline
@@ -76,8 +75,8 @@ class IRenderer
     virtual void BindDescriptor(uint32_t objectIndex) = 0;
 
     virtual void DrawWithBuffers(
-        std::shared_ptr<IBuffer> vertexBuffer,
-        std::shared_ptr<IBuffer> indexBuffer
+        const std::shared_ptr<IBuffer> vertexBuffer,
+        const std::shared_ptr<IBuffer> indexBuffer
     ) = 0;
 
     RenderStats& GetRenderStats()
@@ -85,29 +84,27 @@ class IRenderer
         return m_renderStats;
     }
 
-    CullStats& GetCullStats()
-    {
-        return m_cullStats;
-    }
-
     void ResetFrameStats()
     {
-        m_renderStats.MeshCount       = 0;
-        m_renderStats.IndexCount      = 0;
-        m_renderStats.VertexCount     = 0;
-        m_renderStats.SceneUpdateTime = 0.0;
-        m_renderStats.SortTime        = 0.0;
-        m_cullStats.MeshCount         = 0;
-        m_cullStats.IndexCount        = 0;
-        m_cullStats.VertexCount       = 0;
-        m_cullStats.CullTime          = 0.0;
+        m_renderStats.MeshCount           = 0;
+        m_renderStats.IndexCount          = 0;
+        m_renderStats.VertexCount         = 0;
+        m_renderStats.CulledMeshCount     = 0;
+        m_renderStats.CulledIndexCount    = 0;
+        m_renderStats.CulledVertexCount   = 0;
+        m_renderStats.SceneUpdateTime     = 0.0;
+        m_renderStats.SceneCullTime       = 0.0;
+        m_renderStats.SceneBatchTime      = 0.0;
+        m_renderStats.SceneSortTime       = 0.0;
+        m_renderStats.SceneDescriptorTime = 0.0;
+        m_renderStats.SceneRenderTime     = 0.0;
     }
 
     void AddCulledMesh(std::shared_ptr<IBuffer> vertexBuffer, std::shared_ptr<IBuffer> indexBuffer)
     {
-        m_cullStats.MeshCount++;
-        m_cullStats.IndexCount += indexBuffer->GetElementCount();
-        m_cullStats.VertexCount += vertexBuffer->GetElementCount();
+        m_renderStats.CulledMeshCount++;
+        m_renderStats.CulledIndexCount += indexBuffer->GetElementCount();
+        m_renderStats.CulledVertexCount += vertexBuffer->GetElementCount();
     }
 
     virtual void  SetExposure(float exposure)    = 0;
@@ -119,7 +116,6 @@ class IRenderer
 
   protected:
     RenderStats m_renderStats;
-    CullStats   m_cullStats;
 
     std::shared_ptr<Camera> m_camera;
 };

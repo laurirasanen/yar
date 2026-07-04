@@ -47,7 +47,7 @@ class MeshNode : public IRenderNode
         return m_mesh->GetIndexCount();
     }
 
-    void Render() override
+    void Render() const override
     {
         g_renderer->DrawWithBuffers(m_mesh->GetVertexBuffer(), m_mesh->GetIndexBuffer());
     }

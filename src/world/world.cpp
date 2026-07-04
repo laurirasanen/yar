@@ -55,7 +55,6 @@ void World::Render()
     }
 
     g_scene->Update(m_nodes);
-    g_scene->UpdateDescriptor();
     g_scene->Render();
 
     if (m_sky)

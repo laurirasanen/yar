@@ -75,7 +75,6 @@ void UI::DebugWindow()
         ))
     {
         const auto renderStats = g_renderer->GetRenderStats();
-        const auto cullStats   = g_renderer->GetCullStats();
 
         ImGui::Text(
             "FPS: %.2f (%s)",
@@ -83,9 +82,13 @@ void UI::DebugWindow()
             Time::Pretty(Time::DeltaFrame).c_str()
         );
         ImGui::Text("  Render: %s", Time::Pretty(Time::DeltaRender).c_str());
-        ImGui::Text("  Scene: %s", Time::Pretty(renderStats.SceneUpdateTime).c_str());
-        ImGui::Text("  Cull: %s", Time::Pretty(cullStats.CullTime).c_str());
-        ImGui::Text("  Sort: %s", Time::Pretty(renderStats.SortTime).c_str());
+        ImGui::Text("  Scene:");
+        ImGui::Text("    Update: %s", Time::Pretty(renderStats.SceneUpdateTime).c_str());
+        ImGui::Text("    Cull: %s", Time::Pretty(renderStats.SceneCullTime).c_str());
+        ImGui::Text("    Batch: %s", Time::Pretty(renderStats.SceneBatchTime).c_str());
+        ImGui::Text("    Sort: %s", Time::Pretty(renderStats.SceneSortTime).c_str());
+        ImGui::Text("    Desc: %s", Time::Pretty(renderStats.SceneDescriptorTime).c_str());
+        ImGui::Text("    Render: %s", Time::Pretty(renderStats.SceneRenderTime).c_str());
 
         ImGui::Text("TPS: %.0f (%s)", 1.0 / Time::DeltaTick, Time::Pretty(Time::DeltaTick).c_str());
 
@@ -119,9 +122,9 @@ void UI::DebugWindow()
         ImGui::Text("  Vertices: %zu", renderStats.VertexCount);
 
         ImGui::Text("Culled:");
-        ImGui::Text("  Meshes: %zu", cullStats.MeshCount);
-        ImGui::Text("  Indices: %zu", cullStats.IndexCount);
-        ImGui::Text("  Vertices: %zu", cullStats.VertexCount);
+        ImGui::Text("  Meshes: %zu", renderStats.CulledMeshCount);
+        ImGui::Text("  Indices: %zu", renderStats.CulledIndexCount);
+        ImGui::Text("  Vertices: %zu", renderStats.CulledVertexCount);
 
         ImGui::Text("Camera:");
         const auto camera = g_renderer->GetCamera();
