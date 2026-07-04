@@ -1,6 +1,8 @@
 #include "../public/log.h"
 #include "../public/time_util.h"
 
+#include <cmath>
+
 namespace yar
 {
 double Time::Now()
@@ -32,9 +34,9 @@ void Time::UpdateTickDelta()
     if (DeltaTick > SlowTickThreshold)
     {
         LOG_WARN(
-            "Engine: Tick ran slow {:.2}ms, clamp delta {:.2}ms",
-            DeltaTick * 1000,
-            SlowTickThreshold * 1000
+            "Engine: Tick ran slow at {}, clamp delta to {}",
+            Pretty(DeltaTick),
+            Pretty(SlowTickThreshold)
         );
         DeltaTick = SlowTickThreshold;
     }
@@ -84,5 +86,33 @@ void Time::StartRender()
 void Time::StopRender()
 {
     DeltaRender = Now() - renderStart;
+}
+
+std::string Time::Pretty(double seconds)
+{
+    if (seconds < 1e-6)
+    {
+        return std::format("{:.1f}ns", seconds * 1e9);
+    }
+    if (seconds < 1e-3)
+    {
+        return std::format("{:.1f}us", seconds * 1e6);
+    }
+    if (seconds < 1)
+    {
+        return std::format("{:.1f}ms", seconds * 1e3);
+    }
+    if (seconds < 60)
+    {
+        return std::format("{:.1f}s", seconds);
+    }
+    if (seconds < 3600)
+    {
+        const uint32_t m = static_cast<uint32_t>(floor(seconds / 60));
+        const double   s = seconds - m * 60.0;
+        return std::format("{}m {:.1f}s", m, s);
+    }
+
+    return std::format("{:.1f}s", seconds);
 }
 }; // namespace yar

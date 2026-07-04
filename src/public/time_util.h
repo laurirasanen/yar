@@ -47,6 +47,8 @@ class Time
 
     static void StopRender();
 
+    static std::string Pretty(double seconds);
+
     static inline double DeltaFrame;
     static inline double DeltaTick;
     static inline double DeltaRender;

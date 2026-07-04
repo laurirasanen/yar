@@ -77,12 +77,16 @@ void UI::DebugWindow()
         const auto renderStats = g_renderer->GetRenderStats();
         const auto cullStats   = g_renderer->GetCullStats();
 
-        ImGui::Text("FPS: %.2f (%.2fms)", 1.0 / Time::DeltaFrame, Time::DeltaFrame * 1000.0);
-        ImGui::Text("  Render: %.2fms", Time::DeltaRender * 1000.0);
-        ImGui::Text("  Cull: %.2fms", cullStats.CullTime * 1000.0);
-        ImGui::Text("  Sort: %.2fms", renderStats.SortTime * 1000.0);
+        ImGui::Text(
+            "FPS: %.2f (%s)",
+            1.0 / Time::DeltaFrame,
+            Time::Pretty(Time::DeltaFrame).c_str()
+        );
+        ImGui::Text("  Render: %s", Time::Pretty(Time::DeltaRender).c_str());
+        ImGui::Text("  Cull: %s", Time::Pretty(cullStats.CullTime).c_str());
+        ImGui::Text("  Sort: %s", Time::Pretty(renderStats.SortTime).c_str());
 
-        ImGui::Text("TPS: %.0f (%.2fms)", 1.0 / Time::DeltaTick, Time::DeltaTick * 1000.0);
+        ImGui::Text("TPS: %.0f (%s)", 1.0 / Time::DeltaTick, Time::Pretty(Time::DeltaTick).c_str());
 
         const auto phyStats = g_physics->GetStats();
         ImGui::Text("Physics:");
@@ -98,7 +102,7 @@ void UI::DebugWindow()
         ImGui::Text("  Joints: %u", phyStats.Joints);
         ImGui::Text("  Islands: %u", phyStats.Islands);
         ImGui::Text("  Tasks: %u", phyStats.Tasks);
-        ImGui::Text("  Time: %.2fms", phyStats.UpdateTime * 1000.0);
+        ImGui::Text("  Time: %s", Time::Pretty(phyStats.UpdateTime).c_str());
 
         const auto vkStats = GetVulkanAllocatorTotalStatistics();
         ImGui::Text("Memory:");
