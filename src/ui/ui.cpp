@@ -7,6 +7,7 @@
 #include "../platform/memory.h"
 #include "../public/iphysics.h"
 #include "../public/log.h"
+#include "../public/util.h"
 #include "../renderer/renderer.h"
 #include "ui.h"
 
@@ -65,7 +66,7 @@ void UI::DebugWindow()
         return;
     }
 
-    ImGui::SetNextWindowBgAlpha(0.5f);
+    ImGui::SetNextWindowBgAlpha(0.75f);
 
     if (ImGui::Begin(
             "Debug info",
@@ -95,17 +96,17 @@ void UI::DebugWindow()
         const auto phyStats = g_physics->GetStats();
         ImGui::Text("Physics:");
         ImGui::Text("  Memory: %s", Memory::Pretty(phyStats.MemoryBytes).c_str());
-        ImGui::Text("  Bodies: %u", phyStats.Bodies);
-        ImGui::Text("  Shapes: %u", phyStats.Shapes);
+        ImGui::Text("  Bodies: %s", Numbers::Pretty(phyStats.Bodies).c_str());
+        ImGui::Text("  Shapes: %s", Numbers::Pretty(phyStats.Shapes).c_str());
         ImGui::Text(
-            "  Contacts: %u (a: %u, r: %u)",
-            phyStats.Contacts,
-            phyStats.ContactsAwake,
-            phyStats.ContactsRecycled
+            "  Contacts: %s (awake: %s, recycled: %s)",
+            Numbers::Pretty(phyStats.Contacts).c_str(),
+            Numbers::Pretty(phyStats.ContactsAwake).c_str(),
+            Numbers::Pretty(phyStats.ContactsRecycled).c_str()
         );
-        ImGui::Text("  Joints: %u", phyStats.Joints);
-        ImGui::Text("  Islands: %u", phyStats.Islands);
-        ImGui::Text("  Tasks: %u", phyStats.Tasks);
+        ImGui::Text("  Joints: %s", Numbers::Pretty(phyStats.Joints).c_str());
+        ImGui::Text("  Islands: %s", Numbers::Pretty(phyStats.Islands).c_str());
+        ImGui::Text("  Tasks: %s", Numbers::Pretty(phyStats.Tasks).c_str());
         ImGui::Text("  Time: %s", Time::Pretty(phyStats.UpdateTime).c_str());
 
         const auto vkStats = GetVulkanAllocatorTotalStatistics();
@@ -117,15 +118,15 @@ void UI::DebugWindow()
         );
 
         ImGui::Text("Visible:");
-        ImGui::Text("  Nodes: %u", renderStats.NodeCount);
-        ImGui::Text("  Vertices: %zu", renderStats.VertexCount);
-        ImGui::Text("  Indices: %zu", renderStats.IndexCount);
-        ImGui::Text("  Textures: %u", renderStats.TextureCount);
+        ImGui::Text("  Nodes: %s", Numbers::Pretty(renderStats.NodeCount).c_str());
+        ImGui::Text("  Vertices: %s", Numbers::Pretty(renderStats.VertexCount).c_str());
+        ImGui::Text("  Indices: %s", Numbers::Pretty(renderStats.IndexCount).c_str());
+        ImGui::Text("  Textures: %s", Numbers::Pretty(renderStats.TextureCount).c_str());
 
         ImGui::Text("Culled:");
-        ImGui::Text("  Nodes: %zu", renderStats.CulledNodeCount);
-        ImGui::Text("  Vertices: %zu", renderStats.CulledVertexCount);
-        ImGui::Text("  Indices: %zu", renderStats.CulledIndexCount);
+        ImGui::Text("  Nodes: %s", Numbers::Pretty(renderStats.CulledNodeCount).c_str());
+        ImGui::Text("  Vertices: %s", Numbers::Pretty(renderStats.CulledVertexCount).c_str());
+        ImGui::Text("  Indices: %s", Numbers::Pretty(renderStats.CulledIndexCount).c_str());
 
         ImGui::Text("Camera:");
         const auto camera = g_renderer->GetCamera();

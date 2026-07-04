@@ -1,5 +1,8 @@
 #pragma once
 
+#include <format>
+#include <string>
+
 namespace yar
 {
 #define ARRAY_SIZE(A) (sizeof(A) / sizeof(*A))
@@ -28,4 +31,22 @@ namespace yar
 #define CLAMP(VAL, LOW, HIGH) (MIN(HIGH, MAX(LOW, VAL)))
 
 #define LERP(A, B, T) (A + T * (B - A))
+
+class Numbers
+{
+  public:
+    static std::string Pretty(size_t n)
+    {
+        if (n < 1000)
+        {
+            return std::format("{}", n);
+        }
+        if (n < 1000000)
+        {
+            return std::format("{:.1f}K", static_cast<double>(n) / 1000);
+        }
+
+        return std::format("{:.1f}M", static_cast<double>(n) / 1000000);
+    }
+};
 }; // namespace yar
