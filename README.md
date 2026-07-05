@@ -14,6 +14,8 @@ A renderer written in modern C++ and Vulkan.
 
 ![Example scene](docs/cobble.gif)
 
+![Bloom](docs/bloom.jpg)
+
 # Building
 
 ## Linux
