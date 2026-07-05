@@ -77,6 +77,7 @@ void Scene::Render()
 {
     const auto startTime = Time::Now();
     auto&      stats     = g_renderer->GetRenderStats();
+    const auto renderer  = static_pointer_cast<Renderer>(g_renderer);
 
     if (m_nodes.size() <= 0)
     {
@@ -84,10 +85,16 @@ void Scene::Render()
         return;
     }
 
-    uint32_t nodeIdx = 0;
+    uint32_t nodeIdx  = 0;
+    uint32_t batchIdx = 0;
 
     for (const auto& batch : m_batches)
     {
+        renderer->BeginDebugLabel(
+            std::format("Batch {} ({})", batchIdx, RenderPipelineNames[batch.first]).c_str(),
+            {}
+        );
+
         const auto& nodes = batch.second.Nodes;
         stats.NodeCount += nodes.size();
 
@@ -104,6 +111,10 @@ void Scene::Render()
             nodes[i]->Render();
             nodeIdx++;
         }
+
+        batchIdx++;
+
+        renderer->EndDebugLabel();
     }
 
     stats.SceneRenderTime = Time::Now() - startTime;

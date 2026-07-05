@@ -50,10 +50,6 @@ VulkanDevice::~VulkanDevice()
     {
         vkDestroySemaphore(m_vkDevice, semaphore, nullptr);
     }
-    for (auto& semaphore : m_releaseSemaphores)
-    {
-        vkDestroySemaphore(m_vkDevice, semaphore, nullptr);
-    }
 
     vkFreeCommandBuffers(
         m_vkDevice,
@@ -69,11 +65,6 @@ VulkanDevice::~VulkanDevice()
     DestroyVulkanAllocator();
 
     vkDestroyDevice(m_vkDevice, nullptr);
-}
-
-void VulkanDevice::Setup()
-{
-    m_tonemapPass = std::make_shared<TonemapPass>(GetSwapchainImageFormat());
 }
 
 void VulkanDevice::Begin()
@@ -119,6 +110,11 @@ void VulkanDevice::Begin()
         vkBeginCommandBuffer(m_vkCommandBuffers[m_currentFrame], &beginInfo),
         "Failed to begin command buffer"
     );
+
+    if (m_tonemapPass == nullptr)
+    {
+        SetupPostprocessing();
+    }
 
     TransitionImageLayout(
         m_vkCommandBuffers[m_currentFrame],
@@ -215,17 +211,6 @@ void VulkanDevice::PostProcess()
 
     TransitionImageLayout(
         m_vkCommandBuffers[m_currentFrame],
-        m_vkSwapchainImages[m_swapchainImageIndex],
-        VK_IMAGE_LAYOUT_UNDEFINED,
-        VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL,
-        VK_PIPELINE_STAGE_2_COLOR_ATTACHMENT_OUTPUT_BIT,
-        VK_PIPELINE_STAGE_2_COLOR_ATTACHMENT_OUTPUT_BIT,
-        VK_ACCESS_2_NONE,
-        VK_ACCESS_2_COLOR_ATTACHMENT_WRITE_BIT
-    );
-
-    TransitionImageLayout(
-        m_vkCommandBuffers[m_currentFrame],
         m_colorAttachment.Image,
         VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL,
         VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL,
@@ -234,6 +219,58 @@ void VulkanDevice::PostProcess()
         VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL
     );
 
+    RenderAttachment previousOutput = m_colorAttachment;
+    for (const auto& pass : m_downsamplePasses)
+    {
+        std::vector<RenderAttachment> inputs = {previousOutput};
+        pass->SetInputs(inputs, m_currentFrame);
+        pass->Render(m_vkCommandBuffers[m_currentFrame], m_currentFrame);
+        pass->TransitionOutput();
+        previousOutput = pass->GetOutput();
+    }
+
+    for (uint8_t i = 0; i < m_bloomPassCount - 1; i++)
+    {
+        RenderAttachment downsampleOutput =
+            m_downsamplePasses[m_bloomPassCount - 2 - i]->GetOutput();
+        std::vector<RenderAttachment> inputs = {previousOutput, downsampleOutput};
+        const auto&                   pass   = m_upsamplePasses[i];
+        pass->SetInputs(inputs, m_currentFrame);
+        pass->Render(m_vkCommandBuffers[m_currentFrame], m_currentFrame);
+        pass->TransitionOutput();
+        previousOutput = pass->GetOutput();
+    }
+
+    TransitionImageLayout(
+        m_vkCommandBuffers[m_currentFrame],
+        m_vkSwapchainImages[m_swapchainImageIndex],
+        VK_IMAGE_LAYOUT_UNDEFINED,
+        VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL,
+        VK_PIPELINE_STAGE_2_COLOR_ATTACHMENT_OUTPUT_BIT,
+        VK_PIPELINE_STAGE_2_COLOR_ATTACHMENT_OUTPUT_BIT,
+        VK_ACCESS_2_NONE,
+        VK_ACCESS_2_COLOR_ATTACHMENT_READ_BIT | VK_ACCESS_2_COLOR_ATTACHMENT_WRITE_BIT
+    );
+
+    {
+        RenderAttachment swapchainAttachment = {
+            .Image      = m_vkSwapchainImages[m_swapchainImageIndex],
+            .ImageView  = m_vkSwapchainImageViews[m_swapchainImageIndex],
+            .Allocation = nullptr,
+            .Sampler    = nullptr,
+            .Width      = m_vkSwapchainExtent.width,
+            .Height     = m_vkSwapchainExtent.height
+        };
+        std::vector<RenderAttachment> inputs = {m_colorAttachment, previousOutput};
+        m_tonemapPass->SetInputs(inputs, m_currentFrame);
+        m_tonemapPass->SetOutput(swapchainAttachment);
+        m_tonemapPass->SetLoadOp(VK_ATTACHMENT_LOAD_OP_CLEAR);
+        m_tonemapPass->Render(m_vkCommandBuffers[m_currentFrame], m_currentFrame);
+    }
+}
+
+void VulkanDevice::BeginUI()
+{
     VkClearValue clearColor {};
     clearColor.color = {
         {0.0f, 0.0f, 0.0f, 1.0f}
@@ -242,7 +279,7 @@ void VulkanDevice::PostProcess()
     VkRenderingAttachmentInfo colorAttachment {};
     colorAttachment.sType       = VK_STRUCTURE_TYPE_RENDERING_ATTACHMENT_INFO;
     colorAttachment.clearValue  = clearColor;
-    colorAttachment.loadOp      = VK_ATTACHMENT_LOAD_OP_CLEAR;
+    colorAttachment.loadOp      = VK_ATTACHMENT_LOAD_OP_LOAD;
     colorAttachment.storeOp     = VK_ATTACHMENT_STORE_OP_STORE;
     colorAttachment.imageView   = m_vkSwapchainImageViews[m_swapchainImageIndex];
     colorAttachment.imageLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
@@ -264,16 +301,15 @@ void VulkanDevice::PostProcess()
     renderingInfo.flags                = 0;
 
     vkCmdBeginRendering(m_vkCommandBuffers[m_currentFrame], &renderingInfo);
+}
 
-    m_tonemapPass->SetInputs(m_colorAttachment, m_depthAttachment, m_currentFrame);
-    m_tonemapPass->SetOutput(m_vkSwapchainImages[m_swapchainImageIndex]);
-    m_tonemapPass->Render(m_currentFrame);
+void VulkanDevice::EndUI()
+{
+    vkCmdEndRendering(m_vkCommandBuffers[m_currentFrame]);
 }
 
 void VulkanDevice::Submit()
 {
-    vkCmdEndRendering(m_vkCommandBuffers[m_currentFrame]);
-
     TransitionImageLayout(
         m_vkCommandBuffers[m_currentFrame],
         m_vkSwapchainImages[m_swapchainImageIndex],
@@ -281,7 +317,7 @@ void VulkanDevice::Submit()
         VK_IMAGE_LAYOUT_PRESENT_SRC_KHR,
         VK_PIPELINE_STAGE_2_COLOR_ATTACHMENT_OUTPUT_BIT,
         VK_PIPELINE_STAGE_2_BOTTOM_OF_PIPE_BIT,
-        VK_ACCESS_2_COLOR_ATTACHMENT_WRITE_BIT,
+        VK_ACCESS_2_COLOR_ATTACHMENT_READ_BIT | VK_ACCESS_2_COLOR_ATTACHMENT_WRITE_BIT,
         VK_ACCESS_2_NONE
     );
 
@@ -301,7 +337,7 @@ void VulkanDevice::Submit()
 
     VkSemaphoreSubmitInfo signalInfo {};
     signalInfo.sType     = VK_STRUCTURE_TYPE_SEMAPHORE_SUBMIT_INFO;
-    signalInfo.semaphore = m_releaseSemaphores[m_currentFrame];
+    signalInfo.semaphore = m_releaseSemaphores[m_swapchainImageIndex];
 
     VkSubmitInfo2 submitInfo {};
     submitInfo.sType                    = VK_STRUCTURE_TYPE_SUBMIT_INFO_2;
@@ -320,7 +356,7 @@ void VulkanDevice::Submit()
 
 void VulkanDevice::Present()
 {
-    VkSemaphore    renderSemaphores[] = {m_releaseSemaphores[m_currentFrame]};
+    VkSemaphore    renderSemaphores[] = {m_releaseSemaphores[m_swapchainImageIndex]};
     VkSwapchainKHR swapchains[]       = {m_vkSwapchain};
 
     VkPresentInfoKHR presentInfo {};
@@ -395,6 +431,42 @@ void VulkanDevice::SubmitTemporaryCommandBuffer(VkCommandBuffer commandBuffer)
     vkFreeCommandBuffers(m_vkDevice, m_vkCommandPool, 1, &commandBuffer);
 }
 
+void VulkanDevice::SetupPostprocessing()
+{
+    for (uint8_t i = 0; i < m_bloomPassCount; i++)
+    {
+        auto           pass         = std::make_shared<DownsamplePass>(GetColorFormat());
+        const uint32_t outputResDiv = 1 << (i + 1);
+        pass->SetOutputSamplerMode(VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_BORDER);
+        pass->CreateOutput(
+            m_vkSwapchainExtent.width / outputResDiv,
+            m_vkSwapchainExtent.height / outputResDiv
+        );
+        m_downsamplePasses.push_back(pass);
+    }
+
+    for (uint8_t i = 0; i < m_bloomPassCount - 1; i++)
+    {
+        auto           pass         = std::make_shared<UpsamplePass>(GetColorFormat());
+        const uint32_t outputResDiv = 1 << (m_bloomPassCount - 2 - i);
+        pass->SetOutputSamplerMode(VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE);
+        pass->CreateOutput(
+            m_vkSwapchainExtent.width / outputResDiv,
+            m_vkSwapchainExtent.height / outputResDiv
+        );
+        m_upsamplePasses.push_back(pass);
+    }
+
+    m_tonemapPass = std::make_shared<TonemapPass>(GetSwapchainImageFormat());
+}
+
+void VulkanDevice::DestroyPostprocessing()
+{
+    m_downsamplePasses.clear();
+    m_upsamplePasses.clear();
+    m_tonemapPass.reset();
+}
+
 void VulkanDevice::RecreateSwapchain()
 {
     vkDeviceWaitIdle(m_vkDevice);
@@ -402,6 +474,7 @@ void VulkanDevice::RecreateSwapchain()
     // VkSwapchainCreateInfoKHR.oldSwapchain
     DestroySwapchain();
     CreateSwapchain();
+    DestroyPostprocessing();
 }
 
 void VulkanDevice::DestroySwapchain()
@@ -409,6 +482,10 @@ void VulkanDevice::DestroySwapchain()
     for (auto view : m_vkSwapchainImageViews)
     {
         vkDestroyImageView(m_vkDevice, view, nullptr);
+    }
+    for (auto& semaphore : m_releaseSemaphores)
+    {
+        vkDestroySemaphore(m_vkDevice, semaphore, nullptr);
     }
 
     vkDestroySwapchainKHR(m_vkDevice, m_vkSwapchain, nullptr);
@@ -711,6 +788,14 @@ void VulkanDevice::CreateSwapchain()
         extent.width,
         extent.height
     );
+    m_instance.SetDebugName(
+        m_vkDevice,
+        VK_OBJECT_TYPE_IMAGE,
+        (uint64_t)m_colorAttachment.Image,
+        "offscreen color"
+    );
+    m_colorAttachment.Width  = extent.width;
+    m_colorAttachment.Height = extent.height;
 
     CreateImage(
         &m_depthAttachment.Image,
@@ -721,12 +806,25 @@ void VulkanDevice::CreateSwapchain()
         extent.width,
         extent.height
     );
+    m_instance.SetDebugName(
+        m_vkDevice,
+        VK_OBJECT_TYPE_IMAGE,
+        (uint64_t)m_depthAttachment.Image,
+        "offscreen depth"
+    );
+    m_depthAttachment.Width  = extent.width;
+    m_depthAttachment.Height = extent.height;
 
     const float maxSamplerAnisotropy = m_vkPhysicalDeviceProperties.limits.maxSamplerAnisotropy;
     CreateImageSampler(m_vkDevice, maxSamplerAnisotropy, &m_colorAttachment.Sampler);
     CreateImageSampler(m_vkDevice, maxSamplerAnisotropy, &m_depthAttachment.Sampler);
 
     m_vkSwapchainImageViews.resize(m_vkSwapchainImages.size());
+    m_releaseSemaphores.resize(m_vkSwapchainImages.size());
+
+    VkSemaphoreCreateInfo semaphoreInfo {};
+    semaphoreInfo.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO;
+
     for (size_t i = 0; i < m_vkSwapchainImages.size(); i++)
     {
         CreateImageView(
@@ -736,6 +834,10 @@ void VulkanDevice::CreateSwapchain()
             VK_IMAGE_VIEW_TYPE_2D,
             m_vkSwapchainImageFormat,
             VK_IMAGE_ASPECT_COLOR_BIT
+        );
+        VK_CHECK(
+            vkCreateSemaphore(m_vkDevice, &semaphoreInfo, nullptr, &m_releaseSemaphores[i]),
+            "Failed to create acquire semaphore"
         );
     }
 
@@ -747,6 +849,12 @@ void VulkanDevice::CreateSwapchain()
         GetColorFormat(),
         VK_IMAGE_ASPECT_COLOR_BIT
     );
+    m_instance.SetDebugName(
+        m_vkDevice,
+        VK_OBJECT_TYPE_IMAGE_VIEW,
+        (uint64_t)m_colorAttachment.ImageView,
+        "offscreen color view"
+    );
 
     CreateImageView(
         m_vkDevice,
@@ -755,6 +863,12 @@ void VulkanDevice::CreateSwapchain()
         VK_IMAGE_VIEW_TYPE_2D,
         GetDepthFormat(),
         VK_IMAGE_ASPECT_DEPTH_BIT | VK_IMAGE_ASPECT_STENCIL_BIT
+    );
+    m_instance.SetDebugName(
+        m_vkDevice,
+        VK_OBJECT_TYPE_IMAGE_VIEW,
+        (uint64_t)m_depthAttachment.ImageView,
+        "offscreen depth view"
     );
 }
 
@@ -867,7 +981,6 @@ void VulkanDevice::CreateCommandBuffers()
 void VulkanDevice::CreateSyncObjects()
 {
     m_acquireSemaphores.resize(m_maxFramesInFlight);
-    m_releaseSemaphores.resize(m_maxFramesInFlight);
     m_inFlightFences.resize(m_maxFramesInFlight);
 
     VkSemaphoreCreateInfo semaphoreInfo {};
@@ -884,10 +997,6 @@ void VulkanDevice::CreateSyncObjects()
             "Failed to create acquire semaphore"
         );
         VK_CHECK(
-            vkCreateSemaphore(m_vkDevice, &semaphoreInfo, nullptr, &m_releaseSemaphores[i]),
-            "Failed to create release semaphore"
-        );
-        VK_CHECK(
             vkCreateFence(m_vkDevice, &fenceInfo, nullptr, &m_inFlightFences[i]),
             "Failed to create in flight fence"
         );
@@ -901,13 +1010,12 @@ void VulkanDevice::CreateDescriptorPools()
     uboPoolSize.descriptorCount = m_maxFramesInFlight;
 
     VkDescriptorPoolSize imagePoolSize {};
-    imagePoolSize.type               = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+    imagePoolSize.type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+    // TODO this sucks
     const uint32_t texturesPerObject = 4;
-    const uint32_t globalTextures    = 5;
-    const uint32_t globalCubemaps    = 2;
+    const uint32_t globalTextures    = 64;
     imagePoolSize.descriptorCount =
-        m_maxFramesInFlight
-        * (MAX_OBJECTS * texturesPerObject + globalTextures + globalCubemaps * 6);
+        m_maxFramesInFlight * (MAX_OBJECTS * texturesPerObject + globalTextures);
 
     std::array<VkDescriptorPoolSize, 2> poolSizes = {uboPoolSize, imagePoolSize};
 
@@ -915,7 +1023,7 @@ void VulkanDevice::CreateDescriptorPools()
     poolInfo.sType                 = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
     poolInfo.poolSizeCount         = static_cast<uint32_t>(poolSizes.size());
     poolInfo.pPoolSizes            = poolSizes.data();
-    const uint32_t postProcessSets = 1;
+    const uint32_t postProcessSets = 32; // TODO this sucks
     poolInfo.maxSets               = m_maxFramesInFlight * (1 + postProcessSets);
 
     VK_CHECK(

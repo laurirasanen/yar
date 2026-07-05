@@ -2,6 +2,8 @@
 #include "../shader/compiler.h"
 #include "device.h"
 #include "renderer.h"
+#include "src/renderer/common.h"
+#include <vulkan/vulkan_core.h>
 
 namespace yar
 {
@@ -13,14 +15,20 @@ PostProcessPass::~PostProcessPass()
     vkDestroyDescriptorSetLayout(device.GetVkDevice(), m_descriptorSetLayout, nullptr);
 };
 
-PostProcessPass::PostProcessPass(const char* shader, VkFormat outputColorFormat)
+PostProcessPass::PostProcessPass(
+    const char* name,
+    const char* shader,
+    uint32_t    numTextures,
+    VkFormat    outputColorFormat
+) :
+    m_name(name),
+    m_outputLoadOp(VK_ATTACHMENT_LOAD_OP_LOAD)
 {
-    const auto     renderer = static_pointer_cast<Renderer>(g_renderer);
-    const auto&    device   = renderer->GetDevice();
-    ShaderCompiler compiler;
-    size_t         size;
+    const auto  renderer = static_pointer_cast<Renderer>(g_renderer);
+    const auto& device   = renderer->GetDevice();
+    size_t      size;
 
-    const void* spirv = compiler.GetSpirv(shader, SHADER_ENTRY_PIXEL, size);
+    const void* spirv = g_shaderCompiler->GetSpirv(shader, SHADER_ENTRY_PIXEL, size);
     if (!spirv)
     {
         throw std::runtime_error(std::format("failed to load {} fragment shader", shader));
@@ -28,7 +36,7 @@ PostProcessPass::PostProcessPass(const char* shader, VkFormat outputColorFormat)
 
     auto fragModule = GetShaderCreateInfo(spirv, size);
 
-    spirv = compiler.GetSpirv(shader, SHADER_ENTRY_VERTEX, size);
+    spirv = g_shaderCompiler->GetSpirv(shader, SHADER_ENTRY_VERTEX, size);
     if (!spirv)
     {
         throw std::runtime_error(std::format("failed to load {} vertex shader", shader));
@@ -39,26 +47,22 @@ PostProcessPass::PostProcessPass(const char* shader, VkFormat outputColorFormat)
     auto        shaderVert = FillShaderStageCreateInfo(&vertModule, VK_SHADER_STAGE_VERTEX_BIT);
     std::vector stages {shaderFrag, shaderVert};
 
-    VkDescriptorSetLayoutBinding colorBinding = {};
-    colorBinding.binding                      = 0;
-    colorBinding.descriptorCount              = 1;
-    colorBinding.descriptorType               = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-    colorBinding.stageFlags                   = VK_SHADER_STAGE_FRAGMENT_BIT;
-    colorBinding.pImmutableSamplers           = nullptr;
+    std::vector<VkDescriptorSetLayoutBinding> texBindings = {};
+    texBindings.resize(numTextures);
 
-    VkDescriptorSetLayoutBinding depthBinding = {};
-    depthBinding.binding                      = 1;
-    depthBinding.descriptorCount              = 1;
-    depthBinding.descriptorType               = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-    depthBinding.stageFlags                   = VK_SHADER_STAGE_FRAGMENT_BIT;
-    depthBinding.pImmutableSamplers           = nullptr;
-
-    const std::array<VkDescriptorSetLayoutBinding, 2> bindings = {colorBinding, depthBinding};
+    for (uint32_t i = 0; i < numTextures; i++)
+    {
+        texBindings[i].binding            = i;
+        texBindings[i].descriptorCount    = 1;
+        texBindings[i].descriptorType     = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+        texBindings[i].stageFlags         = VK_SHADER_STAGE_FRAGMENT_BIT;
+        texBindings[i].pImmutableSamplers = nullptr;
+    }
 
     VkDescriptorSetLayoutCreateInfo layoutInfo = {};
     layoutInfo.sType        = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
-    layoutInfo.bindingCount = static_cast<uint32_t>(bindings.size());
-    layoutInfo.pBindings    = bindings.data();
+    layoutInfo.bindingCount = static_cast<uint32_t>(texBindings.size());
+    layoutInfo.pBindings    = texBindings.data();
 
     m_descriptorSets.resize(MAX_FRAMES_IN_FLIGHT);
 
@@ -80,6 +84,7 @@ PostProcessPass::PostProcessPass(const char* shader, VkFormat outputColorFormat)
         allocInfo.descriptorSetCount = 1;
         allocInfo.pSetLayouts        = &m_descriptorSetLayout;
 
+        LOG_DEBUG("ALLOC DESC SET");
         VK_CHECK(
             vkAllocateDescriptorSets(device.GetVkDevice(), &allocInfo, &m_descriptorSets[i]),
             "Failed to allocate descriptor set"
@@ -99,47 +104,30 @@ PostProcessPass::PostProcessPass(const char* shader, VkFormat outputColorFormat)
     );
 }
 
-void PostProcessPass::SetInputs(
-    const RenderAttachment& colorInput,
-    const RenderAttachment& depthInput,
-    uint32_t                frameIndex
-)
+void PostProcessPass::SetInputs(std::vector<RenderAttachment> inputs, uint32_t frameIndex)
 {
     const auto  renderer = static_pointer_cast<Renderer>(g_renderer);
     const auto& device   = renderer->GetDevice();
 
-    m_colorInput = colorInput;
-    m_depthInput = depthInput;
+    std::vector<VkDescriptorImageInfo> imageInfos = {};
+    std::vector<VkWriteDescriptorSet>  writes     = {};
+    imageInfos.resize(inputs.size());
+    writes.resize(inputs.size());
 
-    VkDescriptorImageInfo colorInfo = {};
-    colorInfo.imageLayout           = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-    colorInfo.imageView             = m_colorInput.ImageView;
-    colorInfo.sampler               = m_colorInput.Sampler;
+    for (uint32_t i = 0; i < inputs.size(); i++)
+    {
+        imageInfos[i].imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+        imageInfos[i].imageView   = inputs[i].ImageView;
+        imageInfos[i].sampler     = inputs[i].Sampler;
 
-    VkWriteDescriptorSet colorWrite = {};
-    colorWrite.sType                = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-    colorWrite.dstSet               = m_descriptorSets[frameIndex];
-    colorWrite.dstBinding           = 0;
-    colorWrite.dstArrayElement      = 0;
-    colorWrite.descriptorType       = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-    colorWrite.descriptorCount      = 1;
-    colorWrite.pImageInfo           = &colorInfo;
-
-    VkDescriptorImageInfo depthInfo = {};
-    depthInfo.imageLayout           = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-    depthInfo.imageView             = m_colorInput.ImageView;
-    depthInfo.sampler               = m_colorInput.Sampler;
-
-    VkWriteDescriptorSet depthWrite = {};
-    depthWrite.sType                = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-    depthWrite.dstSet               = m_descriptorSets[frameIndex];
-    depthWrite.dstBinding           = 1;
-    depthWrite.dstArrayElement      = 0;
-    depthWrite.descriptorType       = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-    depthWrite.descriptorCount      = 1;
-    depthWrite.pImageInfo           = &depthInfo;
-
-    std::array<VkWriteDescriptorSet, 2> writes = {colorWrite, depthWrite};
+        writes[i].sType           = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+        writes[i].dstSet          = m_descriptorSets[frameIndex];
+        writes[i].dstBinding      = i;
+        writes[i].dstArrayElement = 0;
+        writes[i].descriptorType  = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+        writes[i].descriptorCount = 1;
+        writes[i].pImageInfo      = &imageInfos[i];
+    }
 
     vkUpdateDescriptorSets(
         device.GetVkDevice(),
@@ -150,31 +138,35 @@ void PostProcessPass::SetInputs(
     );
 }
 
-void PostProcessPass::SetOutput(const VkImage output)
+void PostProcessPass::SetOutput(const RenderAttachment& output)
 {
     DestroyOutput();
-    m_colorOutput.Image = output;
-    m_ownOutput         = false;
+    m_colorOutput = output;
+    m_ownOutput   = false;
 }
 
-void PostProcessPass::CreateOutput()
+void PostProcessPass::CreateOutput(uint32_t outputWidth, uint32_t outputHeight)
 {
     const auto  renderer = static_pointer_cast<Renderer>(g_renderer);
     const auto& device   = renderer->GetDevice();
     const auto  vkDevice = device.GetVkDevice();
-    int         width;
-    int         height;
-    g_window->GetFramebufferSize(&width, &height);
 
     CreateImage(
         &m_colorOutput.Image,
         &m_colorOutput.Allocation,
         VK_IMAGE_TYPE_2D,
         device.GetColorFormat(),
-        VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT,
-        static_cast<uint32_t>(width),
-        static_cast<uint32_t>(height)
+        VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT,
+        outputWidth,
+        outputHeight
     );
+    renderer->SetDebugName(
+        VK_OBJECT_TYPE_IMAGE,
+        (uint64_t)m_colorOutput.Image,
+        std::format("{} output color", m_name).c_str()
+    );
+    m_colorOutput.Width  = outputWidth;
+    m_colorOutput.Height = outputHeight;
 
     CreateImageView(
         vkDevice,
@@ -184,6 +176,14 @@ void PostProcessPass::CreateOutput()
         device.GetColorFormat(),
         VK_IMAGE_ASPECT_COLOR_BIT
     );
+    renderer->SetDebugName(
+        VK_OBJECT_TYPE_IMAGE_VIEW,
+        (uint64_t)m_colorOutput.ImageView,
+        std::format("{} output color view", m_name).c_str()
+    );
+
+    const float maxSamplerAnisotropy = device.GetProperties().limits.maxSamplerAnisotropy;
+    CreateImageSampler(vkDevice, maxSamplerAnisotropy, &m_colorOutput.Sampler, m_outputSamplerMode);
 
     TransitionImageLayout(
         device.GetCommandBuffer(),
@@ -193,64 +193,63 @@ void PostProcessPass::CreateOutput()
         VK_PIPELINE_STAGE_2_COLOR_ATTACHMENT_OUTPUT_BIT,
         VK_PIPELINE_STAGE_2_COLOR_ATTACHMENT_OUTPUT_BIT,
         VK_ACCESS_2_NONE,
-        VK_ACCESS_2_COLOR_ATTACHMENT_WRITE_BIT
+        VK_ACCESS_2_COLOR_ATTACHMENT_READ_BIT | VK_ACCESS_2_COLOR_ATTACHMENT_WRITE_BIT
     );
 
     m_ownOutput = true;
 }
 
-void PostProcessPass::ResizeOutput()
+void PostProcessPass::Render(VkCommandBuffer commandBuffer, uint32_t frameIndex)
 {
-    if (!m_ownOutput)
-    {
-        return;
-    }
-    DestroyOutput();
-    CreateOutput();
-}
-
-void PostProcessPass::PostRender()
-{
-    if (!m_ownOutput)
-    {
-        return;
-    }
-
     const auto  renderer = static_pointer_cast<Renderer>(g_renderer);
     const auto& device   = renderer->GetDevice();
 
-    TransitionImageLayout(
-        device.GetCommandBuffer(),
-        m_colorOutput.Image,
-        VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL,
-        VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL,
-        VK_PIPELINE_STAGE_2_COLOR_ATTACHMENT_OUTPUT_BIT,
-        VK_PIPELINE_STAGE_2_FRAGMENT_SHADER_BIT,
-        VK_ACCESS_2_COLOR_ATTACHMENT_WRITE_BIT,
-        VK_ACCESS_2_SHADER_READ_BIT
-    );
-}
+    renderer->BeginDebugLabel(commandBuffer, m_name, {0.75f, 0.5f, 1.0f, 0.8f});
 
-void PostProcessPass::DestroyOutput()
-{
-    if (!m_ownOutput)
-    {
-        return;
-    }
+    VkClearValue clearColor {};
+    clearColor.color = {
+        {0.0f, 0.0f, 0.0f, 1.0f}
+    };
 
-    const auto renderer = static_pointer_cast<Renderer>(g_renderer);
-    const auto vkDevice = renderer->GetDevice().GetVkDevice();
+    VkRenderingAttachmentInfo colorAttachment {};
+    colorAttachment.sType       = VK_STRUCTURE_TYPE_RENDERING_ATTACHMENT_INFO;
+    colorAttachment.clearValue  = clearColor;
+    colorAttachment.loadOp      = m_outputLoadOp;
+    colorAttachment.storeOp     = VK_ATTACHMENT_STORE_OP_STORE;
+    colorAttachment.imageLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+    colorAttachment.imageView   = m_colorOutput.ImageView;
+    colorAttachment.resolveMode = VK_RESOLVE_MODE_NONE;
 
-    vkDestroyImageView(vkDevice, m_colorOutput.ImageView, nullptr);
-    vmaDestroyImage(g_vma, m_colorOutput.Image, m_colorOutput.Allocation);
-}
+    VkRect2D renderArea {};
+    renderArea.extent = {.width = m_colorOutput.Width, .height = m_colorOutput.Height};
+    renderArea.offset = {0, 0};
 
-void TonemapPass::Render(uint32_t frameIndex)
-{
-    PostProcessPass::PreRender();
+    VkRenderingInfo renderingInfo {};
+    renderingInfo.sType                = VK_STRUCTURE_TYPE_RENDERING_INFO;
+    renderingInfo.renderArea           = renderArea;
+    renderingInfo.viewMask             = 0;
+    renderingInfo.layerCount           = 1;
+    renderingInfo.colorAttachmentCount = 1;
+    renderingInfo.pColorAttachments    = &colorAttachment;
+    renderingInfo.pDepthAttachment     = nullptr;
+    renderingInfo.pStencilAttachment   = nullptr;
+    renderingInfo.flags                = 0;
 
-    const auto  renderer = static_pointer_cast<Renderer>(g_renderer);
-    const auto& device   = renderer->GetDevice();
+    vkCmdBeginRendering(commandBuffer, &renderingInfo);
+
+    VkViewport viewport {};
+    viewport.x        = 0.0f;
+    viewport.y        = 0.0f;
+    viewport.width    = static_cast<float>(m_colorOutput.Width);
+    viewport.height   = static_cast<float>(m_colorOutput.Height);
+    viewport.minDepth = 0.0f;
+    viewport.maxDepth = 1.0f;
+    vkCmdSetViewport(commandBuffer, 0, 1, &viewport);
+
+    VkRect2D scissor {};
+    scissor.offset = {0, 0};
+    scissor.extent = {m_colorOutput.Width, m_colorOutput.Height};
+    vkCmdSetScissor(commandBuffer, 0, 1, &scissor);
 
     vkCmdBindDescriptorSets(
         device.GetCommandBuffer(),
@@ -279,6 +278,44 @@ void TonemapPass::Render(uint32_t frameIndex)
 
     vkCmdDraw(device.GetCommandBuffer(), 3, 1, 0, 0);
 
-    PostProcessPass::PostRender();
+    vkCmdEndRendering(commandBuffer);
+
+    renderer->EndDebugLabel(commandBuffer);
+}
+
+void PostProcessPass::TransitionOutput()
+{
+    if (!m_ownOutput)
+    {
+        return;
+    }
+
+    const auto  renderer = static_pointer_cast<Renderer>(g_renderer);
+    const auto& device   = renderer->GetDevice();
+
+    TransitionImageLayout(
+        device.GetCommandBuffer(),
+        m_colorOutput.Image,
+        VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL,
+        VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL,
+        VK_PIPELINE_STAGE_2_COLOR_ATTACHMENT_OUTPUT_BIT,
+        VK_PIPELINE_STAGE_2_FRAGMENT_SHADER_BIT,
+        VK_ACCESS_2_COLOR_ATTACHMENT_READ_BIT | VK_ACCESS_2_COLOR_ATTACHMENT_WRITE_BIT,
+        VK_ACCESS_2_SHADER_READ_BIT
+    );
+}
+
+void PostProcessPass::DestroyOutput()
+{
+    if (!m_ownOutput)
+    {
+        return;
+    }
+
+    const auto renderer = static_pointer_cast<Renderer>(g_renderer);
+    const auto vkDevice = renderer->GetDevice().GetVkDevice();
+
+    vkDestroyImageView(vkDevice, m_colorOutput.ImageView, nullptr);
+    vmaDestroyImage(g_vma, m_colorOutput.Image, m_colorOutput.Allocation);
 }
 }; // namespace yar

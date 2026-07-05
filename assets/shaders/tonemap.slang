@@ -8,10 +8,10 @@ struct VertexOut
 };
 
 layout(binding = 0, set = 0)
-Sampler2D texColor;
+Sampler2D texSceneColor;
 
 layout(binding = 1, set = 0)
-Sampler2D texDepth;
+Sampler2D texBloomColor;
 
 [shader("vertex")]
 VertexOut vertex(uint vertexID : SV_VertexID)
@@ -31,7 +31,11 @@ PixelOut pixel(
 ) {
     PixelOut output;
 
-    float3 color = texColor.Sample(input.uv).rgb;
+    float3 sceneColor = texSceneColor.SampleLevel(input.uv, 0).rgb;
+    float3 bloomColor = texBloomColor.SampleLevel(input.uv, 0).rgb;
+    const float bloomStrength = 0.3;
+
+    float3 color = sceneColor + bloomStrength * bloomColor;
 
     const float exposure = globalData->settings[0];
     color = color * exposure;

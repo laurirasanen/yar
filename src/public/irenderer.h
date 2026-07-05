@@ -35,6 +35,8 @@ enum RenderPipeline
     SHADED,
 };
 
+static const char* RenderPipelineNames[] = {"NONE", "SKY", "UNLIT", "SHADED"};
+
 class IRenderer
 {
   public:
@@ -69,6 +71,8 @@ class IRenderer
     virtual void  Setup()          = 0;
     virtual void  Begin()          = 0;
     virtual void  PostProcess()    = 0;
+    virtual void  BeginUI()        = 0;
+    virtual void  EndUI()          = 0;
     virtual void  Submit()         = 0;
     virtual void  Present()        = 0;
     virtual void  UpdateUniforms() = 0;

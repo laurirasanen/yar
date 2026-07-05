@@ -88,8 +88,13 @@ Sky::Sky(std::string folder) : ISky()
 
 void Sky::Render()
 {
+    const auto renderer = static_pointer_cast<Renderer>(g_renderer);
+    renderer->BeginDebugLabel("Sky", {0.5f, 0.75f, 1.0f, 0.8f});
+
     g_renderer->BindPipeline(RenderPipeline::SKY);
     g_renderer->BindDescriptor(0);
     g_renderer->DrawWithBuffers(m_vertexBuffer, m_indexBuffer);
+
+    renderer->EndDebugLabel();
 }
 }; // namespace yar

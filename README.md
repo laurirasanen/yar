@@ -42,6 +42,7 @@ meson compile -C build
 - [Sascha Willems: Vulkan examples](https://github.com/SaschaWillems/Vulkan) (MIT)
 - [Google: Filament](https://github.com/google/filament) (Apache 2.0)
 - [Krzysztof Narkowicz: ACES Filmic Tone Mapping Curve](https://knarkowicz.wordpress.com/2016/01/06/aces-filmic-tone-mapping-curve/) (CC0 / MIT)
+- [Léna Piquet (Froyok): Custom Bloom Post-Process in Unreal Engine](https://www.froyok.fr/blog/2021-12-ue4-custom-bloom)
 
 ### Third-party depedencies
 - [Box3D](https://github.com/erincatto/box3d) (MIT)

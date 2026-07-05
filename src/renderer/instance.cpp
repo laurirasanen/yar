@@ -70,6 +70,44 @@ constexpr static void _DestroyDebugUtilsMessengerEXT(
     }
 }
 
+constexpr static void _BeginDebugUtilsLabelEXT(
+    VkInstance                  instance,
+    VkCommandBuffer             commandBuffer,
+    const VkDebugUtilsLabelEXT* pLabelInfo
+)
+{
+    auto func = (PFN_vkCmdBeginDebugUtilsLabelEXT)
+        vkGetInstanceProcAddr(instance, "vkCmdBeginDebugUtilsLabelEXT");
+    if (func != nullptr)
+    {
+        func(commandBuffer, pLabelInfo);
+    }
+}
+
+constexpr static void _EndDebugUtilsLabelEXT(VkInstance instance, VkCommandBuffer commandBuffer)
+{
+    auto func = (PFN_vkCmdEndDebugUtilsLabelEXT)
+        vkGetInstanceProcAddr(instance, "vkCmdEndDebugUtilsLabelEXT");
+    if (func != nullptr)
+    {
+        func(commandBuffer);
+    }
+}
+
+constexpr static void _SetDebugUtilsObjectNameEXT(
+    VkInstance                           instance,
+    VkDevice                             device,
+    const VkDebugUtilsObjectNameInfoEXT* pNameInfo
+)
+{
+    auto func = (PFN_vkSetDebugUtilsObjectNameEXT)
+        vkGetInstanceProcAddr(instance, "vkSetDebugUtilsObjectNameEXT");
+    if (func != nullptr)
+    {
+        func(device, pNameInfo);
+    }
+}
+
 VulkanInstance::VulkanInstance(std::shared_ptr<SDLWindow> window) : m_window(window)
 {
     LOG_DEBUG("Creating VulkanInstance");
@@ -227,5 +265,56 @@ void VulkanInstance::CreateSurface()
     {
         throw std::runtime_error("Failed to create vulkan surface");
     }
+}
+
+void VulkanInstance::BeginDebugLabel(
+    VkCommandBuffer commandBuffer,
+    const char*     name,
+    glm::vec4       color
+) const
+{
+    if (!m_enableValidationLayers)
+    {
+        return;
+    }
+
+    VkDebugUtilsLabelEXT info = {};
+    info.sType                = VK_STRUCTURE_TYPE_DEBUG_UTILS_LABEL_EXT;
+    info.pLabelName           = name;
+    info.color[0]             = color.x;
+    info.color[1]             = color.y;
+    info.color[2]             = color.z;
+    info.color[3]             = color.w;
+    _BeginDebugUtilsLabelEXT(m_vkInstance, commandBuffer, &info);
+}
+
+void VulkanInstance::EndDebugLabel(VkCommandBuffer commandBuffer) const
+{
+    if (!m_enableValidationLayers)
+    {
+        return;
+    }
+
+    _EndDebugUtilsLabelEXT(m_vkInstance, commandBuffer);
+}
+
+void VulkanInstance::SetDebugName(
+    VkDevice     device,
+    VkObjectType objectType,
+    uint64_t     objectHandle,
+    const char*  name
+) const
+{
+    if (!m_enableValidationLayers)
+    {
+        return;
+    }
+
+    VkDebugUtilsObjectNameInfoEXT info = {};
+    info.sType                         = VK_STRUCTURE_TYPE_DEBUG_UTILS_OBJECT_NAME_INFO_EXT;
+    info.objectType                    = objectType;
+    info.objectHandle                  = objectHandle;
+    info.pObjectName                   = name;
+    _SetDebugUtilsObjectNameEXT(m_vkInstance, device, &info);
 }
 } // namespace yar

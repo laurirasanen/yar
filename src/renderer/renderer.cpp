@@ -11,7 +11,8 @@
 
 namespace yar
 {
-std::shared_ptr<Scene> g_scene;
+std::shared_ptr<Scene>          g_scene;
+std::shared_ptr<ShaderCompiler> g_shaderCompiler;
 
 Renderer::Renderer(std::shared_ptr<SDLWindow> window) :
     m_instance(window),
@@ -73,12 +74,13 @@ void Renderer::Setup()
     m_descriptorSet = std::make_shared<DescriptorSet>(MAX_FRAMES_IN_FLIGHT);
     m_descriptorSet->Alloc();
 
+    g_shaderCompiler = std::make_shared<ShaderCompiler>();
+
     // TODO: abstract away to materials?
-    ShaderCompiler compiler;
-    size_t         size;
+    size_t size;
 
     {
-        const void* spirv = compiler.GetSpirv("sky.slang", SHADER_ENTRY_PIXEL, size);
+        const void* spirv = g_shaderCompiler->GetSpirv("sky.slang", SHADER_ENTRY_PIXEL, size);
         if (!spirv)
         {
             throw std::runtime_error("failed to load sky fragment shader");
@@ -86,7 +88,7 @@ void Renderer::Setup()
 
         auto fragModule = GetShaderCreateInfo(spirv, size);
 
-        spirv = compiler.GetSpirv("sky.slang", SHADER_ENTRY_VERTEX, size);
+        spirv = g_shaderCompiler->GetSpirv("sky.slang", SHADER_ENTRY_VERTEX, size);
         if (!spirv)
         {
             throw std::runtime_error("failed to load sky vertex shader");
@@ -107,7 +109,7 @@ void Renderer::Setup()
     }
 
     {
-        const void* spirv = compiler.GetSpirv("unlit.slang", SHADER_ENTRY_PIXEL, size);
+        const void* spirv = g_shaderCompiler->GetSpirv("unlit.slang", SHADER_ENTRY_PIXEL, size);
         if (!spirv)
         {
             throw std::runtime_error("failed to load unlit fragment shader");
@@ -115,7 +117,7 @@ void Renderer::Setup()
 
         auto fragModule = GetShaderCreateInfo(spirv, size);
 
-        spirv = compiler.GetSpirv("unlit.slang", SHADER_ENTRY_VERTEX, size);
+        spirv = g_shaderCompiler->GetSpirv("unlit.slang", SHADER_ENTRY_VERTEX, size);
         if (!spirv)
         {
             throw std::runtime_error("failed to load unlit vertex shader");
@@ -136,7 +138,7 @@ void Renderer::Setup()
     }
 
     {
-        const void* spirv = compiler.GetSpirv("shaded.slang", SHADER_ENTRY_PIXEL, size);
+        const void* spirv = g_shaderCompiler->GetSpirv("shaded.slang", SHADER_ENTRY_PIXEL, size);
         if (!spirv)
         {
             throw std::runtime_error("failed to load shaded fragment shader");
@@ -144,7 +146,7 @@ void Renderer::Setup()
 
         auto fragModule = GetShaderCreateInfo(spirv, size);
 
-        spirv = compiler.GetSpirv("shaded.slang", SHADER_ENTRY_VERTEX, size);
+        spirv = g_shaderCompiler->GetSpirv("shaded.slang", SHADER_ENTRY_VERTEX, size);
         if (!spirv)
         {
             throw std::runtime_error("failed to load shaded vertex shader");
@@ -165,8 +167,6 @@ void Renderer::Setup()
     }
 
     g_scene = std::make_shared<Scene>();
-
-    m_device.Setup();
 }
 
 void Renderer::Begin()

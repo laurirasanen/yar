@@ -3,6 +3,7 @@
 #include <algorithm>
 #include <cfloat>
 
+#include <cstdint>
 #include <glm/ext/matrix_transform.hpp>
 #include <glm/ext/quaternion_float.hpp>
 #include <glm/ext/quaternion_transform.hpp>
@@ -32,6 +33,8 @@ class Camera
         UpdateViewport(1920.0f, 1080.0f);
         UpdateMatrices();
         UpdateFrustum();
+        Yaw   = 0.0f;
+        Pitch = 0.0f;
     }
 
     virtual ~Camera() {};
@@ -179,11 +182,12 @@ class NoclipCamera : public Camera
         {
             const float delta = -0.022f * 3.14f * static_cast<float>(input.mouse.x);
             Yaw += delta;
-            while (Yaw < -180.0f)
+            Yaw = fmodf(Yaw, 360.0f);
+            if (Yaw < -180.0f)
             {
                 Yaw += 360.0f;
             }
-            while (Yaw > 180.0f)
+            if (Yaw > 180.0f)
             {
                 Yaw -= 360.0f;
             }

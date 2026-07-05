@@ -40,12 +40,12 @@ class VulkanDevice
     VulkanDevice& operator=(const VulkanDevice&) = delete;
     VulkanDevice& operator=(VulkanDevice&&)      = delete;
 
-    void Setup();
-
     void Begin();
     void ResetViewport();
     void SetViewport(Rect rect);
     void PostProcess();
+    void BeginUI();
+    void EndUI();
     void Submit();
     void Present();
 
@@ -134,6 +134,9 @@ class VulkanDevice
     }
 
   private:
+    void SetupPostprocessing();
+    void DestroyPostprocessing();
+
     void RecreateSwapchain();
     void DestroySwapchain();
 
@@ -199,7 +202,10 @@ class VulkanDevice
 
     bool m_frameBufferResized = false;
 
-    std::shared_ptr<TonemapPass> m_tonemapPass;
+    const uint8_t                                m_bloomPassCount = 8;
+    std::vector<std::shared_ptr<DownsamplePass>> m_downsamplePasses;
+    std::vector<std::shared_ptr<UpsamplePass>>   m_upsamplePasses;
+    std::shared_ptr<TonemapPass>                 m_tonemapPass;
 
     const std::vector<const char*> m_requiredExtensions = {
         VK_KHR_SWAPCHAIN_EXTENSION_NAME,

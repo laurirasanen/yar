@@ -114,7 +114,7 @@ class ExampleApp : public IApplication
 
         auto sky = g_assets->LoadSky("assets/ibl/cobble");
         g_world->SetSky(sky);
-        g_renderer->SetIBLStrength(1.0f);
+        g_renderer->SetIBLStrength(0.5f);
         g_renderer->SetExposure(1.0f);
         g_renderer->SetContrast(1.0f);
 

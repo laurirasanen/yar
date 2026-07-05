@@ -60,6 +60,18 @@ class Renderer : public IRenderer
 
     void Begin() override;
 
+    void BeginUI() override
+    {
+        m_instance.BeginDebugLabel(m_device.GetCommandBuffer(), "UI", {0.5f, 1.0f, 0.5f, 0.8f});
+        m_device.BeginUI();
+    }
+
+    void EndUI() override
+    {
+        m_device.EndUI();
+        m_instance.EndDebugLabel(m_device.GetCommandBuffer());
+    }
+
     void PostProcess() override;
 
     void Submit() override;
@@ -205,8 +217,7 @@ class Renderer : public IRenderer
 
             default:
             {
-                LOG_ERROR("Tried to update descriptor with no pipeline");
-                break;
+                throw std::runtime_error("Tried to update descriptor with no pipeline");
             }
         }
 
@@ -373,6 +384,31 @@ class Renderer : public IRenderer
     float GetIBLStrength() override
     {
         return m_shaderGlobalData[0]->GetIBLStrength();
+    }
+
+    void BeginDebugLabel(const char* name, glm::vec4 color)
+    {
+        BeginDebugLabel(m_device.GetCommandBuffer(), name, color);
+    }
+
+    void BeginDebugLabel(VkCommandBuffer commandBuffer, const char* name, glm::vec4 color)
+    {
+        m_instance.BeginDebugLabel(commandBuffer, name, color);
+    }
+
+    void EndDebugLabel()
+    {
+        EndDebugLabel(m_device.GetCommandBuffer());
+    }
+
+    void EndDebugLabel(VkCommandBuffer commandBuffer)
+    {
+        m_instance.EndDebugLabel(commandBuffer);
+    }
+
+    void SetDebugName(VkObjectType objectType, uint64_t objectHandle, const char* name)
+    {
+        m_instance.SetDebugName(m_device.GetVkDevice(), objectType, objectHandle, name);
     }
 
   private:

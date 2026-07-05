@@ -249,7 +249,9 @@ void Engine::RenderThread(const std::stop_token token)
 
         g_renderer->PostProcess();
 
+        g_renderer->BeginUI();
         g_ui->Render();
+        g_renderer->EndUI();
 
         g_renderer->Submit();
 

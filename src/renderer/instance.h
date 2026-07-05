@@ -3,6 +3,8 @@
 #include <memory>
 #include <vector>
 
+#include <glm/vec4.hpp>
+
 #include "../window/window.h"
 
 namespace yar
@@ -34,6 +36,16 @@ class VulkanInstance
     }
 
     void SetWindow(std::shared_ptr<SDLWindow> window);
+
+    void BeginDebugLabel(VkCommandBuffer commandBuffer, const char* name, glm::vec4 color) const;
+    void EndDebugLabel(VkCommandBuffer commandBuffer) const;
+
+    void SetDebugName(
+        VkDevice     device,
+        VkObjectType objectType,
+        uint64_t     objectHandle,
+        const char*  name
+    ) const;
 
   private:
     bool                     ValidationLayersSupported();

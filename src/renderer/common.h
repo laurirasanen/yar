@@ -11,10 +11,10 @@
 
 namespace yar
 {
-#define VK_CHECK(RESULT, MSG)          \
-    if (RESULT != VK_SUCCESS)          \
-    {                                  \
-        throw std::runtime_error(MSG); \
+#define VK_CHECK(RESULT, MSG)                                                                      \
+    if (RESULT != VK_SUCCESS)                                                                      \
+    {                                                                                              \
+        throw std::runtime_error(std::format("{} (VkResult: {})", MSG, static_cast<int>(RESULT))); \
     }
 
 #define MAX_OBJECTS 2048
@@ -39,6 +39,8 @@ struct RenderAttachment
     VkImageView   ImageView;
     VmaAllocation Allocation;
     VkSampler     Sampler;
+    uint32_t      Width;
+    uint32_t      Height;
 };
 
 constexpr static VkPipelineStageFlags2 GetPipelineStageFlags(const VkImageLayout imageLayout)
@@ -290,18 +292,19 @@ static void CreateImage(
 }
 
 static void CreateImageSampler(
-    const VkDevice device,
-    float          maxSamplerAnisotropy,
-    VkSampler*     sampler
+    const VkDevice       device,
+    float                maxSamplerAnisotropy,
+    VkSampler*           sampler,
+    VkSamplerAddressMode addressMode = VK_SAMPLER_ADDRESS_MODE_REPEAT
 )
 {
     VkSamplerCreateInfo samplerInfo     = {};
     samplerInfo.sType                   = VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO;
     samplerInfo.minFilter               = VK_FILTER_LINEAR;
     samplerInfo.magFilter               = VK_FILTER_LINEAR;
-    samplerInfo.addressModeU            = VK_SAMPLER_ADDRESS_MODE_REPEAT;
-    samplerInfo.addressModeV            = VK_SAMPLER_ADDRESS_MODE_REPEAT;
-    samplerInfo.addressModeW            = VK_SAMPLER_ADDRESS_MODE_REPEAT;
+    samplerInfo.addressModeU            = addressMode;
+    samplerInfo.addressModeV            = addressMode;
+    samplerInfo.addressModeW            = addressMode;
     samplerInfo.anisotropyEnable        = VK_TRUE;
     samplerInfo.maxAnisotropy           = maxSamplerAnisotropy;
     samplerInfo.borderColor             = VK_BORDER_COLOR_FLOAT_TRANSPARENT_BLACK;

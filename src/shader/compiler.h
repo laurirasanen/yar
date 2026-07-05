@@ -1,5 +1,6 @@
 #pragma once
 
+#include <memory>
 #include <string>
 #include <vector>
 
@@ -60,4 +61,6 @@ class ShaderCompiler
     Slang::ComPtr<slang::ISession>       m_session;
     std::vector<ShaderModule>            m_modules;
 };
+
+extern std::shared_ptr<ShaderCompiler> g_shaderCompiler;
 } // namespace yar
