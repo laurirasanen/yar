@@ -96,6 +96,8 @@ int Engine::Run(std::shared_ptr<IApplication> app)
 
     while (true)
     {
+        std::this_thread::yield();
+
         if (Time::TimeForEngineTick())
         {
             if (!Tick())
@@ -109,8 +111,6 @@ int Engine::Run(std::shared_ptr<IApplication> app)
         {
             Frame();
         }
-
-        std::this_thread::yield();
     }
 
     return 0;
@@ -125,6 +125,25 @@ void Engine::Frame()
     }
 
     Time::UpdateFrameDelta();
+
+    // Sleep before polling for input to reduce input lag.
+    // In a FIFO (vsync) scenario, we are going to be blocked
+    // by driver anyway either at image acquire or present,
+    // which will effectively age our inputs by as much.
+    // Pre-emptively sleep by previous frame block duration,
+    // minus some headroom.
+    // TODO: this could use some smooth heuristic
+    // TODO: VK_EXT_present_timing ?
+    const auto&  stats    = g_renderer->GetRenderStats();
+    const auto   slop     = stats.AcquireBlockTime + stats.PresentBlockTime;
+    const double headroom = 0.002; // 2ms
+    const auto   sleep    = MIN(Time::AntiLag + slop - headroom, Time::FrameInterval - headroom);
+    const auto   start    = Time::Now();
+    while (Time::Now() < start + sleep)
+    {
+        std::this_thread::yield();
+    }
+    Time::AntiLag = Time::Now() - start;
 
     UpdateInput();
 

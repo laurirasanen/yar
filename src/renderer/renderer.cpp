@@ -8,15 +8,14 @@
 #include "../shader/compiler.h"
 #include "data_types.h"
 #include "renderer.h"
+#include "src/public/irenderer.h"
 
 namespace yar
 {
 std::shared_ptr<Scene>          g_scene;
 std::shared_ptr<ShaderCompiler> g_shaderCompiler;
 
-Renderer::Renderer(std::shared_ptr<SDLWindow> window) :
-    m_instance(window),
-    m_device(m_instance, MAX_FRAMES_IN_FLIGHT)
+Renderer::Renderer(std::shared_ptr<SDLWindow> window) : m_instance(window), m_device(m_instance)
 {
     LOG_INFO("Creating Renderer");
 }
@@ -248,11 +247,10 @@ void Renderer::GetImGuiInfo(VulkanImGuiCreationInfo& info)
     info.imInit.DescriptorPool             = m_device.GetImGuiDescriptorPool();
     info.imInit.DescriptorPoolSize         = 0;
     info.imInit.MinImageCount              = 2;
-    info.imInit.ImageCount                 = MAX_FRAMES_IN_FLIGHT;
+    info.imInit.ImageCount                 = MAX(2, MAX_FRAMES_IN_FLIGHT);
     info.imInit.PipelineCache              = VK_NULL_HANDLE; // TODO
     info.imInit.PipelineInfoMain           = info.imPipeline;
     info.imInit.UseDynamicRendering        = true;
-    info.imInit.MinImageCount              = MAX_FRAMES_IN_FLIGHT;
     info.imInit.Allocator                  = nullptr; // TODO vma
     info.imInit.CheckVkResultFn            = ImGuiVkCheck;
     info.imInit.MinAllocationSize          = 1024 * 1024;

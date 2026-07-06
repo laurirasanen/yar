@@ -27,8 +27,6 @@
 
 namespace yar
 {
-#define MAX_FRAMES_IN_FLIGHT 2
-
 class Renderer : public IRenderer
 {
   public:
@@ -414,6 +412,11 @@ class Renderer : public IRenderer
     const char* GetPresentMode() override
     {
         return PresentModeName(m_device.GetPresentMode());
+    }
+
+    uint32_t GetSwapchainImageCount() override
+    {
+        return m_device.GetSwapchainImageCount();
     }
 
   private:

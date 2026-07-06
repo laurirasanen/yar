@@ -14,11 +14,10 @@
 
 namespace yar
 {
-VulkanDevice::VulkanDevice(const VulkanInstance& instance, uint32_t maxFramesInFlight) :
+VulkanDevice::VulkanDevice(const VulkanInstance& instance) :
     m_instance(instance),
     m_swapchainImageIndex(0),
-    m_currentFrame(0),
-    m_maxFramesInFlight(maxFramesInFlight)
+    m_currentFrame(0)
 {
     LOG_INFO("Creating VulkanDevice");
 
@@ -90,6 +89,17 @@ void VulkanDevice::Begin()
         &m_swapchainImageIndex
     );
     g_renderer->GetRenderStats().AcquireBlockTime = Time::Now() - startAcquire;
+
+    if (m_swapchainImageIndex >= m_swapchainImageCount)
+    {
+        throw std::runtime_error(
+            std::format(
+                "Acquired swapchain image index OOB {}/{}",
+                m_swapchainImageIndex,
+                m_swapchainImageCount - 1
+            )
+        );
+    }
 
     if (imageResult == VK_ERROR_OUT_OF_DATE_KHR)
     {
@@ -385,7 +395,7 @@ void VulkanDevice::Present()
         throw std::runtime_error("Failed to present queue");
     }
 
-    m_currentFrame = (m_currentFrame + 1) % m_maxFramesInFlight;
+    m_currentFrame = (m_currentFrame + 1) % MAX_FRAMES_IN_FLIGHT;
 }
 
 VkCommandBuffer VulkanDevice::GetTemporaryCommandBuffer()
@@ -696,14 +706,12 @@ constexpr VkPresentModeKHR VulkanDevice::ChooseSwapPresentMode(
 {
     for (const auto& mode : available)
     {
-        if (mode == VK_PRESENT_MODE_MAILBOX_KHR)
+        if (mode == VK_PRESENT_MODE_FIFO_RELAXED_KHR)
         {
-            LOG_DEBUG("Using VK_PRESENT_MODE_MAILBOX_KHR");
             return mode;
         }
     }
 
-    LOG_DEBUG("Using VK_PRESENT_MODE_FIFO_KHR");
     return VK_PRESENT_MODE_FIFO_KHR;
 }
 
@@ -738,18 +746,23 @@ constexpr VkExtent2D VulkanDevice::ChooseSwapExtent(const VkSurfaceCapabilitiesK
 
 void VulkanDevice::CreateSwapchain()
 {
-    auto support       = QuerySwapchainSupport(m_vkPhysicalDevice);
-    auto surfaceFormat = ChooseSwapSurfaceFormat(support.formats);
-    m_presentMode      = ChooseSwapPresentMode(support.presentModes);
-    auto extent        = ChooseSwapExtent(support.capabilities);
-    auto imageCount    = support.capabilities.minImageCount;
+    auto support          = QuerySwapchainSupport(m_vkPhysicalDevice);
+    auto surfaceFormat    = ChooseSwapSurfaceFormat(support.formats);
+    m_presentMode         = ChooseSwapPresentMode(support.presentModes);
+    auto extent           = ChooseSwapExtent(support.capabilities);
+    m_swapchainImageCount = support.capabilities.minImageCount;
+    if (m_presentMode == VK_PRESENT_MODE_MAILBOX_KHR)
+    {
+        m_swapchainImageCount++;
+    }
 
-    LOG_DEBUG("Using {} swapchain images", imageCount);
+    LOG_DEBUG("Using {}", PresentModeName(m_presentMode));
+    LOG_DEBUG("Requesting {} swapchain images", m_swapchainImageCount);
 
     VkSwapchainCreateInfoKHR createInfo {};
     createInfo.sType            = VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR;
     createInfo.surface          = m_instance.GetSurface();
-    createInfo.minImageCount    = imageCount;
+    createInfo.minImageCount    = m_swapchainImageCount;
     createInfo.imageFormat      = surfaceFormat.format;
     createInfo.imageColorSpace  = surfaceFormat.colorSpace;
     createInfo.imageExtent      = extent;
@@ -780,9 +793,27 @@ void VulkanDevice::CreateSwapchain()
         "Failed to create swapchain"
     );
 
-    vkGetSwapchainImagesKHR(m_vkDevice, m_vkSwapchain, &imageCount, nullptr);
-    m_vkSwapchainImages.resize(imageCount);
-    vkGetSwapchainImagesKHR(m_vkDevice, m_vkSwapchain, &imageCount, m_vkSwapchainImages.data());
+    const auto prevCount = m_swapchainImageCount;
+    VK_CHECK(
+        vkGetSwapchainImagesKHR(m_vkDevice, m_vkSwapchain, &m_swapchainImageCount, nullptr),
+        "Failed to query swapchain image count"
+    );
+    if (prevCount != m_swapchainImageCount)
+    {
+        LOG_WARN("Requested {} swapchain images, got {}", prevCount, m_swapchainImageCount);
+    }
+
+    m_vkSwapchainImages.resize(m_swapchainImageCount);
+
+    VK_CHECK(
+        vkGetSwapchainImagesKHR(
+            m_vkDevice,
+            m_vkSwapchain,
+            &m_swapchainImageCount,
+            m_vkSwapchainImages.data()
+        ),
+        "Failed to get swapchain images"
+    );
 
     m_vkSwapchainImageFormat = surfaceFormat.format;
     m_vkSwapchainExtent      = extent;
@@ -972,13 +1003,13 @@ void VulkanDevice::CreateCommandPool()
 
 void VulkanDevice::CreateCommandBuffers()
 {
-    m_vkCommandBuffers.resize(m_maxFramesInFlight);
+    m_vkCommandBuffers.resize(MAX_FRAMES_IN_FLIGHT);
 
     VkCommandBufferAllocateInfo allocInfo {};
     allocInfo.sType              = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
     allocInfo.commandPool        = m_vkCommandPool;
     allocInfo.level              = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
-    allocInfo.commandBufferCount = m_maxFramesInFlight;
+    allocInfo.commandBufferCount = MAX_FRAMES_IN_FLIGHT;
 
     VK_CHECK(
         vkAllocateCommandBuffers(m_vkDevice, &allocInfo, m_vkCommandBuffers.data()),
@@ -988,8 +1019,8 @@ void VulkanDevice::CreateCommandBuffers()
 
 void VulkanDevice::CreateSyncObjects()
 {
-    m_acquireSemaphores.resize(m_maxFramesInFlight);
-    m_inFlightFences.resize(m_maxFramesInFlight);
+    m_acquireSemaphores.resize(MAX_FRAMES_IN_FLIGHT);
+    m_inFlightFences.resize(MAX_FRAMES_IN_FLIGHT);
 
     VkSemaphoreCreateInfo semaphoreInfo {};
     semaphoreInfo.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO;
@@ -998,7 +1029,7 @@ void VulkanDevice::CreateSyncObjects()
     fenceInfo.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
     fenceInfo.flags = VK_FENCE_CREATE_SIGNALED_BIT;
 
-    for (uint32_t i = 0; i < m_maxFramesInFlight; i++)
+    for (uint32_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++)
     {
         VK_CHECK(
             vkCreateSemaphore(m_vkDevice, &semaphoreInfo, nullptr, &m_acquireSemaphores[i]),
@@ -1015,7 +1046,7 @@ void VulkanDevice::CreateDescriptorPools()
 {
     VkDescriptorPoolSize uboPoolSize {};
     uboPoolSize.type            = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC;
-    uboPoolSize.descriptorCount = m_maxFramesInFlight;
+    uboPoolSize.descriptorCount = MAX_FRAMES_IN_FLIGHT;
 
     VkDescriptorPoolSize imagePoolSize {};
     imagePoolSize.type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
@@ -1023,7 +1054,7 @@ void VulkanDevice::CreateDescriptorPools()
     const uint32_t texturesPerObject = 4;
     const uint32_t globalTextures    = 64;
     imagePoolSize.descriptorCount =
-        m_maxFramesInFlight * (MAX_OBJECTS * texturesPerObject + globalTextures);
+        MAX_FRAMES_IN_FLIGHT * (MAX_OBJECTS * texturesPerObject + globalTextures);
 
     std::array<VkDescriptorPoolSize, 2> poolSizes = {uboPoolSize, imagePoolSize};
 
@@ -1032,7 +1063,7 @@ void VulkanDevice::CreateDescriptorPools()
     poolInfo.poolSizeCount         = static_cast<uint32_t>(poolSizes.size());
     poolInfo.pPoolSizes            = poolSizes.data();
     const uint32_t postProcessSets = 32; // TODO this sucks
-    poolInfo.maxSets               = m_maxFramesInFlight * (1 + postProcessSets);
+    poolInfo.maxSets               = MAX_FRAMES_IN_FLIGHT * (1 + postProcessSets);
 
     VK_CHECK(
         vkCreateDescriptorPool(m_vkDevice, &poolInfo, nullptr, &m_vkDescriptorPool),
@@ -1041,13 +1072,13 @@ void VulkanDevice::CreateDescriptorPools()
 
     VkDescriptorPoolSize imGuiPoolSize {};
     imGuiPoolSize.type            = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-    imGuiPoolSize.descriptorCount = m_maxFramesInFlight;
+    imGuiPoolSize.descriptorCount = MAX(2, MAX_FRAMES_IN_FLIGHT);
 
     VkDescriptorPoolCreateInfo imGuiPoolInfo {};
     imGuiPoolInfo.sType         = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
     imGuiPoolInfo.poolSizeCount = 1;
     imGuiPoolInfo.pPoolSizes    = &imGuiPoolSize;
-    imGuiPoolInfo.maxSets       = m_maxFramesInFlight;
+    imGuiPoolInfo.maxSets       = MAX(2, MAX_FRAMES_IN_FLIGHT);
     imGuiPoolInfo.flags         = VK_DESCRIPTOR_POOL_CREATE_FREE_DESCRIPTOR_SET_BIT;
 
     VK_CHECK(

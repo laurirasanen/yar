@@ -83,7 +83,16 @@ void UI::DebugWindow()
             1.0 / Time::DeltaFrame,
             Time::Pretty(Time::DeltaFrame).c_str()
         );
-        ImGui::Text("Mode: %s", g_renderer->GetPresentMode());
+        ImGui::Text(
+            "Swapchain: %s [%u]",
+            g_renderer->GetPresentMode(),
+            g_renderer->GetSwapchainImageCount()
+        );
+        ImGui::Text("AntiLag: %s", Time::Pretty(Time::AntiLag).c_str());
+        ImGui::Text(
+            "Slop: %s",
+            Time::Pretty(renderStats.AcquireBlockTime + renderStats.PresentBlockTime).c_str()
+        );
         ImGui::Text("Render: %s", Time::Pretty(Time::DeltaRender).c_str());
         ImGui::Text("  Setup: %s", Time::Pretty(renderStats.SetupTime).c_str());
         ImGui::Text("    Acquire: %s", Time::Pretty(renderStats.AcquireBlockTime).c_str());
@@ -98,10 +107,6 @@ void UI::DebugWindow()
         ImGui::Text("  Submit: %s", Time::Pretty(renderStats.SubmitTime).c_str());
         ImGui::Text("  Present: %s", Time::Pretty(renderStats.PresentTime).c_str());
         ImGui::Text("    Block: %s", Time::Pretty(renderStats.PresentBlockTime).c_str());
-        ImGui::Text(
-            "  Slop: %s",
-            Time::Pretty(renderStats.AcquireBlockTime + renderStats.PresentBlockTime).c_str()
-        );
 
         ImGui::Text("TPS: %.0f (%s)", 1.0 / Time::DeltaTick, Time::Pretty(Time::DeltaTick).c_str());
 

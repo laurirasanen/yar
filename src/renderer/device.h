@@ -32,7 +32,7 @@ struct VulkanSwapchainSupportDetails
 class VulkanDevice
 {
   public:
-    VulkanDevice(const VulkanInstance& instance, uint32_t maxFramesInFlight);
+    VulkanDevice(const VulkanInstance& instance);
     ~VulkanDevice();
 
     VulkanDevice(const VulkanDevice&)            = delete;
@@ -138,6 +138,11 @@ class VulkanDevice
         return m_presentMode;
     }
 
+    uint32_t GetSwapchainImageCount() const
+    {
+        return m_swapchainImageCount;
+    }
+
   private:
     void SetupPostprocessing();
     void DestroyPostprocessing();
@@ -183,6 +188,7 @@ class VulkanDevice
     VkQueue m_vkPresentQueue;
 
     VkPresentModeKHR         m_presentMode;
+    uint32_t                 m_swapchainImageCount;
     VkSwapchainKHR           m_vkSwapchain;
     std::vector<VkImage>     m_vkSwapchainImages;
     VkFormat                 m_vkSwapchainImageFormat;
@@ -202,9 +208,8 @@ class VulkanDevice
     VkDescriptorPool m_vkDescriptorPool;
     VkDescriptorPool m_vkImGuiDescriptorPool;
 
-    uint32_t       m_swapchainImageIndex;
-    uint32_t       m_currentFrame;
-    const uint32_t m_maxFramesInFlight;
+    uint32_t m_swapchainImageIndex;
+    uint32_t m_currentFrame;
 
     bool m_frameBufferResized = false;
 

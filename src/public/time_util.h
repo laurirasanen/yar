@@ -53,6 +53,8 @@ class Time
     static inline double DeltaTick;
     static inline double DeltaRender;
 
+    static inline double AntiLag = 0.0;
+
     static inline unsigned int FrameRate     = 60;
     static inline double       FrameInterval = 1.0 / FrameRate;
 

@@ -9,6 +9,8 @@
 
 namespace yar
 {
+#define MAX_FRAMES_IN_FLIGHT 1
+
 struct RenderStats
 {
     uint32_t NodeCount;
@@ -128,6 +130,8 @@ class IRenderer
     virtual float GetIBLStrength()               = 0;
 
     virtual const char* GetPresentMode() = 0;
+
+    virtual uint32_t GetSwapchainImageCount() = 0;
 
   protected:
     RenderStats m_renderStats;
