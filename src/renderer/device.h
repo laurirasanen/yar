@@ -133,6 +133,11 @@ class VulkanDevice
         return m_vkCommandPool;
     }
 
+    VkPresentModeKHR GetPresentMode() const
+    {
+        return m_presentMode;
+    }
+
   private:
     void SetupPostprocessing();
     void DestroyPostprocessing();
@@ -177,6 +182,7 @@ class VulkanDevice
     VkQueue m_vkGraphicsQueue;
     VkQueue m_vkPresentQueue;
 
+    VkPresentModeKHR         m_presentMode;
     VkSwapchainKHR           m_vkSwapchain;
     std::vector<VkImage>     m_vkSwapchainImages;
     VkFormat                 m_vkSwapchainImageFormat;

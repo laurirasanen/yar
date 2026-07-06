@@ -692,10 +692,12 @@ constexpr VkPresentModeKHR VulkanDevice::ChooseSwapPresentMode(
     {
         if (mode == VK_PRESENT_MODE_MAILBOX_KHR)
         {
+            LOG_DEBUG("Using VK_PRESENT_MODE_MAILBOX_KHR");
             return mode;
         }
     }
 
+    LOG_DEBUG("Using VK_PRESENT_MODE_FIFO_KHR");
     return VK_PRESENT_MODE_FIFO_KHR;
 }
 
@@ -732,7 +734,7 @@ void VulkanDevice::CreateSwapchain()
 {
     auto support       = QuerySwapchainSupport(m_vkPhysicalDevice);
     auto surfaceFormat = ChooseSwapSurfaceFormat(support.formats);
-    auto presentMode   = ChooseSwapPresentMode(support.presentModes);
+    m_presentMode      = ChooseSwapPresentMode(support.presentModes);
     auto extent        = ChooseSwapExtent(support.capabilities);
     auto imageCount    = support.capabilities.minImageCount;
 
@@ -749,7 +751,7 @@ void VulkanDevice::CreateSwapchain()
     createInfo.imageUsage       = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
     createInfo.preTransform     = support.capabilities.currentTransform;
     createInfo.compositeAlpha   = VK_COMPOSITE_ALPHA_OPAQUE_BIT_KHR;
-    createInfo.presentMode      = presentMode;
+    createInfo.presentMode      = m_presentMode;
     createInfo.clipped          = VK_TRUE;
     createInfo.oldSwapchain     = VK_NULL_HANDLE;
 

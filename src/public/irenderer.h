@@ -117,6 +117,8 @@ class IRenderer
     virtual void  SetIBLStrength(float strength) = 0;
     virtual float GetIBLStrength()               = 0;
 
+    virtual const char* GetPresentMode() = 0;
+
   protected:
     RenderStats m_renderStats;
 

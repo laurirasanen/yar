@@ -411,6 +411,11 @@ class Renderer : public IRenderer
         m_instance.SetDebugName(m_device.GetVkDevice(), objectType, objectHandle, name);
     }
 
+    const char* GetPresentMode() override
+    {
+        return PresentModeName(m_device.GetPresentMode());
+    }
+
   private:
     VulkanInstance m_instance;
     VulkanDevice   m_device;

@@ -351,4 +351,44 @@ static void CreateImageView(
         "Failed to create image view"
     );
 }
+
+static constexpr const char* PresentModeName(VkPresentModeKHR mode)
+{
+    switch (mode)
+    {
+        case VK_PRESENT_MODE_IMMEDIATE_KHR:
+        {
+            return "VK_PRESENT_MODE_IMMEDIATE_KHR";
+        }
+        case VK_PRESENT_MODE_MAILBOX_KHR:
+        {
+            return "VK_PRESENT_MODE_MAILBOX_KHR";
+        }
+        case VK_PRESENT_MODE_FIFO_KHR:
+        {
+            return "VK_PRESENT_MODE_FIFO_KHR";
+        }
+        case VK_PRESENT_MODE_FIFO_RELAXED_KHR:
+        {
+            return "VK_PRESENT_MODE_FIFO_RELAXED_KHR";
+        }
+        case VK_PRESENT_MODE_SHARED_DEMAND_REFRESH_KHR:
+        {
+            return "VK_PRESENT_MODE_SHARED_DEMAND_REFRESH_KHR";
+        }
+        case VK_PRESENT_MODE_SHARED_CONTINUOUS_REFRESH_KHR:
+        {
+            return "VK_PRESENT_MODE_SHARED_CONTINUOUS_REFRESH_KHR";
+        }
+        case VK_PRESENT_MODE_FIFO_LATEST_READY_KHR:
+        {
+            return "VK_PRESENT_MODE_FIFO_LATEST_READY_KHR";
+        }
+
+        default:
+        {
+            return "UNKNOWN";
+        }
+    }
+}
 } // namespace yar

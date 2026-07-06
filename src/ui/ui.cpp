@@ -6,6 +6,7 @@
 
 #include "../platform/memory.h"
 #include "../public/iphysics.h"
+#include "../public/irenderer.h"
 #include "../public/log.h"
 #include "../public/util.h"
 #include "../renderer/renderer.h"
@@ -82,15 +83,16 @@ void UI::DebugWindow()
             1.0 / Time::DeltaFrame,
             Time::Pretty(Time::DeltaFrame).c_str()
         );
-        ImGui::Text("  Render: %s", Time::Pretty(Time::DeltaRender).c_str());
-        ImGui::Text("  Scene:");
-        ImGui::Text("    Update: %s", Time::Pretty(renderStats.SceneUpdateTime).c_str());
-        ImGui::Text("    Cull: %s", Time::Pretty(renderStats.SceneCullTime).c_str());
-        ImGui::Text("    Batch: %s", Time::Pretty(renderStats.SceneBatchTime).c_str());
-        ImGui::Text("    Sort: %s", Time::Pretty(renderStats.SceneSortTime).c_str());
-        ImGui::Text("    Desc: %s", Time::Pretty(renderStats.SceneDescriptorTime).c_str());
-        ImGui::Text("    Render: %s", Time::Pretty(renderStats.SceneRenderTime).c_str());
-        ImGui::Text("    PP: %s", Time::Pretty(renderStats.PostProcessTime).c_str());
+        ImGui::Text("Mode: %s", g_renderer->GetPresentMode());
+        ImGui::Text("Render: %s", Time::Pretty(Time::DeltaRender).c_str());
+        ImGui::Text("Scene:");
+        ImGui::Text("  Update: %s", Time::Pretty(renderStats.SceneUpdateTime).c_str());
+        ImGui::Text("  Cull: %s", Time::Pretty(renderStats.SceneCullTime).c_str());
+        ImGui::Text("  Batch: %s", Time::Pretty(renderStats.SceneBatchTime).c_str());
+        ImGui::Text("  Sort: %s", Time::Pretty(renderStats.SceneSortTime).c_str());
+        ImGui::Text("  Desc: %s", Time::Pretty(renderStats.SceneDescriptorTime).c_str());
+        ImGui::Text("  Render: %s", Time::Pretty(renderStats.SceneRenderTime).c_str());
+        ImGui::Text("  PP: %s", Time::Pretty(renderStats.PostProcessTime).c_str());
 
         ImGui::Text("TPS: %.0f (%s)", 1.0 / Time::DeltaTick, Time::Pretty(Time::DeltaTick).c_str());
 
