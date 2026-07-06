@@ -171,9 +171,11 @@ void Renderer::Setup()
 
 void Renderer::Begin()
 {
+    const auto startTime = Time::Now();
     m_descriptorSet->NewFrame();
     m_currentPipeline = RenderPipeline::NONE;
     m_device.Begin();
+    m_renderStats.SetupTime = Time::Now() - startTime;
 }
 
 void Renderer::PostProcess()
@@ -185,13 +187,17 @@ void Renderer::PostProcess()
 
 void Renderer::Submit()
 {
+    const auto startTime = Time::Now();
     m_device.Submit();
     m_frameBuffers.clear();
+    m_renderStats.SubmitTime = Time::Now() - startTime;
 }
 
 void Renderer::Present()
 {
+    const auto startTime = Time::Now();
     m_device.Present();
+    m_renderStats.PresentTime = Time::Now() - startTime;
 }
 
 void Renderer::UpdateUniforms()

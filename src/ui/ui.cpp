@@ -85,14 +85,23 @@ void UI::DebugWindow()
         );
         ImGui::Text("Mode: %s", g_renderer->GetPresentMode());
         ImGui::Text("Render: %s", Time::Pretty(Time::DeltaRender).c_str());
-        ImGui::Text("Scene:");
-        ImGui::Text("  Update: %s", Time::Pretty(renderStats.SceneUpdateTime).c_str());
-        ImGui::Text("  Cull: %s", Time::Pretty(renderStats.SceneCullTime).c_str());
-        ImGui::Text("  Batch: %s", Time::Pretty(renderStats.SceneBatchTime).c_str());
-        ImGui::Text("  Sort: %s", Time::Pretty(renderStats.SceneSortTime).c_str());
-        ImGui::Text("  Desc: %s", Time::Pretty(renderStats.SceneDescriptorTime).c_str());
-        ImGui::Text("  Render: %s", Time::Pretty(renderStats.SceneRenderTime).c_str());
+        ImGui::Text("  Setup: %s", Time::Pretty(renderStats.SetupTime).c_str());
+        ImGui::Text("    Acquire: %s", Time::Pretty(renderStats.AcquireBlockTime).c_str());
+        ImGui::Text("  Scene:");
+        ImGui::Text("    Update: %s", Time::Pretty(renderStats.SceneUpdateTime).c_str());
+        ImGui::Text("    Cull: %s", Time::Pretty(renderStats.SceneCullTime).c_str());
+        ImGui::Text("    Batch: %s", Time::Pretty(renderStats.SceneBatchTime).c_str());
+        ImGui::Text("    Sort: %s", Time::Pretty(renderStats.SceneSortTime).c_str());
+        ImGui::Text("    Desc: %s", Time::Pretty(renderStats.SceneDescriptorTime).c_str());
+        ImGui::Text("    Render: %s", Time::Pretty(renderStats.SceneRenderTime).c_str());
         ImGui::Text("  PP: %s", Time::Pretty(renderStats.PostProcessTime).c_str());
+        ImGui::Text("  Submit: %s", Time::Pretty(renderStats.SubmitTime).c_str());
+        ImGui::Text("  Present: %s", Time::Pretty(renderStats.PresentTime).c_str());
+        ImGui::Text("    Block: %s", Time::Pretty(renderStats.PresentBlockTime).c_str());
+        ImGui::Text(
+            "  Slop: %s",
+            Time::Pretty(renderStats.AcquireBlockTime + renderStats.PresentBlockTime).c_str()
+        );
 
         ImGui::Text("TPS: %.0f (%s)", 1.0 / Time::DeltaTick, Time::Pretty(Time::DeltaTick).c_str());
 

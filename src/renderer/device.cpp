@@ -7,6 +7,7 @@
 
 #include <vulkan/vulkan_core.h>
 
+#include "../public/irenderer.h"
 #include "../public/log.h"
 #include "common.h"
 #include "device.h"
@@ -79,7 +80,8 @@ void VulkanDevice::Begin()
         "Failed to reset in flight fence"
     );
 
-    auto imageResult = vkAcquireNextImageKHR(
+    const auto startAcquire = Time::Now();
+    auto       imageResult  = vkAcquireNextImageKHR(
         m_vkDevice,
         m_vkSwapchain,
         UINT64_MAX,
@@ -87,6 +89,8 @@ void VulkanDevice::Begin()
         VK_NULL_HANDLE,
         &m_swapchainImageIndex
     );
+    g_renderer->GetRenderStats().AcquireBlockTime = Time::Now() - startAcquire;
+
     if (imageResult == VK_ERROR_OUT_OF_DATE_KHR)
     {
         RecreateSwapchain();
@@ -94,7 +98,6 @@ void VulkanDevice::Begin()
     }
     else if (imageResult != VK_SUCCESS && imageResult != VK_SUBOPTIMAL_KHR)
     {
-
         throw std::runtime_error("Failed to acquire next swapchain image");
     }
 
@@ -367,7 +370,10 @@ void VulkanDevice::Present()
     presentInfo.pSwapchains        = swapchains;
     presentInfo.pImageIndices      = &m_swapchainImageIndex;
 
-    auto presentResult = vkQueuePresentKHR(m_vkPresentQueue, &presentInfo);
+    const auto presentStart  = Time::Now();
+    auto       presentResult = vkQueuePresentKHR(m_vkPresentQueue, &presentInfo);
+    g_renderer->GetRenderStats().PresentBlockTime = Time::Now() - presentStart;
+
     if (presentResult == VK_ERROR_OUT_OF_DATE_KHR || presentResult == VK_SUBOPTIMAL_KHR
         || m_frameBufferResized)
     {

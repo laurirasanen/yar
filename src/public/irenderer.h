@@ -25,6 +25,11 @@ struct RenderStats
     double   SceneDescriptorTime;
     double   SceneRenderTime;
     double   PostProcessTime;
+    double   SetupTime;
+    double   AcquireBlockTime;
+    double   SubmitTime;
+    double   PresentTime;
+    double   PresentBlockTime;
 };
 
 enum RenderPipeline
@@ -108,6 +113,11 @@ class IRenderer
         m_renderStats.SceneDescriptorTime = 0.0;
         m_renderStats.SceneRenderTime     = 0.0;
         m_renderStats.PostProcessTime     = 0.0;
+        m_renderStats.SetupTime           = 0.0;
+        m_renderStats.AcquireBlockTime    = 0.0;
+        m_renderStats.SubmitTime          = 0.0;
+        m_renderStats.PresentTime         = 0.0;
+        m_renderStats.PresentBlockTime    = 0.0;
     }
 
     virtual void  SetExposure(float exposure)    = 0;
