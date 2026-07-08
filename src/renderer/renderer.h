@@ -102,12 +102,11 @@ class Renderer : public IRenderer
         m_device.SubmitTemporaryCommandBuffer(commandBuffer);
     }
 
-    void CreateBuffer(
-        std::shared_ptr<IBuffer>& buffer,
-        BufferType                bufferType,
-        void*                     data,
-        uint32_t                  elementSize,
-        uint32_t                  elementCount
+    std::shared_ptr<IBuffer> CreateBuffer(
+        BufferType bufferType,
+        void*      data,
+        uint32_t   elementSize,
+        uint32_t   elementCount
     ) override
     {
         auto vkBuffer = std::make_shared<Buffer>(
@@ -118,7 +117,7 @@ class Renderer : public IRenderer
             elementCount
         );
         std::memcpy(vkBuffer->GetAllocationInfo().pMappedData, data, elementSize * elementCount);
-        buffer = vkBuffer;
+        return vkBuffer;
     }
 
     void BindPipeline(RenderPipeline pipe) override
@@ -276,7 +275,7 @@ class Renderer : public IRenderer
         }
     }
 
-    void SetMissingTexture(TextureType type, std::shared_ptr<Texture> tex)
+    void SetMissingTexture(TextureType type, std::shared_ptr<TextureComponent> tex)
     {
         switch (type)
         {
@@ -311,7 +310,7 @@ class Renderer : public IRenderer
         }
     }
 
-    std::shared_ptr<Texture> GetMissingTexture(TextureType type)
+    std::shared_ptr<TextureComponent> GetMissingTexture(TextureType type)
     {
         switch (type)
         {
@@ -438,9 +437,9 @@ class Renderer : public IRenderer
     // while still in use by command buffer.
     std::vector<std::shared_ptr<Buffer>> m_frameBuffers;
 
-    std::shared_ptr<Texture> m_missingAlbedo;
-    std::shared_ptr<Texture> m_missingMetalness;
-    std::shared_ptr<Texture> m_missingNormal;
-    std::shared_ptr<Texture> m_missingEmissive;
+    std::shared_ptr<TextureComponent> m_missingAlbedo;
+    std::shared_ptr<TextureComponent> m_missingMetalness;
+    std::shared_ptr<TextureComponent> m_missingNormal;
+    std::shared_ptr<TextureComponent> m_missingEmissive;
 };
 } // namespace yar

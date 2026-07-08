@@ -7,7 +7,8 @@
 #include <glm/matrix.hpp>
 #include <glm/vec3.hpp>
 
-#include "util.h"
+#include "../util.h"
+#include "component.h"
 
 namespace yar
 {
@@ -19,27 +20,38 @@ namespace yar
 #define VEC_UP   VEC_Y
 #define VEC_FWD  VEC_Z
 
-struct Transform
+class TransformComponent : public Component
 {
-    friend Transform operator*(const Transform& lhs, const Transform& rhs)
+  public:
+    friend TransformComponent operator*(
+        const TransformComponent& lhs,
+        const TransformComponent& rhs
+    )
     {
-        Transform t  = {};
-        t.m_model    = lhs.m_model * rhs.m_model;
-        t.m_rotation = lhs.m_rotation * rhs.m_rotation;
+        TransformComponent t;
+        t.SetModelMatrix(lhs.m_model * rhs.m_model);
+        t.SetRotation(lhs.m_rotation * rhs.m_rotation);
         return t;
     }
 
-    friend Transform operator/(const Transform& lhs, const Transform& rhs)
+    friend TransformComponent operator/(
+        const TransformComponent& lhs,
+        const TransformComponent& rhs
+    )
     {
-        Transform t  = {};
-        t.m_model    = lhs.m_model / rhs.m_model;
-        t.m_rotation = lhs.m_rotation * glm::inverse(rhs.m_rotation);
+        TransformComponent t;
+        t.SetModelMatrix(lhs.m_model / rhs.m_model);
+        t.SetRotation(lhs.m_rotation * glm::inverse(rhs.m_rotation));
         return t;
     }
 
-    static Transform Lerp(const Transform& start, const Transform& end, float lerp)
+    static TransformComponent Lerp(
+        const TransformComponent& start,
+        const TransformComponent& end,
+        float                     lerp
+    )
     {
-        Transform result = {};
+        TransformComponent result;
         for (uint8_t i = 0; i < 16; i++)
         {
             result.m_model[i / 4][i % 4] =

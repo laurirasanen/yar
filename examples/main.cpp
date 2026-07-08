@@ -70,7 +70,7 @@ class ExampleApp : public IApplication
         }
 
         const float delta = static_cast<float>(Time::DeltaFrame) * 10.0f;
-        Transform   t     = m_flightHelmet->GetTransform();
+        TransformComponent   t     = m_flightHelmet->GetTransform();
         t.AddRotation(delta, VEC_UP);
         m_flightHelmet->SetTransform(t, true);
     }
@@ -89,7 +89,7 @@ class ExampleApp : public IApplication
 
     void Load()
     {
-        Transform trans = {};
+        TransformComponent trans = {};
 
         m_flightHelmet = g_assets->LoadGLTF("assets/scenes/FlightHelmet.glb");
         trans.SetEulerRotation({0, 0, 0});

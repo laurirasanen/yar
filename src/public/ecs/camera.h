@@ -13,6 +13,7 @@
 
 #include "../public/input.h"
 #include "../public/time_util.h"
+#include "component.h"
 #include "geometry.h"
 #include "transform.h"
 
@@ -21,7 +22,7 @@ namespace yar
 #define CAM_NEAR 0.05f
 #define CAM_FAR  500.0f
 
-class Camera
+class Camera : public Component
 {
   public:
     Camera()
@@ -153,7 +154,7 @@ class Camera
 
     virtual void HandleInput(WindowInput) {};
 
-    Transform transform;
+    TransformComponent transform;
     float     fov;
     float     aspect;
     float     near;

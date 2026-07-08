@@ -222,7 +222,7 @@ void DescriptorSet::Update(
 
     for (size_t i = 0; i < nodes.size(); i++)
     {
-        const auto mat      = static_pointer_cast<Material>(nodes[i]->GetMaterial());
+        const auto mat      = static_pointer_cast<MaterialComponent>(nodes[i]->GetMaterial());
         const auto albedo   = mat->GetAlbedo();
         const auto orm      = mat->GetORM();
         const auto normal   = mat->GetNormal();

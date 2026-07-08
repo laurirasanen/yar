@@ -46,7 +46,19 @@ struct AABB
     glm::vec3 max;
     glm::vec3 center;
 
-    AABB Transform(const Transform& t) const
+    AABB(const std::vector<glm::vec3>& positions)
+    {
+        min = positions[0];
+        max = positions[0];
+        for (size_t i = 1; i < positions.size(); i++)
+        {
+            min = glm::min(min, positions[i]);
+            max = glm::max(max, positions[i]);
+        }
+        center = min + 0.5f * (max - min);
+    }
+
+    AABB Transform(const TransformComponent& t) const
     {
         const glm::vec3 corners[8] = {
             t.ToGlobalSpace(glm::vec4(min.x, min.y, min.z, 1.0f)),

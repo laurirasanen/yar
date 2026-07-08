@@ -24,6 +24,8 @@ enum BufferLocation
 class IBuffer
 {
   public:
+    IBuffer() {};
+
     IBuffer(
         BufferType     bufferType,
         BufferLocation bufferLocation,
@@ -39,8 +41,6 @@ class IBuffer
     }
 
     virtual ~IBuffer() = default;
-
-    IBuffer(const char*) {};
 
     IBuffer(const IBuffer&)            = delete;
     IBuffer(IBuffer&&)                 = delete;

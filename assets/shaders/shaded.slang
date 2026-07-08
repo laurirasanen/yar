@@ -63,18 +63,18 @@ struct VertexOutShaded
 {
     PixelOut output;
 
-    float4 albedo = TEX_ALBEDO.Sample(input.uv);
+    float4 albedo = TEX_ALBEDO(input.uv);
     if (albedo.a < 0.01)
     {
         discard;
     }
 
-    float3 orm = TEX_ORM.Sample(input.uv).rgb;
+    float3 orm = TEX_ORM(input.uv);
     float occlusion = pow(orm.r, objectData.materialParams.x);
     float roughness = orm.g * objectData.materialParams.y;
     float metalness = orm.b * objectData.materialParams.z;
 
-    float3 normalMap = TEX_NORMAL.Sample(input.uv).rgb;
+    float3 normalMap = TEX_NORMAL(input.uv);
     float3 normalDir = normalize(normalMap * 2.0 - 1.0);
 
     float3 lightDir = input.tangentLightDir;
@@ -93,10 +93,10 @@ struct VertexOutShaded
         occlusion
     );
 
-    const float4 emissiveTex = TEX_EMISSIVE.Sample(input.uv).rgba;
-    const float4 emissiveStrength = float4(objectData.materialParams2.xyz, 1.0);
-    const float4 emissive = emissiveTex * emissiveStrength;
-    color += emissive.rgb * emissive.a;
+    const float3 emissiveTex = TEX_EMISSIVE(input.uv);
+    const float3 emissiveStrength = objectData.materialParams2.xyz;
+    const float3 emissive = emissiveTex * emissiveStrength;
+    color += emissive;
 
     output.color.rgb = color;
     output.color.a = albedo.a;

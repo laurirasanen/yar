@@ -37,34 +37,34 @@ class INode
         return m_name;
     }
 
-    const Transform& GetTransform()
+    const TransformComponent& GetTransform()
     {
         return m_transform;
     }
 
-    void SetTransform(const Transform& transform, bool teleport = false)
+    void SetTransform(const TransformComponent& transform, bool teleport = false)
     {
         m_transform = transform;
         UpdateGlobalTransform(teleport);
         UpdateAABB();
     }
 
-    const Transform& GetGlobalTransform()
+    const TransformComponent& GetGlobalTransform()
     {
         return m_globalTransform;
     }
 
-    Transform GetInterpolatedTransform(float lerp)
+    TransformComponent GetInterpolatedTransform(float lerp)
     {
         if (m_interpolate)
         {
-            return Transform::Lerp(m_oldGlobalTransform, m_globalTransform, lerp);
+            return TransformComponent::Lerp(m_oldGlobalTransform, m_globalTransform, lerp);
         }
 
         return m_globalTransform;
     }
 
-    void SetGlobalTransform(const Transform& transform, bool teleport = false)
+    void SetGlobalTransform(const TransformComponent& transform, bool teleport = false)
     {
         if (m_parent == nullptr)
         {
@@ -170,9 +170,9 @@ class INode
 
   protected:
     std::string                         m_name;
-    Transform                           m_transform;
-    Transform                           m_oldGlobalTransform;
-    Transform                           m_globalTransform;
+    TransformComponent                           m_transform;
+    TransformComponent                           m_oldGlobalTransform;
+    TransformComponent                           m_globalTransform;
     AABB                                m_aabb;
     INode*                              m_parent;
     std::vector<std::shared_ptr<INode>> m_children;

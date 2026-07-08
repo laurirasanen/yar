@@ -34,18 +34,6 @@ struct PhysicsStats
     double   UpdateTime;
 };
 
-class IPhysicsBody
-{
-  public:
-    IPhysicsBody()          = default;
-    virtual ~IPhysicsBody() = default;
-
-    IPhysicsBody(const IPhysicsBody&)            = delete;
-    IPhysicsBody(IPhysicsBody&&)                 = delete;
-    IPhysicsBody& operator=(const IPhysicsBody&) = delete;
-    IPhysicsBody& operator=(IPhysicsBody&&)      = delete;
-};
-
 class IPhysics
 {
   public:
@@ -73,9 +61,9 @@ class IPhysics
 
     virtual void DisableBody(std::shared_ptr<IPhysicsBody> body) = 0;
 
-    virtual Transform GetTransform(std::shared_ptr<IPhysicsBody> body) = 0;
+    virtual TransformComponent GetTransform(std::shared_ptr<IPhysicsBody> body) = 0;
 
-    virtual void SetTransform(std::shared_ptr<IPhysicsBody> body, const Transform& t) = 0;
+    virtual void SetTransform(std::shared_ptr<IPhysicsBody> body, const TransformComponent& t) = 0;
 
     virtual const PhysicsStats& GetStats() const = 0;
 };

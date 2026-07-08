@@ -6,20 +6,20 @@
 #include <imgui.h>
 
 #include "../public/log.h"
+#include "../public/resource/manager.h"
 #include "../public/time_util.h"
 #include "../ui/ui.h"
 #include "../window/window.h"
 #include "../world/world.h"
-#include "assets.h"
 #include "engine.h"
 
 namespace yar
 {
-std::shared_ptr<IUI>       g_ui;
-std::shared_ptr<IWindow>   g_window;
-std::shared_ptr<IWorld>    g_world;
-std::shared_ptr<IAssets>   g_assets;
-std::shared_ptr<IRenderer> g_renderer;
+std::shared_ptr<IUI>             g_ui;
+std::shared_ptr<IWindow>         g_window;
+std::shared_ptr<IWorld>          g_world;
+std::shared_ptr<ResourceManager> g_resources;
+std::shared_ptr<IRenderer>       g_renderer;
 
 Engine::Engine()
 {
@@ -35,8 +35,7 @@ Engine::Engine()
 
     g_ui = std::make_shared<UI>();
 
-    g_assets = std::make_shared<Assets>();
-    g_assets->Initialize();
+    g_resources = std::make_shared<ResourceManager>();
 
     g_world = std::make_shared<World>();
 

@@ -4,12 +4,7 @@
 
 namespace yar
 {
-enum MaterialQueue
-{
-    QUEUE_OPAQUE,
-    QUEUE_TRANSPARENT,
-    QUEUE_MAX
-};
+
 
 class IMaterial
 {
@@ -37,6 +32,6 @@ class IMaterial
   protected:
     std::string m_name;
 
-    MaterialQueue m_queue;
+
 };
 }; // namespace yar

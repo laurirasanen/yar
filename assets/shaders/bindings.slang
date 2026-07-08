@@ -3,10 +3,12 @@
 
 #define MAT_MVP (mul(objectData.model, globalData->viewProj))
 
-#define TEX_ALBEDO   (  texAlbedo[objectData.texIndices.x])
-#define TEX_ORM      (     texORM[objectData.texIndices.y])
-#define TEX_NORMAL   (  texNormal[objectData.texIndices.z])
-#define TEX_EMISSIVE (texEmissive[objectData.texIndices.w])
+#define UINT32_MAX 4294967295
+
+#define TEX_ALBEDO(uv)   (objectData.texIndices.x < UINT32_MAX ? texAlbedo[objectData.texIndices.x].SampleLevel(0, uv) : float4(1.0, 0, 1.0, 1.0))
+#define TEX_ORM(uv)      (objectData.texIndices.y < UINT32_MAX ? texORM[objectData.texIndices.y].SampleLevel(0, uv).rgb : float3(0, 0.8, 0))
+#define TEX_NORMAL(uv)   (objectData.texIndices.z < UINT32_MAX ? texNormal[objectData.texIndices.z].SampleLevel(0, uv).rgb : float3(0.5, 0.5, 1.0))
+#define TEX_EMISSIVE(uv) (objectData.texIndices.w < UINT32_MAX ? texEmissive[objectData.texIndices.w].SampleLevel(0, uv).rgb : float3(0, 0, 0))
 
 struct ObjectData
 {

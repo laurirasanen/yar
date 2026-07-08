@@ -199,17 +199,17 @@ void Physics::DisableBody(std::shared_ptr<IPhysicsBody> body)
     b3Body_Disable(b->GetBodyID());
 }
 
-Transform Physics::GetTransform(std::shared_ptr<IPhysicsBody> body)
+TransformComponent Physics::GetTransform(std::shared_ptr<IPhysicsBody> body)
 {
     const auto b   = InternalBody(body);
     const auto b3t = b3Body_GetTransform(b->GetBodyID());
-    auto       t   = Transform();
+    auto       t   = TransformComponent();
     t.SetPosition(B3ToGlm(b3t.p));
     t.SetRotation(B3ToGlm(b3t.q));
     return t;
 }
 
-void Physics::SetTransform(std::shared_ptr<IPhysicsBody> body, const Transform& t)
+void Physics::SetTransform(std::shared_ptr<IPhysicsBody> body, const TransformComponent& t)
 {
     const auto b = InternalBody(body);
     b3Body_SetTransform(b->GetBodyID(), GlmToB3(t.GetPosition()), GlmToB3(t.GetRotation()));

@@ -1,16 +1,18 @@
 # Yet Another Renderer
 
-A renderer written in modern C++ and Vulkan.
+A somewhat modern renderer written in C++ and Vulkan.
 
 - C++23
 - Vulkan 1.4
 - SDL3
 - Dear ImGui overlay
-- Slang shader compile at runtime
+- Slang shader compile at runtime (TODO: hot reload)
 - glTF scenes
 - Frustum culling
 - PBR (ORM workflow)
 - Image based lighting
+- ECS
+- Box3D physics
 
 ![Example scene](docs/cobble.gif)
 
@@ -35,17 +37,6 @@ meson compile -C build
 
 ## Acknowledgments
 
-### Papers
-
-- [Brent Burley. Physically Based Shading at Disney. 2012.](https://media.disneyanimation.com/uploads/production/publication_asset/48/asset/s2012_pbs_disney_brdf_notes_v3.pdf)
-
-### Other resources
-
-- [Sascha Willems: Vulkan examples](https://github.com/SaschaWillems/Vulkan) (MIT)
-- [Google: Filament](https://github.com/google/filament) (Apache 2.0)
-- [Krzysztof Narkowicz: ACES Filmic Tone Mapping Curve](https://knarkowicz.wordpress.com/2016/01/06/aces-filmic-tone-mapping-curve/) (CC0 / MIT)
-- [Léna Piquet (Froyok): Custom Bloom Post-Process in Unreal Engine](https://www.froyok.fr/blog/2021-12-ue4-custom-bloom)
-
 ### Third-party depedencies
 - [Box3D](https://github.com/erincatto/box3d) (MIT)
 - [cgltf](https://github.com/jkuhlmann/cgltf) (MIT)
@@ -58,6 +49,15 @@ meson compile -C build
 - [stb](https://github.com/nothings/stb) (MIT / Public Domain)
 - [VulkanMemoryAllocator](https://github.com/GPUOpen-LibrariesAndSDKs/VulkanMemoryAllocator) (MIT)
 - [Vulkan-Headers](https://github.com/KhronosGroup/Vulkan-Headers) (Apache 2.0 / MIT)
+
+### Resources
+
+- [Sascha Willems: Vulkan examples](https://github.com/SaschaWillems/Vulkan) (MIT)
+- [Google: Filament](https://github.com/google/filament) (Apache 2.0)
+- [Krzysztof Narkowicz: ACES Filmic Tone Mapping Curve](https://knarkowicz.wordpress.com/2016/01/06/aces-filmic-tone-mapping-curve/) (CC0 / MIT)
+- [Léna Piquet (Froyok): Custom Bloom Post-Process in Unreal Engine](https://www.froyok.fr/blog/2021-12-ue4-custom-bloom)
+- [Brent Burley: Physically Based Shading at Disney](https://media.disneyanimation.com/uploads/production/publication_asset/48/asset/s2012_pbs_disney_brdf_notes_v3.pdf)
+- [Khronos Vulkan Tutorial: Building a Simple Engine](https://docs.vulkan.org/tutorial/latest/Building_a_Simple_Engine/introduction.html) (CC BY-SA 4.0)
 
 ### Assets
 

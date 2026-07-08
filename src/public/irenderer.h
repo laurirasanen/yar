@@ -6,6 +6,7 @@
 
 #include <cstdint>
 #include <memory>
+#include <vector>
 
 namespace yar
 {
@@ -65,13 +66,56 @@ class IRenderer
         return m_camera;
     }
 
-    virtual void CreateBuffer(
-        std::shared_ptr<IBuffer>& buffer,
-        BufferType                type,
-        void*                     data,
-        uint32_t                  elementSize,
-        uint32_t                  elementCount
+    virtual std::shared_ptr<IBuffer> CreateBuffer(
+        BufferType type,
+        void*      data,
+        uint32_t   elementSize,
+        uint32_t   elementCount
     ) = 0;
+
+    std::shared_ptr<IBuffer> GetIndexBuffer(std::vector<uint32_t> indices)
+    {
+        return CreateBuffer(
+            BufferType::IndexBuffer,
+            indices.data(),
+            sizeof(uint32_t),
+            indices.size()
+        );
+    }
+
+    std::shared_ptr<IBuffer> GetVertexBuffer(
+        std::vector<float> positions,
+        std::vector<float> normals,
+        std::vector<float> tangents,
+        std::vector<float> uvs
+    )
+    {
+        std::vector<float> vertices = {};
+        vertices.resize(positions.size() + normals.size() + tangents.size() + uvs.size());
+
+        const auto vertexCount = positions / 3;
+        const auto elementSize = sizeof(float) * (3 + 3 + 3 + 2);
+
+        for (size_t v = 0; v < vertexCount; v++)
+        {
+            vertices[v + 0] = positions[0];
+            vertices[v + 1] = positions[1];
+            vertices[v + 2] = positions[2];
+
+            vertices[v + 3] = normals[0];
+            vertices[v + 4] = normals[1];
+            vertices[v + 5] = normals[2];
+
+            vertices[v + 6] = tangents[0];
+            vertices[v + 7] = tangents[1];
+            vertices[v + 8] = tangents[2];
+
+            vertices[v + 9]  = uvs[0];
+            vertices[v + 10] = uvs[1];
+        }
+
+        return CreateBuffer(BufferType::VertexBuffer, vertices.data(), elementSize, vertexCount);
+    }
 
     virtual void  Resize()         = 0;
     virtual float GetAspect()      = 0;

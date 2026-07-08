@@ -24,7 +24,7 @@ class MeshNode : public IRenderNode
 
     void UpdateAABB() override
     {
-        const Transform t        = GetGlobalTransform();
+        const TransformComponent t        = GetGlobalTransform();
         const auto      meshAABB = m_mesh->GetAABB().Transform(t);
         m_aabb.min               = meshAABB.min;
         m_aabb.max               = meshAABB.max;

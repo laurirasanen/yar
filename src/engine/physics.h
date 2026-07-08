@@ -61,9 +61,9 @@ class Physics : public IPhysics
 
     void DisableBody(std::shared_ptr<IPhysicsBody> body) override;
 
-    Transform GetTransform(std::shared_ptr<IPhysicsBody> body) override;
+    TransformComponent GetTransform(std::shared_ptr<IPhysicsBody> body) override;
 
-    void SetTransform(std::shared_ptr<IPhysicsBody> body, const Transform& t) override;
+    void SetTransform(std::shared_ptr<IPhysicsBody> body, const TransformComponent& t) override;
 
     const PhysicsStats& GetStats() const override
     {
