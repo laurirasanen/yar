@@ -1,11 +1,11 @@
 #include "assets.h"
 
+#include "../public/renderer/irenderer.h"
 #include "../renderer/renderer.h"
 #include "../renderer/texture.h"
 #include "../world/gltf_node.h"
 #include "../world/mesh_node.h"
 #include "../world/sky.h"
-#include "src/public/irenderer.h"
 
 #include <memory>
 
@@ -52,8 +52,8 @@ std::shared_ptr<INode> Assets::CreateBox(const glm::vec3& extents, const glm::ve
     auto mesh = std::make_shared<Mesh<VertexUnlit>>(vertices, indices, vertexBuffer, indexBuffer);
     // TODO this is a bit silly
     auto renderer = static_pointer_cast<Renderer>(g_renderer);
-    auto material =
-        std::make_shared<MaterialComponent>("box", nullptr, nullptr, nullptr, nullptr, 1.0f, 1.0f, nullptr);
+    auto material = std::make_shared<
+        MaterialComponent>("box", nullptr, nullptr, nullptr, nullptr, 1.0f, 1.0f, nullptr);
     return std::make_shared<MeshNode<VertexUnlit>>("box", mesh, material, RenderPipeline::UNLIT);
 }
 }; // namespace yar

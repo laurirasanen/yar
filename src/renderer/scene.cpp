@@ -1,10 +1,8 @@
 #include "scene.h"
-#include "../public/irenderer.h"
 #include "../public/log.h"
+#include "../public/renderer/irenderer.h"
 #include "../public/time_util.h"
 #include "../renderer/renderer.h"
-#include "../world/mesh_node.h"
-#include "src/public/inode.h"
 
 namespace yar
 {

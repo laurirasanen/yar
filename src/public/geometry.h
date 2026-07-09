@@ -58,7 +58,7 @@ struct AABB
         center = min + 0.5f * (max - min);
     }
 
-    AABB Transform(const TransformComponent& t) const
+    AABB Transform(const Transform& t) const
     {
         const glm::vec3 corners[8] = {
             t.ToGlobalSpace(glm::vec4(min.x, min.y, min.z, 1.0f)),

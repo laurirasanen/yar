@@ -1,7 +1,6 @@
 #pragma once
 
-#include "../public/inode.h"
-#include "../public/irenderer.h"
+#include "../public/renderer/irenderer.h"
 
 #include <map>
 #include <memory>

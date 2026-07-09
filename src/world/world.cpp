@@ -1,10 +1,6 @@
 #include "world.h"
 #include "../engine/physics.h"
-#include "../platform/fs.h"
-#include "../public/irenderer.h"
 #include "../public/log.h"
-#include "../public/transform.h"
-#include "../public/util.h"
 
 namespace yar
 {
@@ -21,29 +17,34 @@ World::~World()
     LOG_INFO("Destroying World");
 }
 
-void World::AddNode(std::shared_ptr<INode> node)
+void World::AddNode(std::shared_ptr<Entity> entity)
 {
-    m_nodes.push_back(node);
+    entity->Initialize();
+    m_entities.push_back(entity);
 }
 
-void World::Frame()
+void World::Update(float deltaTime)
 {
+    for (const auto& ent : m_entities)
+    {
+        ent->Update(deltaTime);
+    }
 }
 
-void World::Tick()
+void World::FixedUpdate(float deltaTime)
 {
     std::scoped_lock worldLock {m_worldMutex};
 
-    for (const auto& node : m_nodes)
+    for (const auto& ent : m_entities)
     {
-        node->EarlyTick();
+        ent->EarlyFixedUpdate(deltaTime);
     }
 
-    g_physics->Step();
+    g_physics->Step(deltaTime);
 
-    for (const auto& node : m_nodes)
+    for (const auto& ent : m_entities)
     {
-        node->Tick();
+        ent->FixedUpate(deltaTime);
     }
 }
 
@@ -54,12 +55,7 @@ void World::Render()
         return;
     }
 
-    g_scene->Update(m_nodes);
+    g_scene->Update(m_entities);
     g_scene->Render();
-
-    if (m_sky)
-    {
-        m_sky->Render();
-    }
 }
 } // namespace yar

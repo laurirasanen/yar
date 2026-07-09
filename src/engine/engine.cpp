@@ -6,7 +6,7 @@
 #include <imgui.h>
 
 #include "../public/log.h"
-#include "../public/resource/manager.h"
+#include "../public/resource/resource.h"
 #include "../public/time_util.h"
 #include "../ui/ui.h"
 #include "../window/window.h"
@@ -146,7 +146,9 @@ void Engine::Frame()
 
     UpdateInput();
 
-    m_app->Frame();
+    const auto deltaTime = static_cast<float>(Time::DeltaFrame);
+
+    m_app->Frame(deltaTime);
 
     const auto camera = g_renderer->GetCamera();
     camera->HandleInput(m_frameInput);
@@ -160,7 +162,7 @@ void Engine::Frame()
         g_renderer->Resize();
     }
 
-    g_world->Frame();
+    g_world->Frame(deltaTime);
 
     if (m_frameInput.WasPressed(Key::KEY_MOUSE_GRAB))
     {
@@ -228,9 +230,9 @@ void Engine::TickThread(const std::stop_token token)
             break;
         }
 
-        m_app->Tick();
-
-        g_world->Tick();
+        const auto deltaTime = static_cast<float>(Time::DeltaTick);
+        m_app->FixedUpate(deltaTime);
+        g_world->FixedUpdate(deltaTime);
 
         m_mainTickSemaphore.release();
     }

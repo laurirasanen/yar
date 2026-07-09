@@ -4,8 +4,8 @@
 
 #include "vulkan/vulkan_core.h"
 
-#include "../public/iwindow.h"
 #include "../public/log.h"
+#include "../public/window/iwindow.h"
 #include "attributes.h"
 #include "common.h"
 

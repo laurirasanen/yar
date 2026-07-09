@@ -126,6 +126,11 @@ class Mesh : public Resource
         return true;
     }
 
+    const std::vector<SubMesh>& GetSubMeshes() const
+    {
+        return m_subMeshes;
+    }
+
   private:
     std::vector<SubMesh> m_subMeshes;
 };

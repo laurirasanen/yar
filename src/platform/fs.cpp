@@ -7,7 +7,7 @@
 #include <unistd.h>
 #endif
 
-#include "fs.h"
+#include "../public/platform/fs.h"
 
 namespace yar
 {

@@ -5,9 +5,9 @@
 #include <SDL3/SDL_events.h>
 
 #include "../platform/memory.h"
-#include "../public/iphysics.h"
-#include "../public/irenderer.h"
+#include "../public/engine/iphysics.h"
 #include "../public/log.h"
+#include "../public/renderer/irenderer.h"
 #include "../public/util.h"
 #include "../renderer/renderer.h"
 #include "ui.h"

@@ -8,9 +8,9 @@
 #include <glm/gtc/quaternion.hpp>
 #include <glm/vec3.hpp>
 
+#include "../public/engine/iengine.h"
 #include "../public/iapp.h"
-#include "../public/iengine.h"
-#include "../public/input.h"
+#include "../public/window/input.h"
 #include "../renderer/renderer.h"
 
 namespace yar

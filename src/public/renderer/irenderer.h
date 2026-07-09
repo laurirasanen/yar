@@ -1,8 +1,7 @@
 #pragma once
 
-#include "camera.h"
+#include "../ecs/camera.h"
 #include "ibuffer.h"
-#include "isky.h"
 
 #include <cstdint>
 #include <memory>
@@ -79,7 +78,7 @@ class IRenderer
             BufferType::IndexBuffer,
             indices.data(),
             sizeof(uint32_t),
-            indices.size()
+            static_cast<uint32_t>(indices.size())
         );
     }
 

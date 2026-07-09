@@ -5,8 +5,8 @@
 #include <SDL3/SDL_video.h>
 #include <vulkan/vulkan_core.h>
 
-#include "../public/input.h"
-#include "../public/iwindow.h"
+#include "../public/window/input.h"
+#include "../public/window/iwindow.h"
 
 namespace yar
 {

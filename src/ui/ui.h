@@ -4,8 +4,8 @@
 
 #include <glm/vec2.hpp>
 
-#include "../public/iui.h"
 #include "../public/time_util.h"
+#include "../public/ui/iui.h"
 #include "../renderer/common.h"
 
 namespace yar

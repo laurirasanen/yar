@@ -1,7 +1,7 @@
 #define STB_IMAGE_IMPLEMENTATION
 #include <stb_image.h>
 
-#include "../public/irenderer.h"
+#include "../public/renderer/irenderer.h"
 #include "../public/resource/texture.h"
 #include "../renderer/renderer.h"
 

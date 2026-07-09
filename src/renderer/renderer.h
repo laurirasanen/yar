@@ -9,7 +9,7 @@
 #include <vulkan/vulkan_core.h>
 
 #include "../public/geometry.h"
-#include "../public/irenderer.h"
+#include "../public/renderer/irenderer.h"
 #include "../window/window.h"
 #include "../world/sky.h"
 #include "buffer.h"

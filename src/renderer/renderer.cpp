@@ -5,10 +5,10 @@
 #include <vulkan/vulkan_core.h>
 
 #include "../public/log.h"
+#include "../public/renderer/irenderer.h"
 #include "../shader/compiler.h"
 #include "data_types.h"
 #include "renderer.h"
-#include "src/public/irenderer.h"
 
 namespace yar
 {

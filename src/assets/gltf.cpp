@@ -1,9 +1,9 @@
 #define CGLTF_IMPLEMENTATION
-#include "gltf.h"
+#include "../public/assets/gltf.h"
 
-#include "../platform/fs.h"
 #include "../platform/memory.h"
 #include "../public/log.h"
+#include "../public/platform/fs.h"
 #include "../public/util.h"
 
 #include <glm/geometric.hpp>
@@ -12,7 +12,7 @@
 
 namespace yar
 {
-bool GLTF::Load(std::string path, std::vector<GltfData>& output)
+bool GLTF::Load(const std::string& path, std::vector<GltfData>& output)
 {
     const auto  full_path = fs_relative_path(path);
     const char* cpath     = full_path.c_str();

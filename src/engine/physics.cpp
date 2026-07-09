@@ -1,10 +1,10 @@
 #include "physics.h"
 
+#include "../public/engine/iphysics.h"
 #include "../public/time_util.h"
 #include "../public/util.h"
 #include "box3d/box3d.h"
 #include "box3d/id.h"
-#include "src/public/iphysics.h"
 
 #include <thread>
 
@@ -101,13 +101,12 @@ Physics::~Physics()
     b3DestroyWorld(m_worldId);
 }
 
-void Physics::Step()
+void Physics::Step(float deltaTime)
 {
-    const auto  startTime    = Time::Now();
-    const int   subStepCount = 4;
-    const float timeStep     = static_cast<float>(Time::DeltaTick);
+    const auto startTime    = Time::Now();
+    const int  subStepCount = 4;
 
-    b3World_Step(m_worldId, timeStep, subStepCount);
+    b3World_Step(m_worldId, deltaTime, subStepCount);
 
     const auto counters      = b3World_GetCounters(m_worldId);
     m_stats.MemoryBytes      = static_cast<size_t>(counters.byteCount);
@@ -122,12 +121,68 @@ void Physics::Step()
     m_stats.UpdateTime       = Time::Now() - startTime;
 }
 
+void Physics::AddShape(
+    std::shared_ptr<IPhysicsBody> body,
+    PhysicsShapeType              type,
+    const glm::vec3&              position,
+    const glm::quat&              rotation,
+    const glm::vec3&              extent
+)
+{
+    const auto b      = InternalBody(body);
+    const auto bodyId = b->GetBodyID();
+
+    b3ShapeDef shapeDef = b3DefaultShapeDef();
+    b3ShapeId  shapeId  = {};
+
+    switch (type)
+    {
+        case PhysicsShapeType::SHAPE_BOX:
+        {
+            b3Transform transform = {};
+            transform.p           = GlmToB3(position);
+            transform.q           = GlmToB3(rotation);
+            b3BoxHull hull = b3MakeTransformedBoxHull(extent.x, extent.y, extent.z, transform);
+            shapeId        = b3CreateHullShape(bodyId, &shapeDef, &hull.base);
+            break;
+        }
+
+        case PhysicsShapeType::SHAPE_SPHERE:
+        {
+            const auto longestAxis = MAX(MAX(extent.x, extent.y), extent.z);
+            b3Sphere   sphere      = {.center = GlmToB3(position), .radius = longestAxis};
+            shapeId                = b3CreateSphereShape(bodyId, &shapeDef, &sphere);
+            break;
+        }
+
+        case PhysicsShapeType::SHAPE_CAPSULE:
+        {
+            const auto radius      = MAX(extent.x, extent.z);
+            const auto offset      = MAX(0.0f, extent.z - radius);
+            const auto localCenter = rotation * glm::vec3 {0, offset, 0};
+            const auto center1     = GlmToB3(position + localCenter);
+            const auto center2     = GlmToB3(position - localCenter);
+            b3Capsule  capsule     = {.center1 = center1, .center2 = center2, .radius = radius};
+            shapeId                = b3CreateCapsuleShape(bodyId, &shapeDef, &capsule);
+            break;
+        }
+
+        default:
+        {
+            throw std::runtime_error(
+                std::format("Unhandled physics shape type {}", static_cast<int>(type))
+            );
+        }
+    }
+
+    auto shape = PhysicsShape(shapeId);
+    b->AddShape(shape);
+}
+
 std::shared_ptr<IPhysicsBody> Physics::CreateBody(
     PhysicsBodyType  type,
-    PhysicsBodyShape shape,
     const glm::vec3& position,
-    const glm::quat& rotation,
-    const glm::vec3  extent
+    const glm::quat& rotation
 )
 {
     b3BodyDef bodyDef = b3DefaultBodyDef();
@@ -135,55 +190,18 @@ std::shared_ptr<IPhysicsBody> Physics::CreateBody(
     bodyDef.position  = GlmToB3(position);
     bodyDef.rotation  = GlmToB3(rotation);
     bodyDef.isEnabled = false;
+    b3BodyId bodyId   = b3CreateBody(m_worldId, &bodyDef);
 
-    b3BodyId bodyId = b3CreateBody(m_worldId, &bodyDef);
-
-    b3ShapeDef shapeDef = b3DefaultShapeDef();
-    b3ShapeId  shapeId  = {};
-
-    switch (shape)
-    {
-        case PhysicsBodyShape::SHAPE_BOX:
-        {
-            b3BoxHull hull = b3MakeBoxHull(extent.x, extent.y, extent.z);
-            shapeId        = b3CreateHullShape(bodyId, &shapeDef, &hull.base);
-            break;
-        }
-
-        case PhysicsBodyShape::SHAPE_SPHERE:
-        {
-            const auto longestAxis = MAX(MAX(extent.x, extent.y), extent.z);
-            b3Sphere   sphere      = {.center = {}, .radius = longestAxis};
-            shapeId                = b3CreateSphereShape(bodyId, &shapeDef, &sphere);
-            break;
-        }
-
-        case PhysicsBodyShape::SHAPE_CAPSULE:
-        {
-            const auto radius = MAX(extent.x, extent.z);
-            const auto offset = MAX(0.0f, extent.z - radius);
-            const auto center = b3Vec3 {.x = 0, .y = offset, .z = 0};
-
-            b3Capsule capsule = {.center1 = center, .center2 = -center, .radius = radius};
-            shapeId           = b3CreateCapsuleShape(bodyId, &shapeDef, &capsule);
-            break;
-        }
-
-        default:
-        {
-            throw std::runtime_error(
-                std::format("Unhandled physics shape {}", static_cast<int>(shape))
-            );
-        }
-    }
-
-    return std::make_shared<PhysicsBody>(bodyId, shapeId);
+    return std::make_shared<PhysicsBody>(bodyId);
 }
 
 void Physics::DestroyBody(std::shared_ptr<IPhysicsBody> body)
 {
     const auto b = InternalBody(body);
-    b3DestroyShape(b->GetShapeID(), false);
+    for (const auto& shape : b->GetShapes())
+    {
+        b3DestroyShape(shape.GetShape(), false);
+    }
     b3DestroyBody(b->GetBodyID());
 }
 
@@ -199,17 +217,17 @@ void Physics::DisableBody(std::shared_ptr<IPhysicsBody> body)
     b3Body_Disable(b->GetBodyID());
 }
 
-TransformComponent Physics::GetTransform(std::shared_ptr<IPhysicsBody> body)
+Transform Physics::GetTransform(std::shared_ptr<IPhysicsBody> body)
 {
     const auto b   = InternalBody(body);
     const auto b3t = b3Body_GetTransform(b->GetBodyID());
-    auto       t   = TransformComponent();
+    auto       t   = Transform();
     t.SetPosition(B3ToGlm(b3t.p));
     t.SetRotation(B3ToGlm(b3t.q));
     return t;
 }
 
-void Physics::SetTransform(std::shared_ptr<IPhysicsBody> body, const TransformComponent& t)
+void Physics::SetTransform(std::shared_ptr<IPhysicsBody> body, const Transform& t)
 {
     const auto b = InternalBody(body);
     b3Body_SetTransform(b->GetBodyID(), GlmToB3(t.GetPosition()), GlmToB3(t.GetRotation()));

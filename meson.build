@@ -150,7 +150,7 @@ engine_deps = [
 ]
 
 engine_src = files([
-  'src/engine/assets/gltf.cpp',
+  'src/assets/gltf.cpp',
 
   'src/engine/engine.cpp',
   'src/engine/entry.cpp',
@@ -162,7 +162,6 @@ engine_src = files([
   'src/renderer/buffer.cpp',
   'src/renderer/descriptor_set.cpp',
   'src/renderer/device.cpp',
-  'src/renderer/image.cpp',
   'src/renderer/instance.cpp',
   'src/renderer/post_process.cpp',
   'src/renderer/renderer.cpp',

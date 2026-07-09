@@ -7,8 +7,8 @@
 
 #include <vulkan/vulkan_core.h>
 
-#include "../public/irenderer.h"
 #include "../public/log.h"
+#include "../public/renderer/irenderer.h"
 #include "common.h"
 #include "device.h"
 

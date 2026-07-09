@@ -3,7 +3,6 @@
 #include <algorithm>
 #include <cfloat>
 
-#include <cstdint>
 #include <glm/ext/matrix_transform.hpp>
 #include <glm/ext/quaternion_float.hpp>
 #include <glm/ext/quaternion_transform.hpp>
@@ -11,11 +10,11 @@
 #include <glm/gtc/constants.hpp>
 #include <glm/matrix.hpp>
 
-#include "../public/input.h"
-#include "../public/time_util.h"
+#include "../geometry.h"
+#include "../time_util.h"
+#include "../transform.h"
+#include "../window/input.h"
 #include "component.h"
-#include "geometry.h"
-#include "transform.h"
 
 namespace yar
 {
@@ -154,7 +153,7 @@ class Camera : public Component
 
     virtual void HandleInput(WindowInput) {};
 
-    TransformComponent transform;
+    Transform transform;
     float     fov;
     float     aspect;
     float     near;

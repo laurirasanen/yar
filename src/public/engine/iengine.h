@@ -1,8 +1,8 @@
 #pragma once
 
+#include "../window/input.h"
+#include "../window/iwindow.h"
 #include "iapp.h"
-#include "input.h"
-#include "iwindow.h"
 
 #include <memory>
 

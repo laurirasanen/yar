@@ -1,17 +1,18 @@
-#include "camera.h"
-#include "entry.h"
+#include "ecs/camera.h"
+#include "ecs/entity.h"
+#include "ecs/rigidbody.h"
+#include "engine/entry.h"
+#include "engine/iengine.h"
+#include "engine/iphysics.h"
 #include "iapp.h"
-#include "iassets.h"
-#include "iengine.h"
-#include "input.h"
-#include "iphysics.h"
-#include "irenderer.h"
 #include "iui.h"
-#include "iwindow.h"
-#include "iworld.h"
 #include "log.h"
+#include "renderer/irenderer.h"
 #include "time_util.h"
 #include "transform.h"
+#include "window/input.h"
+#include "window/iwindow.h"
+#include "world/iworld.h"
 
 using namespace yar;
 
@@ -24,9 +25,12 @@ class ExampleApp : public IApplication
 
         g_window->SetTitle("example");
 
-        m_camera = std::make_shared<NoclipCamera>();
-        m_camera->transform.SetPosition({0.10f, 0.15f, -0.8f});
-        m_camera->Pitch = 10.0f;
+        auto cam = std::make_shared<Entity>("camera");
+        cam->AddComponent<TransformComponent>();
+        cam->AddComponent<NoclipCamera>()->Pitch = 10.0f;
+        cam->GetComponent<TransformComponent>()->GetTransform()->SetPosition({0.10f, 0.15f, -0.8f});
+
+        g_world->AddEntity(cam);
 
         g_renderer->SetCamera(m_camera);
 
@@ -34,7 +38,7 @@ class ExampleApp : public IApplication
         return 0;
     }
 
-    void Frame() override
+    void Update(float deltaTime) override
     {
         if (!m_loaded)
         {
@@ -69,13 +73,11 @@ class ExampleApp : public IApplication
             g_renderer->SetIBLStrength(g_renderer->GetIBLStrength() - 0.05f);
         }
 
-        const float delta = static_cast<float>(Time::DeltaFrame) * 10.0f;
-        TransformComponent   t     = m_flightHelmet->GetTransform();
-        t.AddRotation(delta, VEC_UP);
-        m_flightHelmet->SetTransform(t, true);
+        Transform* t = m_flightHelmet->GetComponent<TransformComponent>()->GetTransform();
+        t->AddRotation(deltaTime * 10.0f, VEC_UP);
     }
 
-    void Tick() override
+    void FixedUpdate(float deltaTime) override
     {
         if (!m_loaded)
         {
@@ -89,67 +91,60 @@ class ExampleApp : public IApplication
 
     void Load()
     {
-        TransformComponent trans = {};
+        auto mesh      = g_resources->Load<Mesh>("assets/scenes/FlightHelmet.glb");
+        m_flightHelmet = std::make_shared<Entity>("flight helmet");
+        auto trans     = m_flightHelmet->AddComponent<TransformComponent>();
+        m_flightHelmet->AddComponent<MeshComponent>(mesh);
+        trans->SetEulerRotation({0, 0, 0});
+        trans->SetPosition({-0.4f, -0.3f, 0});
 
-        m_flightHelmet = g_assets->LoadGLTF("assets/scenes/FlightHelmet.glb");
-        trans.SetEulerRotation({0, 0, 0});
-        trans.SetPosition({-0.4f, -0.3f, 0});
-        m_flightHelmet->SetTransform(trans, true);
-        g_world->AddNode(m_flightHelmet);
+        g_world->AddEntity(m_flightHelmet);
 
-        m_damagedHelmet = g_world->AddPhysicsNode(
-            "helmet",
-            PhysicsBodyType::BODY_DYNAMIC,
-            PhysicsBodyShape::SHAPE_SPHERE,
-            {0, 2.0f, 0},
-            glm::identity<glm::quat>(),
-            {0.2f, 0.2f, 0.2f}
-        );
-        auto meshNode = g_assets->LoadGLTF("assets/scenes/DamagedHelmet.glb");
-        trans         = {};
-        trans.SetEulerRotation({90.0f, 180.0f, 0});
-        trans.SetScale({0.25f, 0.25f, 0.25f});
-        meshNode->SetTransform(trans, true);
-        m_damagedHelmet->AddChild(meshNode);
+        mesh               = g_resources->Load<Mesh>("assets/scenes/DamagedHelmet.glb");
+        auto damagedHelmet = std::make_shared<Entity>("damaged helmet");
+        trans              = damagedHelmet->AddComponent<TransformComponent>();
+        trans->SetPosition({0, 2.0f, 0});
+        trans->SetEulerRotation({90.0f, 180.0f, 0});
+        trans->SetScale({0.25f, 0.25f, 0.25f});
+        damagedHelmet->AddComponent<MeshComponent>(mesh);
+        auto body = damagedHelmet->AddComponent<RigidBody>(PhysicsBodyType::BODY_DYNAMIC);
+        body->AddCollider(PhysicsShapeType::SHAPE_SPHERE, {}, {}, {0.2f, 0.2f, 0.2f});
 
-        auto sky = g_assets->LoadSky("assets/ibl/cobble");
-        g_world->SetSky(sky);
+        g_world->AddEntity(damagedHelmet);
+
+        auto sky = std::make_shared<Entity>("sky");
+        sky->AddComponent<Sky>("assets/ibl/cobble");
+
+        g_world->AddEntity(sky);
+
         g_renderer->SetIBLStrength(0.5f);
         g_renderer->SetExposure(1.0f);
         g_renderer->SetContrast(1.0f);
 
-        m_floor = g_world->AddPhysicsNode(
-            "floor",
-            PhysicsBodyType::BODY_STATIC,
-            PhysicsBodyShape::SHAPE_BOX,
-            {0, -1.0f, 0},
-            glm::angleAxis(-glm::radians(5.0f), VEC_Z),
-            {5.0f, 0.1f, 5.0f}
-        );
-        auto floorMesh = g_assets->CreateBox({5.0f, 0.1f, 5.0f}, {0.5f, 0.5f, 0.5f});
-        m_floor->AddChild(floorMesh);
+        auto floor = std::make_shared<Entity>("floor");
+        trans      = floor->AddComponent<TransformComponent>();
+        trans->SetPosition({0, -1.0, 0});
+        trans->SetRotation(glm::angleAxis(-glm::radians(5.0f), VEC_Z));
+        floor->AddComponent<BoxMesh>({5.0f, 0.1f, 5.0f}, {0.25f, 0.25f, 0.25f});
+        body = floor->AddComponent<RigidBodyComponent>(PhysicsBodyType::BODY_STATIC);
+        body->AddCollider(PhysicsShapeType::SHAPE_BOX, {}, {}, {5.0f, 0.1f, 5.0f});
 
-        m_wall = g_world->AddPhysicsNode(
-            "wall",
-            PhysicsBodyType::BODY_STATIC,
-            PhysicsBodyShape::SHAPE_BOX,
-            {5.0f, 0, 0},
-            glm::identity<glm::quat>(),
-            {0.1f, 5.0f, 5.0f}
-        );
-        auto wallMesh = g_assets->CreateBox({0.1f, 5.0f, 5.0f}, {0.8f, 0.0f, 0.0f});
-        m_wall->AddChild(wallMesh);
+        g_world->AddEntity(floor);
+
+        auto wall = std::make_shared<Entity>("wall");
+        trans     = wall->AddComponent<TransformComponent>();
+        trans->SetPosition({5.0f, 0, 0});
+        wall->AddComponent<BoxMesh>({0.1f, 5.0f, 5.0f}, {0.8f, 0, 0});
+        body = wall->AddComponent<RigidBodyComponent>(PhysicsBodyType::BODY_STATIC);
+        body->AddCollider(PhysicsShapeType::SHAPE_BOX, {}, {}, {0.1f, 5.0f, 5.0f});
+
+        g_world->AddEntity(wall);
     }
 
   private:
     bool m_loaded;
 
-    std::shared_ptr<INode> m_flightHelmet;
-    std::shared_ptr<INode> m_damagedHelmet;
-    std::shared_ptr<INode> m_floor;
-    std::shared_ptr<INode> m_wall;
-
-    std::shared_ptr<Camera> m_camera;
+    std::shared_ptr<Entity> m_flightHelmet;
 };
 
 int main(int argc, char** argv)

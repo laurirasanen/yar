@@ -14,35 +14,10 @@
 #include <glm/matrix.hpp>
 #include <glm/vec3.hpp>
 
-#include "../public/camera.h"
+#include "../public/ecs/camera.h"
 
 namespace yar
 {
-struct VertexEmpty
-{
-};
-
-struct VertexSky
-{
-    glm::vec2 position;
-};
-
-struct VertexUnlit
-{
-    glm::vec3 position;
-    glm::vec3 color;
-};
-
-struct VertexShaded
-{
-    glm::vec3 position;
-    glm::vec3 normal;
-    glm::vec3 tangent;
-    glm::vec2 uv;
-};
-
-typedef uint32_t Index;
-
 struct ShaderGlobalData
 {
     alignas(16) glm::mat4 view;
