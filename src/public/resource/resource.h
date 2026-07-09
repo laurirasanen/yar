@@ -1,8 +1,13 @@
 #pragma once
 
+#include <condition_variable>
 #include <cstdint>
+#include <functional>
 #include <memory>
+#include <mutex>
+#include <queue>
 #include <string>
+#include <thread>
 #include <typeindex>
 #include <unordered_map>
 
@@ -15,13 +20,11 @@ class ResourceHandle
 {
 
   public:
-    ResourceHandle() : m_resourceManager(nullptr)
+    ResourceHandle()
     {
     }
 
-    ResourceHandle(const std::string& id, ResourceManager* manager) :
-        m_resourceId(id),
-        m_resourceManager(manager)
+    ResourceHandle(const std::string& id) : m_resourceId(id)
     {
     }
 
@@ -57,8 +60,7 @@ class ResourceHandle
     }
 
   private:
-    std::string      m_resourceId;
-    ResourceManager* m_resourceManager;
+    std::string m_resourceId;
 };
 
 class Resource
@@ -122,6 +124,25 @@ class Resource
 class ResourceManager
 {
   public:
+    ResourceManager()
+    {
+        m_running      = true;
+        m_workerThread = std::thread([this]() { WorkerThread(); });
+    }
+
+    ~ResourceManager()
+    {
+        {
+            std::scoped_lock lock {m_queueMutex};
+            m_running = false;
+        }
+        m_condition.notify_one();
+        if (m_workerThread.joinable())
+        {
+            m_workerThread.join();
+        }
+    }
+
     template<typename T, typename... Args>
     ResourceHandle<T> Load(const std::string& resourceId, Args&&... args)
     {
@@ -133,7 +154,7 @@ class ResourceManager
         if (it != typeResources.end())
         {
             it->second.refCount++;
-            return ResourceHandle<T>(resourceId, this);
+            return ResourceHandle<T>(resourceId);
         }
 
         auto resource = std::make_unique<T>(resourceId, std::forward<Args>(args)...);
@@ -144,7 +165,20 @@ class ResourceManager
 
         typeResources[resourceId] = {.resource = std::move(resource), .refCount = 1};
 
-        return ResourceHandle<T>(resourceId, this);
+        return ResourceHandle<T>(resourceId);
+    }
+
+    template<typename T>
+    void LoadAsync(const std::string& resourceId, std::function<void(ResourceHandle<T>)> callback)
+    {
+        static_assert(std::is_base_of<Resource, T>::value, "T must derive from Resource");
+
+        std::scoped_lock lock {m_queueMutex};
+        m_taskQueue.push([this, resourceId, callback]() {
+            auto handle = Load<T>(resourceId);
+            callback(handle);
+        });
+        m_condition.notify_one();
     }
 
     template<typename T>
@@ -196,6 +230,33 @@ class ResourceManager
     }
 
   private:
+    void WorkerThread()
+    {
+        while (m_running)
+        {
+            std::function<void()> task;
+            {
+                std::unique_lock<std::mutex> lock(m_queueMutex);
+                m_condition.wait(lock, [this]() { return !m_taskQueue.empty() || !m_running; });
+
+                if (!m_running && m_taskQueue.empty())
+                {
+                    return;
+                }
+
+                task = std::move(m_taskQueue.front());
+                m_taskQueue.pop();
+            }
+            task();
+        }
+    }
+
+    bool                              m_running = false;
+    std::thread                       m_workerThread;
+    std::queue<std::function<void()>> m_taskQueue;
+    std::mutex                        m_queueMutex;
+    std::condition_variable           m_condition;
+
     struct RefCountedResource
     {
         std::unique_ptr<Resource> resource;
@@ -229,31 +290,18 @@ ResourceHandle<T>& ResourceHandle<T>::operator=(ResourceHandle<T>&& other) = def
 template<typename T>
 ResourceHandle<T>::~ResourceHandle()
 {
-    if (!m_resourceManager)
-    {
-        return;
-    }
-    m_resourceManager->Release<T>(m_resourceId);
+    g_resources->Release<T>(m_resourceId);
 }
 
 template<typename T>
 T* ResourceHandle<T>::Get() const
 {
-    if (!m_resourceManager)
-    {
-        return nullptr;
-    }
-    return m_resourceManager->GetResource<T>(m_resourceId);
+    return g_resources->GetResource<T>(m_resourceId);
 }
 
 template<typename T>
 bool ResourceHandle<T>::IsValid() const
 {
-    if (!m_resourceManager)
-    {
-        return false;
-    }
-    return m_resourceManager->GetResource<T>(m_resourceId) != nullptr;
+    return g_resources->GetResource<T>(m_resourceId) != nullptr;
 }
-
 }; // namespace yar
