@@ -1,5 +1,6 @@
 #pragma once
 
+#include "../log.h"
 #include "component.h"
 
 #include <memory>
@@ -41,6 +42,19 @@ class Entity
         for (auto& comp : m_components)
         {
             comp->Update(deltaTime);
+        }
+    }
+
+    void EarlyFixedUpdate(float deltaTime)
+    {
+        if (!m_active)
+        {
+            return;
+        }
+
+        for (auto& comp : m_components)
+        {
+            comp->EarlyFixedUpdate(deltaTime);
         }
     }
 
@@ -95,6 +109,10 @@ class Entity
         auto it = m_componentMap.find(typeID);
         if (it != m_componentMap.end())
         {
+            // Returned value may not be what you expect,
+            // since previous component could have been
+            // constructed with different args.
+            LOG_ERROR("Component already exists");
             return static_cast<T*>(it->second);
         }
 

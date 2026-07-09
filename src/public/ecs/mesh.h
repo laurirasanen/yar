@@ -14,9 +14,13 @@ class MeshComponent : public Component
 
     void Render() override
     {
-        const auto& meshes = m_mesh->Get()->GetSubMeshes();
+        const auto& meshes = m_mesh->GetSubMeshes();
         for (const auto& mesh : meshes)
         {
+            if (mesh->IsCulled())
+            {
+                continue;
+            }
             g_renderer->DrawWithBuffers(mesh->GetVertexBuffer(), mesh->GetIndexBuffer());
         }
     }
@@ -24,7 +28,7 @@ class MeshComponent : public Component
     uint32_t GetIndexCount() const
     {
         uint32_t    count  = 0;
-        const auto& meshes = m_mesh->Get()->GetSubMeshes();
+        const auto& meshes = m_mesh->GetSubMeshes();
         for (const auto& mesh : meshes)
         {
             count += mesh.GetIndexCount();
@@ -35,12 +39,17 @@ class MeshComponent : public Component
     uint32_t GetVertexCount() const
     {
         uint32_t    count  = 0;
-        const auto& meshes = m_mesh->Get()->GetSubMeshes();
+        const auto& meshes = m_mesh->GetSubMeshes();
         for (const auto& mesh : meshes)
         {
             count += mesh.GetVertexCount();
         }
         return count;
+    }
+
+    const ResourceHandle<Mesh>& GetMesh() const
+    {
+        return m_mesh;
     }
 
   private:

@@ -22,7 +22,7 @@ class World : public IWorld
     void AddEntity(std::shared_ptr<Entity> entity) override;
 
     void Update(float deltaTime) override;
-    void FixedUpate(float deltaTime) override;
+    void FixedUpdate(float deltaTime) override;
     void Render() override;
 
   private:

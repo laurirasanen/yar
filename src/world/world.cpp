@@ -1,6 +1,7 @@
 #include "world.h"
 #include "../engine/physics.h"
 #include "../public/log.h"
+#include "../renderer/scene.h"
 
 namespace yar
 {
@@ -44,7 +45,7 @@ void World::FixedUpdate(float deltaTime)
 
     for (const auto& ent : m_entities)
     {
-        ent->FixedUpate(deltaTime);
+        ent->FixedUpdate(deltaTime);
     }
 }
 

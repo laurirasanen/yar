@@ -105,6 +105,10 @@ class Component
     {
     }
 
+    virtual void EarlyFixedUpdate(float deltaTime)
+    {
+    }
+
     virtual void FixedUpdate(float deltaTime)
     {
     }

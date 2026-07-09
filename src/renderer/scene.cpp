@@ -1,8 +1,12 @@
 #include "scene.h"
+#include "../public/ecs/entity.h"
+#include "../public/ecs/mesh.h"
 #include "../public/log.h"
 #include "../public/renderer/irenderer.h"
+#include "../public/resource/mesh.h"
 #include "../public/time_util.h"
 #include "../renderer/renderer.h"
+#include "src/public/ecs/transform.h"
 
 namespace yar
 {
@@ -14,31 +18,33 @@ Scene::~Scene()
 {
 }
 
-void Scene::Update(std::vector<std::shared_ptr<INode>> worldNodes)
+void Scene::Update(const std::vector<std::shared_ptr<Entity>>& entities)
 {
     const auto startTime = Time::Now();
     auto&      stats     = g_renderer->GetRenderStats();
 
-    if (worldNodes.size() <= 0)
-    {
-        stats.SceneUpdateTime = Time::Now() - startTime;
-        return;
-    }
-
-    std::vector<std::shared_ptr<INode>> flattened = {};
-    for (const auto& node : worldNodes)
-    {
-        flattened.append_range(node->GetChildrenRecursive());
-    }
-    flattened.append_range(worldNodes);
-
     m_nodes.clear();
-    for (const auto& node : flattened)
+
+    for (const auto& ent : entities)
     {
-        const auto& r = dynamic_pointer_cast<IRenderNode>(node);
-        if (r != nullptr)
+        const auto mesh  = ent->GetComponent<MeshComponent>();
+        const auto trans = ent->GetComponent<TransformComponent>();
+        if (!mesh || !trans)
         {
-            m_nodes.push_back(r);
+            continue;
+        }
+        const auto t = *trans->GetTransform();
+
+        const auto subMeshes = mesh->GetMesh()->GetSubMeshes();
+        for (const auto& m : subMeshes)
+        {
+            auto node = std::make_shared<Node>();
+            node->SetIndexBuffer(m.GetIndexBuffer());
+            node->SetVertexBuffer(m.GetVertexBuffer());
+            node->SetAABB(m.GetAABB());
+            node->SetMaterial(m.GetMaterial());
+            node->SetTransform(t);
+            m_nodes.push_back(node);
         }
     }
 
@@ -49,26 +55,6 @@ void Scene::Update(std::vector<std::shared_ptr<INode>> worldNodes)
     SortBatches();
 
     UpdateDescriptor();
-}
-
-void Scene::UpdateDescriptor()
-{
-    const auto startTime = Time::Now();
-    auto&      stats     = g_renderer->GetRenderStats();
-
-    // TODO this kinda sucks
-    std::vector<std::shared_ptr<IRenderNode>> flattened = {};
-    flattened.reserve(m_nodes.size());
-
-    for (const auto& batch : m_batches)
-    {
-        flattened.append_range(batch.second.Nodes);
-    }
-
-    const auto renderer = static_pointer_cast<Renderer>(g_renderer);
-    renderer->UpdateDescriptor(flattened);
-
-    stats.SceneDescriptorTime = Time::Now() - startTime;
 }
 
 void Scene::Render()
@@ -124,15 +110,9 @@ void Scene::CullNodes()
     const auto camera    = g_renderer->GetCamera();
     auto&      stats     = g_renderer->GetRenderStats();
 
-    std::vector<std::shared_ptr<IRenderNode>> visible;
-    for (const auto& node : m_nodes)
+    std::vector<std::shared_ptr<Entity>> visible;
+    for (auto& node : m_nodes)
     {
-        if (node->GetMaterial() == nullptr)
-        {
-            LOG_ERROR("Node is missing a material: {}", node->GetName());
-            continue;
-        }
-
         if (node->FrustumCull(camera))
         {
             stats.CulledNodeCount++;
@@ -161,7 +141,7 @@ void Scene::BatchNodes()
 
     for (const auto& node : m_nodes)
     {
-        m_batches[node->GetPipeline()].Nodes.push_back(node);
+        m_batches[node->GetMaterial()].Nodes.push_back(node);
     }
 
     stats.SceneBatchTime = Time::Now() - startTime;
@@ -178,7 +158,7 @@ void Scene::SortBatches()
         std::sort(
             batch.second.Nodes.begin(),
             batch.second.Nodes.end(),
-            [&cameraPos](std::shared_ptr<IRenderNode> a, std::shared_ptr<IRenderNode> b) {
+            [&cameraPos](std::shared_ptr<Node> a, std::shared_ptr<Node> b) {
                 const auto queueA = a->GetMaterial()->GetQueue();
                 const auto queueB = b->GetMaterial()->GetQueue();
 
@@ -201,5 +181,25 @@ void Scene::SortBatches()
 
     auto& stats         = g_renderer->GetRenderStats();
     stats.SceneSortTime = Time::Now() - startTime;
+}
+
+void Scene::UpdateDescriptor()
+{
+    const auto startTime = Time::Now();
+    auto&      stats     = g_renderer->GetRenderStats();
+
+    // TODO this kinda sucks
+    std::vector<std::shared_ptr<Entity>> flattened = {};
+    flattened.reserve(m_nodes.size());
+
+    for (const auto& batch : m_batches)
+    {
+        flattened.append_range(batch.second.Nodes);
+    }
+
+    const auto renderer = static_pointer_cast<Renderer>(g_renderer);
+    renderer->UpdateDescriptor(flattened);
+
+    stats.SceneDescriptorTime = Time::Now() - startTime;
 }
 } // namespace yar

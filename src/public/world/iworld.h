@@ -22,9 +22,9 @@ class IWorld
 
     virtual void AddEntity(std::shared_ptr<Entity> entity) = 0;
 
-    virtual void Update(float deltaTime)     = 0;
-    virtual void FixedUpate(float deltaTime) = 0;
-    virtual void Render()                    = 0;
+    virtual void Update(float deltaTime)      = 0;
+    virtual void FixedUpdate(float deltaTime) = 0;
+    virtual void Render()                     = 0;
 
     void SetEnabled(bool enabled)
     {

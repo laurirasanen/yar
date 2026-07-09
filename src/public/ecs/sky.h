@@ -10,10 +10,10 @@
 
 namespace yar
 {
-class Sky : public Component
+class SkyComponent : public Component
 {
   public:
-    Sky(const std::string& path) : Component(), m_path(path)
+    SkyComponent(const std::string& path) : Component(), m_path(path)
     {
     }
 

@@ -1,6 +1,7 @@
 #pragma once
 
 #include "../public/renderer/irenderer.h"
+#include "node.h"
 
 #include <map>
 #include <memory>
@@ -10,7 +11,7 @@ namespace yar
 {
 struct RenderBatch
 {
-    std::vector<std::shared_ptr<IRenderNode>> Nodes;
+    std::vector<std::shared_ptr<Node>> Nodes;
 };
 
 class Scene
@@ -24,9 +25,7 @@ class Scene
     Scene& operator=(const Scene&) = delete;
     Scene& operator=(Scene&&)      = delete;
 
-    void Update(std::vector<std::shared_ptr<INode>> worldNodes);
-
-    void UpdateDescriptor();
+    void Update(const std::vector<std::shared_ptr<Entity>>& entities);
 
     void Render();
 
@@ -37,8 +36,10 @@ class Scene
 
     void SortBatches();
 
-    std::vector<std::shared_ptr<IRenderNode>> m_nodes;
-    std::map<RenderPipeline, RenderBatch>     m_batches;
+    void UpdateDescriptor();
+
+    std::vector<std::shared_ptr<Node>> m_nodes;
+    std::map<Material, RenderBatch>    m_batches;
 };
 
 extern std::shared_ptr<Scene> g_scene;

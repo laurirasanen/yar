@@ -231,7 +231,7 @@ void Engine::TickThread(const std::stop_token token)
         }
 
         const auto deltaTime = static_cast<float>(Time::DeltaTick);
-        m_app->FixedUpate(deltaTime);
+        m_app->FixedUpdate(deltaTime);
         g_world->FixedUpdate(deltaTime);
 
         m_mainTickSemaphore.release();

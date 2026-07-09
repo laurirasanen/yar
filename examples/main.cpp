@@ -1,6 +1,8 @@
+#include "ecs/boxmesh.h"
 #include "ecs/camera.h"
 #include "ecs/entity.h"
 #include "ecs/rigidbody.h"
+#include "ecs/sky.h"
 #include "engine/entry.h"
 #include "engine/iengine.h"
 #include "engine/iphysics.h"
@@ -93,7 +95,7 @@ class ExampleApp : public IApplication
     {
         auto mesh      = g_resources->Load<Mesh>("assets/scenes/FlightHelmet.glb");
         m_flightHelmet = std::make_shared<Entity>("flight helmet");
-        auto trans     = m_flightHelmet->AddComponent<TransformComponent>();
+        auto trans     = m_flightHelmet->AddComponent<TransformComponent>()->GetTransform();
         m_flightHelmet->AddComponent<MeshComponent>(mesh);
         trans->SetEulerRotation({0, 0, 0});
         trans->SetPosition({-0.4f, -0.3f, 0});
@@ -102,7 +104,7 @@ class ExampleApp : public IApplication
 
         mesh               = g_resources->Load<Mesh>("assets/scenes/DamagedHelmet.glb");
         auto damagedHelmet = std::make_shared<Entity>("damaged helmet");
-        trans              = damagedHelmet->AddComponent<TransformComponent>();
+        trans              = damagedHelmet->AddComponent<TransformComponent>()->GetTransform();
         trans->SetPosition({0, 2.0f, 0});
         trans->SetEulerRotation({90.0f, 180.0f, 0});
         trans->SetScale({0.25f, 0.25f, 0.25f});
@@ -113,7 +115,7 @@ class ExampleApp : public IApplication
         g_world->AddEntity(damagedHelmet);
 
         auto sky = std::make_shared<Entity>("sky");
-        sky->AddComponent<Sky>("assets/ibl/cobble");
+        sky->AddComponent<SkyComponent>("assets/ibl/cobble");
 
         g_world->AddEntity(sky);
 
@@ -122,19 +124,19 @@ class ExampleApp : public IApplication
         g_renderer->SetContrast(1.0f);
 
         auto floor = std::make_shared<Entity>("floor");
-        trans      = floor->AddComponent<TransformComponent>();
-        trans->SetPosition({0, -1.0, 0});
+        trans      = floor->AddComponent<TransformComponent>()->GetTransform();
+        trans->SetPosition({0, -1.0f, 0});
         trans->SetRotation(glm::angleAxis(-glm::radians(5.0f), VEC_Z));
-        floor->AddComponent<BoxMesh>({5.0f, 0.1f, 5.0f}, {0.25f, 0.25f, 0.25f});
+        floor->AddComponent<BoxMeshComponent>({5.0f, 0.1f, 5.0f}, {0.25f, 0.25f, 0.25f});
         body = floor->AddComponent<RigidBodyComponent>(PhysicsBodyType::BODY_STATIC);
         body->AddCollider(PhysicsShapeType::SHAPE_BOX, {}, {}, {5.0f, 0.1f, 5.0f});
 
         g_world->AddEntity(floor);
 
         auto wall = std::make_shared<Entity>("wall");
-        trans     = wall->AddComponent<TransformComponent>();
+        trans     = wall->AddComponent<TransformComponent>()->GetTransform();
         trans->SetPosition({5.0f, 0, 0});
-        wall->AddComponent<BoxMesh>({0.1f, 5.0f, 5.0f}, {0.8f, 0, 0});
+        wall->AddComponent<BoxMeshComponent>({0.1f, 5.0f, 5.0f}, {0.8f, 0, 0});
         body = wall->AddComponent<RigidBodyComponent>(PhysicsBodyType::BODY_STATIC);
         body->AddCollider(PhysicsShapeType::SHAPE_BOX, {}, {}, {0.1f, 5.0f, 5.0f});
 

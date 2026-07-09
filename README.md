@@ -57,7 +57,7 @@ meson compile -C build
 - [Krzysztof Narkowicz: ACES Filmic Tone Mapping Curve](https://knarkowicz.wordpress.com/2016/01/06/aces-filmic-tone-mapping-curve/) (CC0 / MIT)
 - [Léna Piquet (Froyok): Custom Bloom Post-Process in Unreal Engine](https://www.froyok.fr/blog/2021-12-ue4-custom-bloom)
 - [Brent Burley: Physically Based Shading at Disney](https://media.disneyanimation.com/uploads/production/publication_asset/48/asset/s2012_pbs_disney_brdf_notes_v3.pdf)
-- [Khronos Vulkan Tutorial: Building a Simple Engine](https://docs.vulkan.org/tutorial/latest/Building_a_Simple_Engine/introduction.html) (CC BY-SA 4.0)
+- [Khronos: Vulkan Tutorial](https://docs.vulkan.org/tutorial/latest) (CC BY-SA 4.0)
 
 ### Assets
 

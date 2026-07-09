@@ -4,9 +4,10 @@
 #include <glm/vec2.hpp>
 #include <glm/vec3.hpp>
 
+#include "../assets/gltf.h"
 #include "../geometry.h"
-#include "../public/ibuffer.h"
-#include "../renderer/data_types.h"
+#include "../renderer/ibuffer.h"
+#include "../renderer/irenderer.h"
 #include "resource.h"
 
 namespace yar
@@ -17,10 +18,10 @@ class SubMesh
     SubMesh() = delete;
 
     SubMesh(
-        std::shared_ptr<IBuffer>  vertexBuffer,
-        std::shared_ptr<IBuffer>  indexBuffer,
-        std::unique_ptr<Material> material,
-        AABB                      aabb
+        std::shared_ptr<IBuffer> vertexBuffer,
+        std::shared_ptr<IBuffer> indexBuffer,
+        Material                 material,
+        AABB                     aabb
     ) :
         m_vertexCount(vertexBuffer->GetElementCount()),
         m_indexCount(indexBuffer->GetElementCount()),
@@ -65,6 +66,11 @@ class SubMesh
         return m_aabb;
     }
 
+    const Material& GetMaterial() const
+    {
+        return m_material;
+    }
+
   private:
     uint32_t m_vertexCount;
     uint32_t m_indexCount;
@@ -72,7 +78,7 @@ class SubMesh
     std::shared_ptr<IBuffer> m_vertexBuffer;
     std::shared_ptr<IBuffer> m_indexBuffer;
 
-    std::unique_ptr<Material> m_material;
+    Material m_material;
 
     AABB m_aabb;
 };
@@ -84,12 +90,17 @@ class Mesh : public Resource
     {
     }
 
+    const std::vector<SubMesh>& GetSubMeshes() const
+    {
+        return m_subMeshes;
+    }
+
   protected:
-    bool DoLoad()
+    bool DoLoad() override
     {
         std::vector<GltfData> data;
 
-        if (!gltf::Load(m_path, data))
+        if (!GLTF::Load(m_path, data))
         {
             return false;
         }
@@ -120,15 +131,10 @@ class Mesh : public Resource
         return true;
     }
 
-    bool DoUnload()
+    bool DoUnload() override
     {
         m_subMeshes.clear();
         return true;
-    }
-
-    const std::vector<SubMesh>& GetSubMeshes() const
-    {
-        return m_subMeshes;
     }
 
   private:
