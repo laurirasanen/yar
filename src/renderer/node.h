@@ -14,7 +14,13 @@ namespace yar
 class Node
 {
   public:
-    Node() : m_transform({}), m_globalTransform({}), m_aabb({}), m_parent(nullptr), m_children({})
+    Node() :
+        m_transform({}),
+        m_globalTransform({}),
+        m_aabb({}),
+        m_globalAABB({}),
+        m_parent(nullptr),
+        m_children({})
     {
     }
 
@@ -138,9 +144,9 @@ class Node
         m_indexBuffer = buff;
     }
 
-    void SetVertexBuffer(std::shared_ptr<IBuffer> buff)
+    void SetVertices(std::vector<float> v)
     {
-        m_vertexBuffer = buff;
+        m_vertices = v;
     }
 
     std::shared_ptr<IBuffer> GetIndexBuffer()
@@ -148,19 +154,14 @@ class Node
         return m_indexBuffer;
     }
 
-    std::shared_ptr<IBuffer> GetVertexBuffer()
+    const std::vector<float>& GetVertices()
     {
-        return m_vertexBuffer;
+        return m_vertices;
     }
 
     uint32_t GetIndexCount() const
     {
         return m_indexBuffer->GetElementCount();
-    }
-
-    uint32_t GetVertexCount() const
-    {
-        return m_vertexBuffer->GetElementCount();
     }
 
     void SetMaterial(const Material& mat)
@@ -182,6 +183,6 @@ class Node
     std::vector<std::shared_ptr<Node>> m_children;
     Material                           m_material;
     std::shared_ptr<IBuffer>           m_indexBuffer;
-    std::shared_ptr<IBuffer>           m_vertexBuffer;
+    std::vector<float>                 m_vertices;
 };
 }; // namespace yar

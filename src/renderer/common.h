@@ -17,7 +17,8 @@ namespace yar
         throw std::runtime_error(std::format("{} (VkResult: {})", MSG, static_cast<int>(RESULT))); \
     }
 
-#define MAX_OBJECTS 2048
+#define MAX_OBJECTS    2048
+#define VERT_BUFF_SIZE (1 << 22)
 
 constexpr static void ImGuiVkCheck(VkResult result)
 {

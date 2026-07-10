@@ -33,24 +33,25 @@ class Buffer : public IBuffer
 
     template<class IT>
     requires std::contiguous_iterator<IT>
-    void Write(const IT it)
+    void Write(const IT it, size_t offset = 0)
     {
         if (m_bufferLocation != Host)
         {
             throw std::runtime_error("Tried mapping a non-host buffer");
         }
 
-        size_t size = it.size() * m_elementSize;
-        if (size > m_size)
+        size_t size       = it.size() * m_elementSize;
+        size_t byteOffset = offset * m_elementSize;
+        if (byteOffset + size > m_size)
         {
             throw std::runtime_error("Tried to write more data than allocated");
         }
 
-        Write(static_cast<void*>(it), size);
+        Write(static_cast<void*>(it), size, byteOffset);
         m_elementCount = it.size();
     }
 
-    void Write(void* data, size_t size);
+    void Write(void* data, size_t size, size_t offset);
 
     void CopyToDevice(void* commandBuffer, std::shared_ptr<Buffer> deviceBuffer);
 
@@ -89,6 +90,6 @@ class Buffer : public IBuffer
     VmaAllocationInfo m_vmaAllocationInfo;
     VkDeviceAddress   m_vkDeviceAddress;
 
-    bool           m_isMapped = false;
+    bool m_isMapped = false;
 };
 } // namespace yar

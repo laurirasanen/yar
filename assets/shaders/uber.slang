@@ -3,15 +3,7 @@
 #include "math.slang"
 #include "brdf.slang"
 
-struct VertexShaded
-{
-    float3 pos       : POSITION;
-    float3 normal    : NORMAL;
-    float3 tangent   : TANGENT;
-    float2 uv        : TEXCOORD;
-};
-
-struct VertexOutShaded
+struct VertexOut
 {
     float4 pos  : SV_Position;
     float2 uv   : TEXCOORD;
@@ -22,15 +14,17 @@ struct VertexOutShaded
     float3 tangentEye;
 };
 
-[shader("vertex")] VertexOutShaded vertex(
-    VertexShaded        input,
+[shader("vertex")] VertexOut vertex(
+    uint vertexID : SV_VertexID
     uniform GlobalData* globalData,
 ) {
-    VertexOutShaded output;
+    VertexOut output;
+
+    Vertex input = vertices[vertexID];
 
     output.uv = input.uv;
 
-    float4 worldPosition  = mul(float4(input.pos, 1.0), objectData.model);
+    float4 worldPosition  = mul(float4(input.position, 1.0), objectData.model);
 
     float3 worldNormal    = normalize(mul(float4(input.normal, 1.0), objectData.normal).xyz);
     float3 worldTangent   = normalize(mul(float4(input.tangent, 1.0), mul(objectData.model, globalData->view)).xyz);
@@ -57,29 +51,29 @@ struct VertexOutShaded
 }
 
 [shader("pixel")] PixelOut pixel(
-    VertexOutShaded     input,
+    VertexOut input,
     uniform GlobalData* globalData,
 )
 {
     PixelOut output;
 
-    float4 albedo = TEX_ALBEDO(input.uv);
+    const float4 albedo = SampleAlbedo(input.uv);
     if (albedo.a < 0.01)
     {
         discard;
     }
 
-    float3 orm = TEX_ORM(input.uv);
-    float occlusion = pow(orm.r, objectData.materialParams.x);
-    float roughness = orm.g * objectData.materialParams.y;
-    float metalness = orm.b * objectData.materialParams.z;
+    const float3 orm = SampleORM(input.uv);
+    const float occlusion = orm.r;
+    const float roughness = orm.g;
+    const float metallic = orm.b;
 
-    float3 normalMap = TEX_NORMAL(input.uv);
-    float3 normalDir = normalize(normalMap * 2.0 - 1.0);
+    const float3 normalMap = SampleNormal(input.uv);
+    const float3 normalDir = normalize(normalMap * 2.0 - 1.0);
 
-    float3 lightDir = input.tangentLightDir;
-    float3 viewDir = normalize(input.tangentEye - input.tangentPos);
-    float3 halfDir = normalize(viewDir + lightDir);
+    const float3 lightDir = input.tangentLightDir;
+    const float3 viewDir = normalize(input.tangentEye - input.tangentPos);
+    const float3 halfDir = normalize(viewDir + lightDir);
 
     float3 color = BRDF_IBL(
         globalData,
@@ -89,13 +83,11 @@ struct VertexOutShaded
         viewDir,
         albedo.rgb,
         roughness,
-        metalness,
+        metallic,
         occlusion
     );
 
-    const float3 emissiveTex = TEX_EMISSIVE(input.uv);
-    const float3 emissiveStrength = objectData.materialParams2.xyz;
-    const float3 emissive = emissiveTex * emissiveStrength;
+    const float3 emissive = SampleEmissive(input.uv);
     color += emissive;
 
     output.color.rgb = color;

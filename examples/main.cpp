@@ -127,7 +127,7 @@ class ExampleApp : public IApplication
         trans      = floor->AddComponent<TransformComponent>()->GetTransform();
         trans->SetPosition({0, -1.0f, 0});
         trans->SetRotation(glm::angleAxis(-glm::radians(5.0f), VEC_Z));
-        floor->AddComponent<BoxMeshComponent>({5.0f, 0.1f, 5.0f}, {0.25f, 0.25f, 0.25f});
+        floor->AddComponent<BoxMeshComponent>({5.0f, 0.1f, 5.0f});
         body = floor->AddComponent<RigidBodyComponent>(PhysicsBodyType::BODY_STATIC);
         body->AddCollider(PhysicsShapeType::SHAPE_BOX, {}, {}, {5.0f, 0.1f, 5.0f});
 
@@ -136,7 +136,7 @@ class ExampleApp : public IApplication
         auto wall = std::make_shared<Entity>("wall");
         trans     = wall->AddComponent<TransformComponent>()->GetTransform();
         trans->SetPosition({5.0f, 0, 0});
-        wall->AddComponent<BoxMeshComponent>({0.1f, 5.0f, 5.0f}, {0.8f, 0, 0});
+        wall->AddComponent<BoxMeshComponent>({0.1f, 5.0f, 5.0f});
         body = wall->AddComponent<RigidBodyComponent>(PhysicsBodyType::BODY_STATIC);
         body->AddCollider(PhysicsShapeType::SHAPE_BOX, {}, {}, {0.1f, 5.0f, 5.0f});
 

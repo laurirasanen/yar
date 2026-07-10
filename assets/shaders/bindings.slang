@@ -5,37 +5,153 @@
 
 #define UINT32_MAX 4294967295
 
-#define TEX_ALBEDO(uv)   (objectData.texIndices.x < UINT32_MAX ? texAlbedo[objectData.texIndices.x].SampleLevel(0, uv) : float4(1.0, 0, 1.0, 1.0))
-#define TEX_ORM(uv)      (objectData.texIndices.y < UINT32_MAX ? texORM[objectData.texIndices.y].SampleLevel(0, uv).rgb : float3(0, 0.8, 0))
-#define TEX_NORMAL(uv)   (objectData.texIndices.z < UINT32_MAX ? texNormal[objectData.texIndices.z].SampleLevel(0, uv).rgb : float3(0.5, 0.5, 1.0))
-#define TEX_EMISSIVE(uv) (objectData.texIndices.w < UINT32_MAX ? texEmissive[objectData.texIndices.w].SampleLevel(0, uv).rgb : float3(0, 0, 0))
+float4 SampleAlbedo(float2 uv)
+{
+    const uint matIdx = objectData.params[0];
+    const float4 missingAlbedo = float4(1.0, 0, 1.0, 1.0);
+
+    if (matIdx >= UINT32_MAX)
+    {
+        return missingAlbedo;
+    }
+
+    const uint firstTexIdx = materials[matIdx].params[0];
+    const uint texCount = materials[matIdx].params[1];
+    if (texCount < 1)
+    {
+        return missingAlbedo;
+    }
+
+    return textures[firstTexIdx].SampleLevel(0, uv).rgba;
+}
+
+float3 SampleORM(float2 uv)
+{
+    const uint matIdx = objectData.params[0];
+    const float3 missingORM = float3(0, 0.8, 0);
+
+    if (matIdx >= UINT32_MAX)
+    {
+        return missingORM;
+    }
+
+    const uint firstTexIdx = materials[matIdx].params[0];
+    const uint texCount = materials[matIdx].params[1];
+    if (texCount < 2)
+    {
+        return missingORM;
+    }
+
+    float3 texVal = textures[firstTexIdx + 1].SampleLevel(0, uv).rgb;
+
+    const uint firstParamIdx = materials[matIdx].params[2];
+    if (firstParamIdx < UINT32_MAX)
+    {
+        const uint paramCount = materials[matIdx].params[3];
+        if (paramCount > 2)
+        {
+            const float occlusion = parameters[firstParamIdx];
+            const float roughness = parameters[firstParamIdx + 1];
+            const float metallic  = parameters[firstParamIdx + 2];
+            texVal.r  = pow(texVal.r, occlusion);
+            texVal.g *= roughness;
+            texVal.b *= metallic;
+        }
+    }
+
+    return texVal;
+}
+
+float3 SampleNormal(float2 uv)
+{
+    const uint matIdx = objectData.params[0];
+    const float3 missingNormal = float3(0.5, 0.5, 1.0);
+
+    if (matIdx >= UINT32_MAX)
+    {
+        return missingNormal;
+    }
+
+    const uint firstTexIdx = materials[matIdx].params[0];
+    const uint texCount = materials[matIdx].params[1];
+    if (texCount < 3)
+    {
+        return missingNormal;
+    }
+
+    return textures[firstTexIdx + 2].SampleLevel(0, uv).rgb;
+}
+
+float3 SampleEmissive(float2 uv)
+{
+    const uint matIdx = objectData.params[0];
+    const float3 missingEmissive = float3(0.0, 0.0, 0.0);
+
+    if (matIdx >= UINT32_MAX)
+    {
+        return missingEmissive;
+    }
+
+    const uint firstTexIdx = materials[matIdx].params[0];
+    const uint texCount = materials[matIdx].params[1];
+    if (texCount < 4)
+    {
+        return missingEmissive;
+    }
+
+    float3 texVal = textures[firstTexIdx + 3].SampleLevel(0, uv).rgb;
+
+    const uint firstParamIdx = materials[matIdx].params[2];
+    if (firstParamIdx < UINT32_MAX)
+    {
+        const uint paramCount = materials[matIdx].params[3];
+        if (paramCount > 5)
+        {
+            texVal.r *= parameters[firstParamIdx + 3];
+            texVal.g *= parameters[firstParamIdx + 4];
+            texVal.b *= parameters[firstParamIdx + 5];
+        }
+    }
+
+    return texVal;
+}
 
 struct ObjectData
 {
     float4x4 model;
     float4x4 normal;
-    // albedo, orm, normal, emissive
-    uint4 texIndices;
-    // occlusion, roughness, metalness, unused
-    float4 materialParams;
-    // xyz = emissive factor, unused
-    float4 materialParams2;
+    // material, unused
+    uint4 params;
+};
+
+struct Vertex
+{
+    float3 position;
+    float3 normal;
+    float3 tangent;
+    float2 uv;
+};
+
+struct Material
+{
+    // first texture, count, first param, count
+    uint4 params;
 };
 
 layout(binding = 0, set = 0)
 ConstantBuffer<ObjectData> objectData;
 
 layout(binding = 1, set = 0)
-Sampler2D texAlbedo[];
+ConstantBuffer<Vertex> vertices;
 
 layout(binding = 2, set = 0)
-Sampler2D texORM[];
+ConstantBuffer<Material> materials;
 
 layout(binding = 3, set = 0)
-Sampler2D texNormal[];
+ConstantBuffer<float> parameters;
 
 layout(binding = 4, set = 0)
-Sampler2D texEmissive[];
+Sampler2D textures[];
 
 // Color, LUT
 layout(binding = 5, set = 0)

@@ -2,11 +2,11 @@
 
 #include <vulkan/vulkan_core.h>
 
-#include "../public/inode.h"
-#include "../public/isky.h"
+#include "../public/ecs/sky.h"
 #include "../renderer/mesh.h"
 #include "buffer.h"
 #include "data_types.h"
+#include "node.h"
 
 #include <memory>
 
@@ -14,11 +14,11 @@ namespace yar
 {
 enum DESC_BINDING : uint32_t
 {
-    BINDING_UBO          = 0u,
-    BINDING_ALBEDO       = 1u,
-    BINDING_ORM          = 2u,
-    BINDING_NORMAL       = 3u,
-    BINDING_EMISSIVE     = 4u,
+    BINDING_OBJECTS      = 0u,
+    BINDING_VERTICES     = 1u,
+    BINDING_MATERIALS    = 2u,
+    BINDING_PARAMS       = 3u,
+    BINDING_TEXTURES     = 4u,
     BINDING_IBL          = 5u,
     BINDING_IBL_FILTERED = 6u,
 };
@@ -35,16 +35,11 @@ class DescriptorSet
     DescriptorSet& operator=(const DescriptorSet&) = delete;
     DescriptorSet& operator=(DescriptorSet&&)      = delete;
 
-    void NewFrame()
-    {
-        m_objectIndex = 0;
-    }
-
     void Alloc();
 
-    void Update(uint32_t frameIndex, const std::vector<std::shared_ptr<IRenderNode>>& nodes);
+    void Update(uint32_t frameIndex, const std::vector<std::shared_ptr<Node>>& nodes);
 
-    void SetSky(std::shared_ptr<ISky> sky);
+    void SetSky(const SkyComponent* sky);
 
     void Bind(
         VkCommandBuffer     commandBuffer,
@@ -63,6 +58,8 @@ class DescriptorSet
     std::vector<VkDescriptorSetLayout>   m_vkLayouts;
     std::vector<VkDescriptorSet>         m_vkSets;
     std::vector<std::shared_ptr<Buffer>> m_objectBuffers;
-    uint32_t                             m_objectIndex;
+    std::vector<std::shared_ptr<Buffer>> m_vertexBuffers;
+    std::vector<std::shared_ptr<Buffer>> m_materialBuffers;
+    std::vector<std::shared_ptr<Buffer>> m_parameterBuffers;
 };
 } // namespace yar

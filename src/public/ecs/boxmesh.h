@@ -11,24 +11,19 @@ namespace yar
 class BoxMeshComponent : public Component
 {
   public:
-    BoxMeshComponent(const glm::vec3& size, const glm::vec3& color) : Component()
+    BoxMeshComponent(const glm::vec3& size) : Component()
     {
-        struct Vertex
-        {
-            glm::vec3 position;
-            glm::vec3 color;
-        };
-
+        const uint32_t vertexCount = 8;
         // clang-format off
-        std::vector<Vertex> vertices = {
-            {.position = {-size.x, -size.y, -size.z}, .color = color},
-            {.position = { size.x, -size.y, -size.z}, .color = color},
-            {.position = {-size.x, -size.y,  size.z}, .color = color},
-            {.position = { size.x, -size.y,  size.z}, .color = color},
-            {.position = {-size.x,  size.y, -size.z}, .color = color},
-            {.position = { size.x,  size.y, -size.z}, .color = color},
-            {.position = {-size.x,  size.y,  size.z}, .color = color},
-            {.position = { size.x,  size.y,  size.z}, .color = color},
+        std::vector<float> vertices = {
+            -size.x, -size.y, -size.z,
+             size.x, -size.y, -size.z,
+            -size.x, -size.y,  size.z,
+             size.x, -size.y,  size.z,
+            -size.x,  size.y, -size.z,
+             size.x,  size.y, -size.z,
+            -size.x,  size.y,  size.z,
+             size.x,  size.y,  size.z,
         };
         std::vector<uint32_t> indices = {
             5, 1, 0, 0, 4, 5,
@@ -39,12 +34,6 @@ class BoxMeshComponent : public Component
             7, 5, 4, 4, 6, 7,
         };
         // clang-format on
-        auto vertexBuffer = g_renderer->CreateBuffer(
-            VertexBuffer,
-            vertices.data(),
-            sizeof(Vertex),
-            static_cast<uint32_t>(vertices.size())
-        );
         auto indexBuffer = g_renderer->CreateBuffer(
             IndexBuffer,
             indices.data(),
@@ -52,28 +41,30 @@ class BoxMeshComponent : public Component
             static_cast<uint32_t>(indices.size())
         );
 
-        auto vertShader = g_resources->Load<Shader>("unlit.slang", SHADER_ENTRY_VERTEX);
-        auto fragShader = g_resources->Load<Shader>("unlit.slang", SHADER_ENTRY_PIXEL);
+        auto vertShader = g_resources->Load<Shader>("uber.slang", SHADER_ENTRY_VERTEX);
+        auto fragShader = g_resources->Load<Shader>("uber.slang", SHADER_ENTRY_PIXEL);
 
         auto material = Material(vertShader, fragShader);
 
-        std::vector<glm::vec3> positions = {};
-        positions.reserve(vertices.size());
-        for (const auto& v : vertices)
+        std::vector<glm::vec3> vecs = {};
+        vecs.resize(vertexCount);
+        for (uint32_t i = 0; i < vertexCount; i++)
         {
-            positions.push_back(v.position);
+            vecs[i].x = vertices[i * 3 + 0];
+            vecs[i].y = vertices[i * 3 + 1];
+            vecs[i].z = vertices[i * 3 + 2];
         }
-        auto aabb = AABB(positions);
+        auto aabb = AABB(vecs);
 
-        m_mesh = SubMesh(vertexBuffer, indexBuffer, material, aabb);
+        m_mesh = std::make_shared<SubMesh>(vertexCount, vertices, indexBuffer, material, aabb);
     }
 
-    const SubMesh& GetSubMesh() const
+    const std::shared_ptr<SubMesh> GetSubMesh() const
     {
         return m_mesh;
     }
 
   private:
-    SubMesh m_mesh;
+    std::shared_ptr<SubMesh> m_mesh;
 };
 }; // namespace yar

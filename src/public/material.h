@@ -1,6 +1,5 @@
 #pragma once
 
-#include "ecs/component.h"
 #include "resource/shader.h"
 #include "resource/texture.h"
 
@@ -11,6 +10,10 @@ namespace yar
 class Material
 {
   public:
+    Material()
+    {
+    }
+
     Material(ResourceHandle<Shader> vert, ResourceHandle<Shader> frag) : m_vert(vert), m_frag(frag)
     {
     }

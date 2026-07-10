@@ -20,14 +20,15 @@ class SubMesh
     SubMesh() = delete;
 
     SubMesh(
-        std::shared_ptr<IBuffer> vertexBuffer,
+        uint32_t                 vertexCount,
+        std::vector<float>       vertices,
         std::shared_ptr<IBuffer> indexBuffer,
         Material                 material,
         AABB                     aabb
     ) :
-        m_vertexCount(vertexBuffer->GetElementCount()),
+        m_vertexCount(vertexCount),
         m_indexCount(indexBuffer->GetElementCount()),
-        m_vertexBuffer(vertexBuffer),
+        m_vertices(vertices),
         m_indexBuffer(indexBuffer),
         m_material(material),
         m_aabb(aabb)
@@ -53,12 +54,12 @@ class SubMesh
         return m_indexCount;
     }
 
-    std::shared_ptr<IBuffer> GetVertexBuffer() const
+    const std::vector<float>& GetVertices() const
     {
-        return m_vertexBuffer;
+        return m_vertices;
     }
 
-    std::shared_ptr<IBuffer> GetIndexBuffer() const
+    const std::shared_ptr<IBuffer> GetIndexBuffer() const
     {
         return m_indexBuffer;
     }
@@ -77,7 +78,7 @@ class SubMesh
     uint32_t m_vertexCount;
     uint32_t m_indexCount;
 
-    std::shared_ptr<IBuffer> m_vertexBuffer;
+    std::vector<float>       m_vertices;
     std::shared_ptr<IBuffer> m_indexBuffer;
 
     Material m_material;
@@ -109,25 +110,56 @@ class Mesh : public Resource
 
         for (const auto& d : data)
         {
-            auto vertexBuffer =
-                g_renderer->GetVertexBuffer(d.positions, d.normals, d.tangents, d.uvs);
+            const uint32_t     vertexCount = static_cast<uint32_t>(d.positions.size() / 3);
+            std::vector<float> vertices;
+            for (uint32_t i = 0; i < vertexCount; i++)
+            {
+                vertices.push_back(d.positions[i * 3 + 0]);
+                vertices.push_back(d.positions[i * 3 + 1]);
+                vertices.push_back(d.positions[i * 3 + 2]);
+
+                vertices.push_back(d.normals[i * 3 + 0]);
+                vertices.push_back(d.normals[i * 3 + 1]);
+                vertices.push_back(d.normals[i * 3 + 2]);
+
+                vertices.push_back(d.tangents[i * 3 + 0]);
+                vertices.push_back(d.tangents[i * 3 + 1]);
+                vertices.push_back(d.tangents[i * 3 + 2]);
+
+                vertices.push_back(d.uvs[i * 2 + 0]);
+                vertices.push_back(d.uvs[i * 2 + 1]);
+            }
+
             auto indexBuffer = g_renderer->GetIndexBuffer(d.indices);
 
             auto vertShader = g_resources->Load<Shader>("pbr", SHADER_ENTRY_VERTEX);
             auto fragShader = g_resources->Load<Shader>("pbr", SHADER_ENTRY_PIXEL);
 
+            std::vector<ResourceHandle<Texture>> textures =
+                {d.textures.albedo, d.textures.orm, d.textures.normal, d.textures.emissive};
+            std::vector<float> params = {
+                1.0f,
+                d.parameters.roughness,
+                d.parameters.metallic,
+                d.parameters.emissive[0],
+                d.parameters.emissive[1],
+                d.parameters.emissive[2]
+            };
             auto material = Material(vertShader, fragShader);
-            material->SetAlbedo(d.textures.albedo);
-            material->SetORM(d.textures.orm);
-            material->SetNormal(d.textures.normal);
-            material->SetEmissive(d.textures.normal);
-            material->SetMetallic(d.parameters.metallic);
-            material->SetRoughness(d.parameters.roughness);
-            material->SetEmissiveFactor(d.parameters.emissive);
+            material.SetTextures(textures);
+            material.SetParameters(params);
 
-            auto aabb = AABB(d.positions);
+            std::vector<glm::vec3> vecs = {};
+            vecs.resize(vertexCount);
+            for (uint32_t i = 0; i < vertexCount; i++)
+            {
+                vecs[i].x = d.positions[i * 3 + 0];
+                vecs[i].y = d.positions[i * 3 + 1];
+                vecs[i].z = d.positions[i * 3 + 2];
+            }
+            auto aabb = AABB(vecs);
 
-            m_subMeshes.push_back(vertexBuffer, indexBuffer, material, aabb);
+            m_subMeshes.push_back(vertexCount, vertices, indexBuffer, material, aabb);
         }
 
         return true;

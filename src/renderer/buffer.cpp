@@ -122,9 +122,9 @@ Buffer::~Buffer()
     vmaDestroyBuffer(g_vma, m_vkBuffer, m_vmaAllocation);
 }
 
-void Buffer::Write(void* data, size_t size)
+void Buffer::Write(void* data, size_t size, size_t offset)
 {
-    vmaCopyMemoryToAllocation(g_vma, data, m_vmaAllocation, 0, size);
+    vmaCopyMemoryToAllocation(g_vma, data, m_vmaAllocation, offset, size);
 }
 
 void Buffer::CopyToDevice(void* commandBuffer, std::shared_ptr<Buffer> deviceBuffer)

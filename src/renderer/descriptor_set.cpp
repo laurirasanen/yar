@@ -8,6 +8,7 @@
 #include "image.h"
 #include "material.h"
 #include "renderer.h"
+#include "src/public/renderer/ibuffer.h"
 
 namespace yar
 {
@@ -16,40 +17,40 @@ DescriptorSet::DescriptorSet(uint32_t maxFrames)
     const auto  renderer = static_pointer_cast<Renderer>(g_renderer);
     const auto& device   = renderer->GetDevice();
 
-    VkDescriptorSetLayoutBinding uboBinding = {};
-    uboBinding.binding                      = BINDING_UBO;
-    uboBinding.descriptorType               = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC;
-    uboBinding.descriptorCount              = 1;
-    uboBinding.stageFlags         = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT;
-    uboBinding.pImmutableSamplers = nullptr;
+    VkDescriptorSetLayoutBinding objectBinding = {};
+    objectBinding.binding                      = BINDING_OBJECTS;
+    objectBinding.descriptorType               = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC;
+    objectBinding.descriptorCount              = 1;
+    objectBinding.stageFlags         = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT;
+    objectBinding.pImmutableSamplers = nullptr;
 
-    VkDescriptorSetLayoutBinding albedoBinding = {};
-    albedoBinding.binding                      = BINDING_ALBEDO;
-    albedoBinding.descriptorCount              = MAX_OBJECTS;
-    albedoBinding.descriptorType               = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-    albedoBinding.stageFlags                   = VK_SHADER_STAGE_FRAGMENT_BIT;
-    albedoBinding.pImmutableSamplers           = nullptr;
+    VkDescriptorSetLayoutBinding vertexBinding = {};
+    vertexBinding.binding                      = BINDING_VERTICES;
+    vertexBinding.descriptorType               = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC;
+    vertexBinding.descriptorCount              = 1;
+    vertexBinding.stageFlags         = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT;
+    vertexBinding.pImmutableSamplers = nullptr;
 
-    VkDescriptorSetLayoutBinding ormBinding = {};
-    ormBinding.binding                      = BINDING_ORM;
-    ormBinding.descriptorCount              = MAX_OBJECTS;
-    ormBinding.descriptorType               = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-    ormBinding.stageFlags                   = VK_SHADER_STAGE_FRAGMENT_BIT;
-    ormBinding.pImmutableSamplers           = nullptr;
+    VkDescriptorSetLayoutBinding materialBinding = {};
+    materialBinding.binding                      = BINDING_MATERIALS;
+    materialBinding.descriptorType               = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC;
+    materialBinding.descriptorCount              = 1;
+    materialBinding.stageFlags         = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT;
+    materialBinding.pImmutableSamplers = nullptr;
 
-    VkDescriptorSetLayoutBinding normalBinding = {};
-    normalBinding.binding                      = BINDING_NORMAL;
-    normalBinding.descriptorCount              = MAX_OBJECTS;
-    normalBinding.descriptorType               = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-    normalBinding.stageFlags                   = VK_SHADER_STAGE_FRAGMENT_BIT;
-    normalBinding.pImmutableSamplers           = nullptr;
+    VkDescriptorSetLayoutBinding paramsBinding = {};
+    paramsBinding.binding                      = BINDING_PARAMS;
+    paramsBinding.descriptorType               = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC;
+    paramsBinding.descriptorCount              = 1;
+    paramsBinding.stageFlags         = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT;
+    paramsBinding.pImmutableSamplers = nullptr;
 
-    VkDescriptorSetLayoutBinding emissiveBinding = {};
-    emissiveBinding.binding                      = BINDING_EMISSIVE;
-    emissiveBinding.descriptorCount              = MAX_OBJECTS;
-    emissiveBinding.descriptorType               = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-    emissiveBinding.stageFlags                   = VK_SHADER_STAGE_FRAGMENT_BIT;
-    emissiveBinding.pImmutableSamplers           = nullptr;
+    VkDescriptorSetLayoutBinding textureBinding = {};
+    textureBinding.binding                      = BINDING_TEXTURES;
+    textureBinding.descriptorCount              = MAX_OBJECTS;
+    textureBinding.descriptorType               = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+    textureBinding.stageFlags                   = VK_SHADER_STAGE_FRAGMENT_BIT;
+    textureBinding.pImmutableSamplers           = nullptr;
 
     VkDescriptorSetLayoutBinding iblColorBinding = {};
     iblColorBinding.binding                      = BINDING_IBL;
@@ -66,11 +67,11 @@ DescriptorSet::DescriptorSet(uint32_t maxFrames)
     iblLightingBinding.pImmutableSamplers           = nullptr;
 
     const std::array<VkDescriptorSetLayoutBinding, 7> bindings = {
-        uboBinding,
-        albedoBinding,
-        ormBinding,
-        normalBinding,
-        emissiveBinding,
+        objectBinding,
+        vertexBinding,
+        materialBinding,
+        paramsBinding,
+        textureBinding,
         iblColorBinding,
         iblLightingBinding
     };
@@ -128,10 +129,8 @@ void DescriptorSet::Alloc()
         "Failed to allocate descriptor sets"
     );
 
-    std::vector<VkWriteDescriptorSet>   writes      = {};
-    std::vector<VkDescriptorBufferInfo> bufferInfos = {};
-    writes.resize(setCount);
-    bufferInfos.resize(setCount);
+    std::vector<VkWriteDescriptorSet>   writes  = {};
+    std::vector<VkDescriptorBufferInfo> buffers = {};
 
     for (uint32_t i = 0; i < setCount; i++)
     {
@@ -145,17 +144,78 @@ void DescriptorSet::Alloc()
             )
         );
 
-        bufferInfos[i].buffer = m_objectBuffers[i]->GetVkBuffer();
-        bufferInfos[i].offset = 0;
-        bufferInfos[i].range  = sizeof(ShaderObjectData);
+        VkDescriptorBufferInfo buffer = {};
+        buffer.buffer                 = m_objectBuffers[i]->GetVkBuffer();
+        buffer.offset                 = 0;
+        buffer.range                  = sizeof(ShaderObjectData);
+        buffers.push_back(buffer);
 
-        writes[i].sType           = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-        writes[i].dstSet          = m_vkSets[i];
-        writes[i].dstBinding      = BINDING_UBO;
-        writes[i].dstArrayElement = 0;
-        writes[i].descriptorType  = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC;
-        writes[i].descriptorCount = 1;
-        writes[i].pBufferInfo     = &bufferInfos[i];
+        VkWriteDescriptorSet write = {};
+        write.sType                = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+        write.dstSet               = m_vkSets[i];
+        write.dstBinding           = BINDING_OBJECTS;
+        write.dstArrayElement      = 0;
+        write.descriptorType       = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC;
+        write.descriptorCount      = 1;
+        write.pBufferInfo          = &buffers.back();
+        writes.push_back(write);
+
+        m_vertexBuffers.push_back(
+            std::make_shared<Buffer>(
+                device.GetVkDevice(),
+                UniformBuffer,
+                SecretThirdOption,
+                sizeof(float),
+                VERT_BUFF_SIZE
+            )
+        );
+
+        buffer.buffer = m_vertexBuffers[i]->GetVkBuffer();
+        buffer.offset = 0;
+        buffer.range  = sizeof(float) * VERT_BUFF_SIZE;
+        buffers.push_back(buffer);
+
+        write.dstBinding  = BINDING_VERTICES;
+        write.pBufferInfo = &buffers.back();
+        writes.push_back(write);
+
+        m_materialBuffers.push_back(
+            std::make_shared<Buffer>(
+                device.GetVkDevice(),
+                UniformBuffer,
+                SecretThirdOption,
+                sizeof(ShaderMaterialData),
+                MAX_OBJECTS
+            )
+        );
+
+        buffer.buffer = m_materialBuffers[i]->GetVkBuffer();
+        buffer.offset = 0;
+        buffer.range  = sizeof(ShaderMaterialData) * MAX_OBJECTS;
+        buffers.push_back(buffer);
+
+        write.dstBinding  = BINDING_MATERIALS;
+        write.pBufferInfo = &buffers.back();
+        writes.push_back(write);
+
+        m_parameterBuffers.push_back(
+            std::make_shared<Buffer>(
+                device.GetVkDevice(),
+                UniformBuffer,
+                SecretThirdOption,
+                sizeof(float),
+                MAX_OBJECTS * 6
+            )
+        );
+
+        buffer.buffer = m_parameterBuffers[i]->GetVkBuffer();
+        buffer.offset = 0;
+        buffer.range  = sizeof(float) * MAX_OBJECTS * 6;
+        buffers.push_back(buffer);
+
+        write.dstBinding  = BINDING_PARAMS;
+        write.pBufferInfo = &buffers.back();
+        writes.push_back(write);
     }
 
     vkUpdateDescriptorSets(
@@ -167,29 +227,7 @@ void DescriptorSet::Alloc()
     );
 }
 
-constexpr uint32_t FillImageInfo(
-    std::vector<VkDescriptorImageInfo>& infos,
-    const std::shared_ptr<Texture>      tex
-)
-{
-    if (tex != nullptr)
-    {
-        const auto            image = static_pointer_cast<VulkanImage>(tex->GetImage());
-        VkDescriptorImageInfo info  = {};
-        info.imageLayout            = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-        info.imageView              = image->GetVkImageView();
-        info.sampler                = image->GetVkSampler();
-        infos.push_back(info);
-        return static_cast<uint32_t>(infos.size()) - 1;
-    }
-
-    return 0;
-}
-
-void DescriptorSet::Update(
-    uint32_t                                         frameIndex,
-    const std::vector<std::shared_ptr<IRenderNode>>& nodes
-)
+void DescriptorSet::Update(uint32_t frameIndex, const std::vector<std::shared_ptr<Node>>& nodes)
 {
     if (nodes.size() <= 0)
     {
@@ -204,92 +242,62 @@ void DescriptorSet::Update(
     const auto  renderer = static_pointer_cast<Renderer>(g_renderer);
     const auto& device   = renderer->GetDevice();
 
-    std::vector<ShaderObjectData>      objects       = {};
-    std::vector<VkDescriptorImageInfo> albedoInfos   = {};
-    std::vector<VkDescriptorImageInfo> ormInfos      = {};
-    std::vector<VkDescriptorImageInfo> normalInfos   = {};
-    std::vector<VkDescriptorImageInfo> emissiveInfos = {};
-    objects.resize(nodes.size());
-    albedoInfos.reserve(nodes.size() + 1);
-    ormInfos.reserve(nodes.size() + 1);
-    normalInfos.reserve(nodes.size() + 1);
-    emissiveInfos.reserve(nodes.size() + 1);
+    std::vector<VkDescriptorImageInfo> textureInfos = {};
 
-    FillImageInfo(albedoInfos, renderer->GetMissingTexture(TextureType::TEX_ALBEDO));
-    FillImageInfo(ormInfos, renderer->GetMissingTexture(TextureType::TEX_ORM));
-    FillImageInfo(normalInfos, renderer->GetMissingTexture(TextureType::TEX_NORMAL));
-    FillImageInfo(emissiveInfos, renderer->GetMissingTexture(TextureType::TEX_EMISSIVE));
+    uint32_t firstTexIdx   = 0;
+    uint32_t firstParamIdx = 0;
+    uint32_t vertexOffset  = 0;
 
-    for (size_t i = 0; i < nodes.size(); i++)
+    for (uint32_t i = 0; i < nodes.size(); i++)
     {
-        const auto mat      = static_pointer_cast<MaterialComponent>(nodes[i]->GetMaterial());
-        const auto albedo   = mat->GetAlbedo();
-        const auto orm      = mat->GetORM();
-        const auto normal   = mat->GetNormal();
-        const auto emissive = mat->GetEmissive();
+        const auto& mat         = nodes[i]->GetMaterial();
+        const auto  materialIdx = i;
 
-        objects[i].texIndices[OBJECT_TEX_ALBEDO]   = FillImageInfo(albedoInfos, albedo);
-        objects[i].texIndices[OBJECT_TEX_ORM]      = FillImageInfo(ormInfos, orm);
-        objects[i].texIndices[OBJECT_TEX_NORMAL]   = FillImageInfo(normalInfos, normal);
-        objects[i].texIndices[OBJECT_TEX_EMISSIVE] = FillImageInfo(emissiveInfos, emissive);
+        const auto& textures = mat.GetTextures();
+        for (const auto& tex : textures)
+        {
+            VkDescriptorImageInfo info = {};
+            info.imageLayout           = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+            info.imageView             = tex->GetVkImageView();
+            info.sampler               = tex->GetVkSampler();
+            textures.push_back(info);
+        }
 
-        const auto lerp   = static_cast<float>(Time::TickFraction());
-        const auto rt     = nodes[i]->GetInterpolatedTransform(lerp);
-        objects[i].model  = rt.GetCombinedMatrix();
-        objects[i].normal = rt.GetRotationMatrix();
+        const auto& params = mat.GetParameters();
 
-        objects[i].materialParams.x = mat->GetOcclusionFactor();
-        objects[i].materialParams.y = mat->GetRoughnessFactor();
-        objects[i].materialParams.z = mat->GetMetalnessFactor();
-        objects[i].materialParams.w = 0.0f;
+        ShaderMaterialData matData = {};
+        matData.params[0]          = textures.size() > 0 ? firstTexIdx : UINT32_MAX;
+        matData.params[1]          = textures.size();
+        matData.params[2]          = params.size() > 0 ? firstParamIdx : UINT32_MAX;
+        matData.params[3]          = params.size();
 
-        const float* emissiveFactor  = mat->GetEmissiveFactor();
-        objects[i].materialParams2.x = emissiveFactor[0];
-        objects[i].materialParams2.y = emissiveFactor[1];
-        objects[i].materialParams2.z = emissiveFactor[2];
-        objects[i].materialParams2.w = 0.0f;
+        ShaderObjectData object = {};
+        object.params[0]        = materialIdx;
+
+        m_parameterBuffers[frameIndex]->Write(params, firstParamIdx);
+        m_materialBuffers[frameIndex]
+            ->Write(&matData, sizeof(ShaderMaterialData), materialIdx * sizeof(ShaderMaterialData));
+        m_objectBuffers[frameIndex]
+            ->Write(&object, sizeof(ShaderObjectData), i * sizeof(ShaderObjectData));
+
+        const auto& vertices = nodes[i]->GetVertices();
+        m_vertexBuffers[frameIndex]->Write(vertices, vertexOffset);
+
+        firstTexIdx += textures.size();
+        firstParamIdx += params.size();
+        vertexOffset += vertices.size();
     }
 
-    m_objectBuffers[frameIndex]->Write(objects.data(), objects.size() * sizeof(ShaderObjectData));
+    VkWriteDescriptorSet textureWrite = {};
+    textureWrite.sType                = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+    textureWrite.dstSet               = m_vkSets[frameIndex];
+    textureWrite.dstBinding           = BINDING_TEXTURES;
+    textureWrite.dstArrayElement      = 0;
+    textureWrite.descriptorType       = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+    textureWrite.descriptorCount      = static_cast<uint32_t>(textureInfos.size());
+    textureWrite.pImageInfo           = textureInfos.data();
 
-    VkWriteDescriptorSet albedoWrite = {};
-    albedoWrite.sType                = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-    albedoWrite.dstSet               = m_vkSets[frameIndex];
-    albedoWrite.dstBinding           = BINDING_ALBEDO;
-    albedoWrite.dstArrayElement      = 0;
-    albedoWrite.descriptorType       = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-    albedoWrite.descriptorCount      = static_cast<uint32_t>(albedoInfos.size());
-    albedoWrite.pImageInfo           = albedoInfos.data();
-
-    VkWriteDescriptorSet ormWrite = {};
-    ormWrite.sType                = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-    ormWrite.dstSet               = m_vkSets[frameIndex];
-    ormWrite.dstBinding           = BINDING_ORM;
-    ormWrite.dstArrayElement      = 0;
-    ormWrite.descriptorType       = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-    ormWrite.descriptorCount      = static_cast<uint32_t>(ormInfos.size());
-    ormWrite.pImageInfo           = ormInfos.data();
-
-    VkWriteDescriptorSet normalWrite = {};
-    normalWrite.sType                = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-    normalWrite.dstSet               = m_vkSets[frameIndex];
-    normalWrite.dstBinding           = BINDING_NORMAL;
-    normalWrite.dstArrayElement      = 0;
-    normalWrite.descriptorType       = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-    normalWrite.descriptorCount      = static_cast<uint32_t>(normalInfos.size());
-    normalWrite.pImageInfo           = normalInfos.data();
-
-    VkWriteDescriptorSet emissiveWrite = {};
-    emissiveWrite.sType                = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-    emissiveWrite.dstSet               = m_vkSets[frameIndex];
-    emissiveWrite.dstBinding           = BINDING_EMISSIVE;
-    emissiveWrite.dstArrayElement      = 0;
-    emissiveWrite.descriptorType       = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-    emissiveWrite.descriptorCount      = static_cast<uint32_t>(emissiveInfos.size());
-    emissiveWrite.pImageInfo           = emissiveInfos.data();
-
-    std::array<VkWriteDescriptorSet, 4> writes =
-        {albedoWrite, ormWrite, normalWrite, emissiveWrite};
+    std::array<VkWriteDescriptorSet, 1> writes = {textureWrite};
 
     vkUpdateDescriptorSets(
         device.GetVkDevice(),
@@ -300,22 +308,19 @@ void DescriptorSet::Update(
     );
 
     auto& stats = g_renderer->GetRenderStats();
-    stats.TextureCount += static_cast<uint32_t>(albedoInfos.size());
-    stats.TextureCount += static_cast<uint32_t>(ormInfos.size());
-    stats.TextureCount += static_cast<uint32_t>(normalInfos.size());
-    stats.TextureCount += static_cast<uint32_t>(emissiveInfos.size());
+    stats.TextureCount += static_cast<uint32_t>(textureInfos.size());
 }
 
-void DescriptorSet::SetSky(std::shared_ptr<ISky> sky)
+void DescriptorSet::SetSky(const Sky* sky)
 {
     auto        renderer = static_pointer_cast<Renderer>(g_renderer);
     const auto& device   = renderer->GetDevice();
 
-    const auto     color    = static_pointer_cast<VulkanImage>(sky->GetColor()->GetImage());
-    const auto     lut      = static_pointer_cast<VulkanImage>(sky->GetLUT()->GetImage());
-    const auto     diffuse  = static_pointer_cast<VulkanImage>(sky->GetDiffuse()->GetImage());
-    const auto     specular = static_pointer_cast<VulkanImage>(sky->GetSpecular()->GetImage());
-    const uint32_t setCount = static_cast<uint32_t>(m_vkLayouts.size());
+    const auto                         color         = sky->GetColor();
+    const auto                         lut           = sky->GetLUT();
+    const auto                         diffuse       = sky->GetDiffuse();
+    const auto                         specular      = sky->GetSpecular();
+    const uint32_t                     setCount      = static_cast<uint32_t>(m_vkLayouts.size());
     std::vector<VkWriteDescriptorSet>  writes        = {};
     std::vector<VkDescriptorImageInfo> colorInfos    = {};
     std::vector<VkDescriptorImageInfo> lutInfos      = {};
@@ -331,26 +336,26 @@ void DescriptorSet::SetSky(std::shared_ptr<ISky> sky)
     {
         VkDescriptorImageInfo colorInfo = {};
         colorInfo.imageLayout           = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-        colorInfo.imageView             = color->GetVkImageView();
-        colorInfo.sampler               = color->GetVkSampler();
+        colorInfo.imageView             = color->GetImageView();
+        colorInfo.sampler               = color->GetSampler();
         colorInfos.push_back(colorInfo);
 
         VkDescriptorImageInfo lutInfo = {};
         lutInfo.imageLayout           = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-        lutInfo.imageView             = lut->GetVkImageView();
-        lutInfo.sampler               = lut->GetVkSampler();
+        lutInfo.imageView             = lut->GetImageView();
+        lutInfo.sampler               = lut->GetSampler();
         lutInfos.push_back(lutInfo);
 
         VkDescriptorImageInfo diffuseInfo = {};
         diffuseInfo.imageLayout           = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-        diffuseInfo.imageView             = diffuse->GetVkImageView();
-        diffuseInfo.sampler               = diffuse->GetVkSampler();
+        diffuseInfo.imageView             = diffuse->GetImageView();
+        diffuseInfo.sampler               = diffuse->GetSampler();
         diffuseInfos.push_back(diffuseInfo);
 
         VkDescriptorImageInfo specularInfo = {};
         specularInfo.imageLayout           = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-        specularInfo.imageView             = specular->GetVkImageView();
-        specularInfo.sampler               = specular->GetVkSampler();
+        specularInfo.imageView             = specular->GetImageView();
+        specularInfo.sampler               = specular->GetSampler();
         specularInfos.push_back(specularInfo);
 
         VkWriteDescriptorSet colorWrite = {};
