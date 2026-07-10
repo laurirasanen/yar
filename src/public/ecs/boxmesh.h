@@ -13,25 +13,58 @@ class BoxMeshComponent : public Component
   public:
     BoxMeshComponent(const glm::vec3& size) : Component()
     {
-        const uint32_t vertexCount = 8;
+        const uint32_t vertexCount = 24;
         // clang-format off
         std::vector<float> vertices = {
-            -size.x, -size.y, -size.z,
-             size.x, -size.y, -size.z,
-            -size.x, -size.y,  size.z,
-             size.x, -size.y,  size.z,
-            -size.x,  size.y, -size.z,
-             size.x,  size.y, -size.z,
-            -size.x,  size.y,  size.z,
-             size.x,  size.y,  size.z,
+            // FRONT 0 - 3
+             size.x,  size.y,  size.z,  0.0f,  0.0f,  1.0f,  1.0f,  0.0f,  0.0f, 0.0f, 0.0f,
+             size.x, -size.y,  size.z,  0.0f,  0.0f,  1.0f,  1.0f,  0.0f,  0.0f, 0.0f, 1.0f,
+            -size.x,  size.y,  size.z,  0.0f,  0.0f,  1.0f,  1.0f,  0.0f,  0.0f, 1.0f, 0.0f,
+            -size.x, -size.y,  size.z,  0.0f,  0.0f,  1.0f,  1.0f,  0.0f,  0.0f, 1.0f, 1.0f,
+
+            // BACK 4 - 7
+             size.x,  size.y, -size.z,  0.0f,  0.0f, -1.0f, -1.0f,  0.0f,  0.0f, 1.0f, 1.0f,
+             size.x, -size.y, -size.z,  0.0f,  0.0f, -1.0f, -1.0f,  0.0f,  0.0f, 1.0f, 0.0f,
+            -size.x,  size.y, -size.z,  0.0f,  0.0f, -1.0f, -1.0f,  0.0f,  0.0f, 0.0f, 1.0f,
+            -size.x, -size.y, -size.z,  0.0f,  0.0f, -1.0f, -1.0f,  0.0f,  0.0f, 0.0f, 0.0f,
+
+            // LEFT 8 - 11
+            size.x,   size.y, -size.z,  1.0f,  0.0f,  0.0f,  0.0f,  0.0f, -1.0f, 1.0f, 1.0f,
+            size.x,  -size.y, -size.z,  1.0f,  0.0f,  0.0f,  0.0f,  0.0f, -1.0f, 1.0f, 0.0f,
+            size.x,   size.y,  size.z,  1.0f,  0.0f,  0.0f,  0.0f,  0.0f, -1.0f, 0.0f, 1.0f,
+            size.x,  -size.y,  size.z,  1.0f,  0.0f,  0.0f,  0.0f,  0.0f, -1.0f, 0.0f, 0.0f,
+
+            // RIGHT 12 - 15
+            -size.x,  size.y, -size.z, -1.0f,  0.0f,  0.0f,  0.0f,  0.0f,  1.0f, 0.0f, 1.0f,
+            -size.x, -size.y, -size.z, -1.0f,  0.0f,  0.0f,  0.0f,  0.0f,  1.0f, 0.0f, 0.0f,
+            -size.x,  size.y,  size.z, -1.0f,  0.0f,  0.0f,  0.0f,  0.0f,  1.0f, 1.0f, 1.0f,
+            -size.x, -size.y,  size.z, -1.0f,  0.0f,  0.0f,  0.0f,  0.0f,  1.0f, 1.0f, 0.0f,
+
+            // TOP 16 - 19
+             size.x,  size.y,  size.z,  0.0f,  1.0f,  0.0f,  0.0f,  1.0f,  0.0f, 1.0f, 1.0f,
+             size.x,  size.y, -size.z,  0.0f,  1.0f,  0.0f,  0.0f,  1.0f,  0.0f, 1.0f, 0.0f,
+            -size.x,  size.y,  size.z,  0.0f,  1.0f,  0.0f,  0.0f,  1.0f,  0.0f, 0.0f, 1.0f,
+            -size.x,  size.y, -size.z,  0.0f,  1.0f,  0.0f,  0.0f,  1.0f,  0.0f, 0.0f, 0.0f,
+
+            // BOTTOM 20 - 23
+             size.x, -size.y,  size.z,  0.0f, -1.0f,  0.0f,  0.0f, -1.0f,  0.0f, 0.0f, 0.0f,
+             size.x, -size.y, -size.z,  0.0f, -1.0f,  0.0f,  0.0f, -1.0f,  0.0f, 0.0f, 1.0f,
+            -size.x, -size.y,  size.z,  0.0f, -1.0f,  0.0f,  0.0f, -1.0f,  0.0f, 1.0f, 0.0f,
+            -size.x, -size.y, -size.z,  0.0f, -1.0f,  0.0f,  0.0f, -1.0f,  0.0f, 1.0f, 1.0f,
         };
         std::vector<uint32_t> indices = {
-            5, 1, 0, 0, 4, 5,
-            4, 0, 2, 2, 6, 4,
-            6, 2, 3, 3, 7, 6,
-            7, 3, 1, 1, 5, 7,
-            3, 0, 1, 2, 0, 3,
-            7, 5, 4, 4, 6, 7,
+            // FRONT
+            0,  3,  2,  1,  3,  0,
+            // BACK
+            6,  7,  4,  4,  7,  5,
+            // LEFT
+            8,  11, 10, 9,  11, 8,
+            // RIGHT
+            14, 15, 12, 12, 15, 13,
+            // TOP
+            16, 19, 18, 17, 19, 16,
+            // BOTTOM
+            22, 23, 20, 20, 23, 21,
         };
         // clang-format on
         auto indexBuffer = g_renderer->CreateBuffer(
@@ -50,9 +83,9 @@ class BoxMeshComponent : public Component
         vecs.resize(vertexCount);
         for (uint32_t i = 0; i < vertexCount; i++)
         {
-            vecs[i].x = vertices[i * 3 + 0];
-            vecs[i].y = vertices[i * 3 + 1];
-            vecs[i].z = vertices[i * 3 + 2];
+            vecs[i].x = vertices[i * 11 + 0];
+            vecs[i].y = vertices[i * 11 + 1];
+            vecs[i].z = vertices[i * 11 + 2];
         }
         auto aabb = AABB(vecs);
 
