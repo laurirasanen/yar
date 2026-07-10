@@ -6,9 +6,11 @@
 
 #include "../assets/gltf.h"
 #include "../geometry.h"
+#include "../material.h"
 #include "../renderer/ibuffer.h"
 #include "../renderer/irenderer.h"
 #include "resource.h"
+#include "src/public/shader/compiler.h"
 
 namespace yar
 {
@@ -111,8 +113,8 @@ class Mesh : public Resource
                 g_renderer->GetVertexBuffer(d.positions, d.normals, d.tangents, d.uvs);
             auto indexBuffer = g_renderer->GetIndexBuffer(d.indices);
 
-            auto vertShader = g_resources->Load<Shader>("uber", ShaderType::Vertex);
-            auto fragShader = g_resources->Load<Shader>("uber", ShaderType::Fragment);
+            auto vertShader = g_resources->Load<Shader>("pbr", SHADER_ENTRY_VERTEX);
+            auto fragShader = g_resources->Load<Shader>("pbr", SHADER_ENTRY_PIXEL);
 
             auto material = Material(vertShader, fragShader);
             material->SetAlbedo(d.textures.albedo);

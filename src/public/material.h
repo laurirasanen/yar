@@ -8,27 +8,11 @@
 
 namespace yar
 {
-enum MaterialQueue
-{
-    QUEUE_OPAQUE,
-    QUEUE_TRANSPARENT,
-    QUEUE_MAX
-};
-
 class Material
 {
   public:
-    Material(ResourceHandle<Shader> vert, ResourceHandle<Shader> frag, MaterialQueue queue) :
-        m_vert(vert),
-        m_frag(frag),
-        m_queue(queue)
+    Material(ResourceHandle<Shader> vert, ResourceHandle<Shader> frag) : m_vert(vert), m_frag(frag)
     {
-#error todo
-    }
-
-    MaterialQueue GetQueue() const
-    {
-        return m_queue;
     }
 
     void SetTextures(const std::vector<ResourceHandle<Texture>>& tex)
@@ -54,7 +38,6 @@ class Material
   private:
     ResourceHandle<Shader> m_vert;
     ResourceHandle<Shader> m_frag;
-    MaterialQueue          m_queue;
 
     std::vector<ResourceHandle<Texture>> m_textures;
     std::vector<float>                   m_parameters;

@@ -2,24 +2,20 @@
 #include "common.slang"
 #include "math.slang"
 
-struct VertexSky
-{
-    float2 pos : POSITION;
-};
-
 struct VertexOutSky
 {
     float4 pos : SV_Position;
+    float2 uv;
 };
 
 [shader("vertex")]
 VertexOutSky vertex(
-    VertexSky           input,
-    uniform GlobalData* globalData,
+    uint vertexID : SV_VertexID
 ) {
     VertexOutSky output;
 
-    output.pos = float4(input.pos, 1.0 - 1e-5, 1.0);
+    output.uv = float2((vertexID << 1) & 2, vertexID & 2);
+    output.pos = float4(output.uv * 2.0f + -1.0f, 1.0 - 1e-5, 1.0f);
 
     return output;
 }
@@ -37,7 +33,6 @@ PixelOut pixel(
 
     float2 uv = SphericalUV(worldDir);
     uv.y = 1.0 -uv.y;
-    // lod has to be explicit here to avoid seams
     float3 color = texIBL[0].SampleLevel(uv, 0).rgb * globalData->settings.w;
 
     output.color = float4(color, 1.0);
