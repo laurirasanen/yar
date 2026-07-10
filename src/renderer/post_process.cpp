@@ -93,7 +93,7 @@ PostProcessPass::PostProcessPass(
 
     const std::vector<VkDescriptorSetLayout> layouts = {m_descriptorSetLayout};
 
-    m_pipeline = std::make_shared<VulkanPipeline<VertexEmpty>>(
+    m_pipeline = std::make_shared<VulkanPipeline>(
         device.GetVkDevice(),
         stages,
         layouts,

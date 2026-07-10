@@ -57,7 +57,7 @@ class PostProcessPass
 
     const char* m_name;
 
-    std::shared_ptr<VulkanPipeline<VertexEmpty>> m_pipeline;
+    std::shared_ptr<VulkanPipeline> m_pipeline;
     VkDescriptorSetLayout                        m_descriptorSetLayout;
     std::vector<VkDescriptorSet>                 m_descriptorSets;
 

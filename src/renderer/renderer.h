@@ -275,72 +275,6 @@ class Renderer : public IRenderer
         }
     }
 
-    void SetMissingTexture(TextureType type, std::shared_ptr<TextureComponent> tex)
-    {
-        switch (type)
-        {
-            case TextureType::TEX_ALBEDO:
-            {
-                m_missingAlbedo = tex;
-                break;
-            }
-
-            case TextureType::TEX_ORM:
-            {
-                m_missingMetalness = tex;
-                break;
-            }
-
-            case TextureType::TEX_NORMAL:
-            {
-                m_missingNormal = tex;
-                break;
-            }
-
-            case TextureType::TEX_EMISSIVE:
-            {
-                m_missingEmissive = tex;
-                break;
-            }
-
-            default:
-            {
-                throw std::runtime_error("Unhandled texture type");
-            }
-        }
-    }
-
-    std::shared_ptr<TextureComponent> GetMissingTexture(TextureType type)
-    {
-        switch (type)
-        {
-            case TextureType::TEX_ALBEDO:
-            {
-                return m_missingAlbedo;
-            }
-
-            case TextureType::TEX_ORM:
-            {
-                return m_missingMetalness;
-            }
-
-            case TextureType::TEX_NORMAL:
-            {
-                return m_missingNormal;
-            }
-
-            case TextureType::TEX_EMISSIVE:
-            {
-                return m_missingEmissive;
-            }
-
-            default:
-            {
-                throw std::runtime_error("Unhandled texture type");
-            }
-        }
-    }
-
     void SetExposure(float exposure) override
     {
         LOG_INFO("Set exposure to {}", exposure);
@@ -424,22 +358,11 @@ class Renderer : public IRenderer
 
     std::shared_ptr<DescriptorSet> m_descriptorSet;
 
-    RenderPipeline m_currentPipeline;
-
     std::vector<std::shared_ptr<Buffer>>           m_shaderGlobalBuffers;
     std::vector<std::shared_ptr<ShaderGlobalData>> m_shaderGlobalData;
-
-    std::shared_ptr<VulkanPipeline<VertexSky>>    m_pipelineSky;
-    std::shared_ptr<VulkanPipeline<VertexUnlit>>  m_pipelineUnlit;
-    std::shared_ptr<VulkanPipeline<VertexShaded>> m_pipelineShaded;
 
     // Hold so we don't call Buffer destructor
     // while still in use by command buffer.
     std::vector<std::shared_ptr<Buffer>> m_frameBuffers;
-
-    std::shared_ptr<TextureComponent> m_missingAlbedo;
-    std::shared_ptr<TextureComponent> m_missingMetalness;
-    std::shared_ptr<TextureComponent> m_missingNormal;
-    std::shared_ptr<TextureComponent> m_missingEmissive;
 };
 } // namespace yar

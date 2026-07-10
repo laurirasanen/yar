@@ -75,104 +75,12 @@ void Renderer::Setup()
 
     g_shaderCompiler = std::make_shared<ShaderCompiler>();
 
-    // TODO: abstract away to materials?
-    size_t size;
-
-    {
-        const void* spirv = g_shaderCompiler->GetSpirv("sky.slang", SHADER_ENTRY_PIXEL, size);
-        if (!spirv)
-        {
-            throw std::runtime_error("failed to load sky fragment shader");
-        }
-
-        auto fragModule = GetShaderCreateInfo(spirv, size);
-
-        spirv = g_shaderCompiler->GetSpirv("sky.slang", SHADER_ENTRY_VERTEX, size);
-        if (!spirv)
-        {
-            throw std::runtime_error("failed to load sky vertex shader");
-        }
-
-        auto vertModule = GetShaderCreateInfo(spirv, size);
-        auto shaderFrag = FillShaderStageCreateInfo(&fragModule, VK_SHADER_STAGE_FRAGMENT_BIT);
-        auto shaderVert = FillShaderStageCreateInfo(&vertModule, VK_SHADER_STAGE_VERTEX_BIT);
-        std::vector stages {shaderFrag, shaderVert};
-
-        m_pipelineSky = std::make_shared<VulkanPipeline<VertexSky>>(
-            m_device.GetVkDevice(),
-            stages,
-            m_descriptorSet->GetLayouts(),
-            m_device.GetColorFormat(),
-            m_device.GetDepthFormat()
-        );
-    }
-
-    {
-        const void* spirv = g_shaderCompiler->GetSpirv("unlit.slang", SHADER_ENTRY_PIXEL, size);
-        if (!spirv)
-        {
-            throw std::runtime_error("failed to load unlit fragment shader");
-        }
-
-        auto fragModule = GetShaderCreateInfo(spirv, size);
-
-        spirv = g_shaderCompiler->GetSpirv("unlit.slang", SHADER_ENTRY_VERTEX, size);
-        if (!spirv)
-        {
-            throw std::runtime_error("failed to load unlit vertex shader");
-        }
-
-        auto vertModule = GetShaderCreateInfo(spirv, size);
-        auto shaderFrag = FillShaderStageCreateInfo(&fragModule, VK_SHADER_STAGE_FRAGMENT_BIT);
-        auto shaderVert = FillShaderStageCreateInfo(&vertModule, VK_SHADER_STAGE_VERTEX_BIT);
-        std::vector stages {shaderFrag, shaderVert};
-
-        m_pipelineUnlit = std::make_shared<VulkanPipeline<VertexUnlit>>(
-            m_device.GetVkDevice(),
-            stages,
-            m_descriptorSet->GetLayouts(),
-            m_device.GetColorFormat(),
-            m_device.GetDepthFormat()
-        );
-    }
-
-    {
-        const void* spirv = g_shaderCompiler->GetSpirv("shaded.slang", SHADER_ENTRY_PIXEL, size);
-        if (!spirv)
-        {
-            throw std::runtime_error("failed to load shaded fragment shader");
-        }
-
-        auto fragModule = GetShaderCreateInfo(spirv, size);
-
-        spirv = g_shaderCompiler->GetSpirv("shaded.slang", SHADER_ENTRY_VERTEX, size);
-        if (!spirv)
-        {
-            throw std::runtime_error("failed to load shaded vertex shader");
-        }
-
-        auto vertModule = GetShaderCreateInfo(spirv, size);
-        auto shaderFrag = FillShaderStageCreateInfo(&fragModule, VK_SHADER_STAGE_FRAGMENT_BIT);
-        auto shaderVert = FillShaderStageCreateInfo(&vertModule, VK_SHADER_STAGE_VERTEX_BIT);
-        std::vector stages {shaderFrag, shaderVert};
-
-        m_pipelineShaded = std::make_shared<VulkanPipeline<VertexShaded>>(
-            m_device.GetVkDevice(),
-            stages,
-            m_descriptorSet->GetLayouts(),
-            m_device.GetColorFormat(),
-            m_device.GetDepthFormat()
-        );
-    }
-
     g_scene = std::make_shared<Scene>();
 }
 
 void Renderer::Begin()
 {
     const auto startTime = Time::Now();
-    m_descriptorSet->NewFrame();
-    m_currentPipeline = RenderPipeline::NONE;
     m_device.Begin();
     m_renderStats.SetupTime = Time::Now() - startTime;
 }

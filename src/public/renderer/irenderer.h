@@ -34,16 +34,6 @@ struct RenderStats
     double   PresentBlockTime;
 };
 
-enum RenderPipeline
-{
-    NONE,
-    SKY,
-    UNLIT,
-    SHADED,
-};
-
-static const char* RenderPipelineNames[] = {"NONE", "SKY", "UNLIT", "SHADED"};
-
 class IRenderer
 {
   public:
@@ -82,40 +72,6 @@ class IRenderer
         );
     }
 
-    std::shared_ptr<IBuffer> GetVertexBuffer(
-        std::vector<float> positions,
-        std::vector<float> normals,
-        std::vector<float> tangents,
-        std::vector<float> uvs
-    )
-    {
-        std::vector<float> vertices = {};
-        vertices.resize(positions.size() + normals.size() + tangents.size() + uvs.size());
-
-        const auto vertexCount = positions / 3;
-        const auto elementSize = sizeof(float) * (3 + 3 + 3 + 2);
-
-        for (size_t v = 0; v < vertexCount; v++)
-        {
-            vertices[v + 0] = positions[0];
-            vertices[v + 1] = positions[1];
-            vertices[v + 2] = positions[2];
-
-            vertices[v + 3] = normals[0];
-            vertices[v + 4] = normals[1];
-            vertices[v + 5] = normals[2];
-
-            vertices[v + 6] = tangents[0];
-            vertices[v + 7] = tangents[1];
-            vertices[v + 8] = tangents[2];
-
-            vertices[v + 9]  = uvs[0];
-            vertices[v + 10] = uvs[1];
-        }
-
-        return CreateBuffer(BufferType::VertexBuffer, vertices.data(), elementSize, vertexCount);
-    }
-
     virtual void  Resize()         = 0;
     virtual float GetAspect()      = 0;
     virtual void  Setup()          = 0;
@@ -127,8 +83,6 @@ class IRenderer
     virtual void  Present()        = 0;
     virtual void  UpdateUniforms() = 0;
     virtual void  WaitForIdle()    = 0;
-
-    virtual void BindPipeline(RenderPipeline pipe) = 0;
 
     virtual void BindDescriptor(uint32_t objectIndex) = 0;
 
