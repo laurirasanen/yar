@@ -6,7 +6,6 @@
 
 #include "../public/log.h"
 #include "../public/renderer/irenderer.h"
-#include "../shader/compiler.h"
 #include "data_types.h"
 #include "renderer.h"
 
@@ -27,9 +26,6 @@ Renderer::~Renderer()
     vkDeviceWaitIdle(m_device.GetVkDevice());
 
     g_scene.reset();
-
-    m_pipelineUnlit.reset();
-    m_pipelineShaded.reset();
 
     m_descriptorSet.reset();
 

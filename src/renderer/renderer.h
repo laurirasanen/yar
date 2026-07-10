@@ -20,7 +20,6 @@
 #include "image.h"
 #include "instance.h"
 #include "mesh.h"
-#include "pipeline.h"
 #include "scene.h"
 
 #include <memory>
@@ -120,48 +119,10 @@ class Renderer : public IRenderer
         return vkBuffer;
     }
 
-    void BindPipeline(RenderPipeline pipe) override
+    void BindPipeline(const VkPipeline pipeline, const VkPipelineLayout layout) override
     {
-        if (m_currentPipeline == pipe)
-        {
-            return;
-        }
-
-        m_currentPipeline = pipe;
-
-        auto             commandBuffer = m_device.GetCommandBuffer();
-        auto             currentFrame  = m_device.GetCurrentFrame();
-        VkPipeline       pipeline;
-        VkPipelineLayout layout;
-
-        switch (pipe)
-        {
-            case SKY:
-            {
-                pipeline = m_pipelineSky->GetVkPipeline();
-                layout   = m_pipelineSky->GetVkPipelineLayout();
-                break;
-            }
-
-            case UNLIT:
-            {
-                pipeline = m_pipelineUnlit->GetVkPipeline();
-                layout   = m_pipelineUnlit->GetVkPipelineLayout();
-                break;
-            }
-
-            case SHADED:
-            {
-                pipeline = m_pipelineShaded->GetVkPipeline();
-                layout   = m_pipelineShaded->GetVkPipelineLayout();
-                break;
-            }
-
-            default:
-            {
-                throw std::runtime_error("unknown pipeline");
-            }
-        }
+        auto commandBuffer = m_device.GetCommandBuffer();
+        auto currentFrame  = m_device.GetCurrentFrame();
 
         vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline);
         vkCmdPushConstants(
@@ -180,43 +141,16 @@ class Renderer : public IRenderer
         return m_shaderGlobalBuffers[currentFrame];
     }
 
-    void UpdateDescriptor(const std::vector<std::shared_ptr<IRenderNode>>& nodes)
+    void UpdateDescriptor(const std::vector<std::shared_ptr<Node>>& nodes)
     {
         const auto currentFrame = m_device.GetCurrentFrame();
         m_descriptorSet->Update(currentFrame, nodes);
     }
 
-    void BindDescriptor(uint32_t objectIndex) override
+    void BindDescriptor(uint32_t objectIndex, const VkPipelineLayout layout) override
     {
-        const auto       currentFrame  = m_device.GetCurrentFrame();
-        auto             commandBuffer = GetVkCommandBuffer();
-        VkPipelineLayout layout;
-
-        switch (m_currentPipeline)
-        {
-            case SKY:
-            {
-                layout = m_pipelineSky->GetVkPipelineLayout();
-                break;
-            }
-
-            case UNLIT:
-            {
-                layout = m_pipelineUnlit->GetVkPipelineLayout();
-                break;
-            }
-
-            case SHADED:
-            {
-                layout = m_pipelineShaded->GetVkPipelineLayout();
-                break;
-            }
-
-            default:
-            {
-                throw std::runtime_error("Tried to update descriptor with no pipeline");
-            }
-        }
+        const auto currentFrame  = m_device.GetCurrentFrame();
+        auto       commandBuffer = GetVkCommandBuffer();
 
         m_descriptorSet->Bind(
             commandBuffer,
@@ -227,34 +161,20 @@ class Renderer : public IRenderer
         );
     }
 
-    void DrawWithBuffers(
-        const std::shared_ptr<IBuffer> vertexBuffer,
-        const std::shared_ptr<IBuffer> indexBuffer
-    ) override
+    void DrawWithBuffers(const std::shared_ptr<IBuffer> indexBuffer) override
     {
-        if (m_currentPipeline == RenderPipeline::NONE)
-        {
-            LOG_ERROR("Tried to draw with no pipeline");
-            return;
-        }
-
-        auto vertex = static_pointer_cast<Buffer>(vertexBuffer);
-        auto index  = static_pointer_cast<Buffer>(indexBuffer);
+        auto index = static_pointer_cast<Buffer>(indexBuffer);
 
         auto commandBuffer = GetCommandBuffer();
         if (commandBuffer != nullptr)
         {
-            vertex->Bind(commandBuffer);
-
             index->Bind(commandBuffer);
             index->Draw(commandBuffer, 0, 1);
 
-            m_frameBuffers.push_back(vertex);
             m_frameBuffers.push_back(index);
 
             m_renderStats.NodeCount++;
             m_renderStats.IndexCount += index->GetElementCount();
-            m_renderStats.VertexCount += vertex->GetElementCount();
         }
     }
 
@@ -263,11 +183,11 @@ class Renderer : public IRenderer
         return m_device;
     }
 
-    void SetSky(std::shared_ptr<ISky> sky)
+    void SetSky(const SkyComponent* sky)
     {
         m_descriptorSet->SetSky(sky);
 
-        auto mips = sky->GetSpecular()->GetImage()->GetMips();
+        auto mips = sky->GetSpecular()->GetMips();
 
         for (uint32_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++)
         {

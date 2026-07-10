@@ -1,6 +1,7 @@
 #pragma once
 
 #include "../ecs/camera.h"
+#include "../material.h"
 #include "ibuffer.h"
 
 #include <cstdint>
@@ -84,12 +85,11 @@ class IRenderer
     virtual void  UpdateUniforms() = 0;
     virtual void  WaitForIdle()    = 0;
 
-    virtual void BindDescriptor(uint32_t objectIndex) = 0;
+    virtual void BindPipeline(const VkPipeline pipeline, const VkPipelineLayout layout) = 0;
 
-    virtual void DrawWithBuffers(
-        const std::shared_ptr<IBuffer> vertexBuffer,
-        const std::shared_ptr<IBuffer> indexBuffer
-    ) = 0;
+    virtual void BindDescriptor(uint32_t objectIndex, const VkPipelineLayout layout) = 0;
+
+    virtual void DrawWithBuffers(const std::shared_ptr<IBuffer> indexBuffer) = 0;
 
     RenderStats& GetRenderStats()
     {

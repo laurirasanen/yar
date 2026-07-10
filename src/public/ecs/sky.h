@@ -17,6 +17,26 @@ class SkyComponent : public Component
     {
     }
 
+    const ResourceHandle<Texture>& GetColor() const
+    {
+        return m_color;
+    }
+
+    const ResourceHandle<Texture>& GetDiffuse() const
+    {
+        return m_diffuse;
+    }
+
+    const ResourceHandle<Texture>& GetSpecular() const
+    {
+        return m_specular;
+    }
+
+    const ResourceHandle<Texture>& GetLUT() const
+    {
+        return m_lut;
+    }
+
   protected:
     void OnInitialize() override
     {
@@ -39,26 +59,6 @@ class SkyComponent : public Component
 
     void Render() override
     {
-    }
-
-    const ResourceHandle<Texture>& GetColor() const
-    {
-        return m_color;
-    }
-
-    const ResourceHandle<Texture>& GetDiffuse() const
-    {
-        return m_diffuse;
-    }
-
-    const ResourceHandle<Texture>& GetSpecular() const
-    {
-        return m_specular;
-    }
-
-    const ResourceHandle<Texture>& GetLUT() const
-    {
-        return m_lut;
     }
 
   private:

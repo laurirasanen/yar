@@ -84,7 +84,6 @@ PostProcessPass::PostProcessPass(
         allocInfo.descriptorSetCount = 1;
         allocInfo.pSetLayouts        = &m_descriptorSetLayout;
 
-        LOG_DEBUG("ALLOC DESC SET");
         VK_CHECK(
             vkAllocateDescriptorSets(device.GetVkDevice(), &allocInfo, &m_descriptorSets[i]),
             "Failed to allocate descriptor set"
