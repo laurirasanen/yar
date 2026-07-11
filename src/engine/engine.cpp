@@ -73,6 +73,7 @@ Engine::~Engine()
     g_world.reset();
     g_ui.reset();
     g_window.reset();
+    g_resources->UnloadAll();
     g_renderer.reset();
 }
 
@@ -149,7 +150,11 @@ void Engine::Frame()
     m_app->Update(deltaTime);
 
     auto camera = g_renderer->GetCamera();
-    camera->HandleInput(m_frameInput);
+    if (camera != nullptr)
+    {
+        // TODO events
+        camera->HandleInput(m_frameInput);
+    }
 
     if (m_frameInput.wantsResize)
     {

@@ -1,3 +1,4 @@
+#include <cstring>
 #define CGLTF_IMPLEMENTATION
 #include "../public/assets/gltf.h"
 
@@ -90,6 +91,8 @@ bool GLTF::Load(const std::string& path, std::vector<GltfData>& output)
                 cgltf_free(data);
                 return false;
             }
+
+            CalculateTangents(parsedData);
 
             if (!ReadTextures(primitive, parsedData))
             {
@@ -232,12 +235,12 @@ void GLTF::CalculateTangents(GltfData& data)
     const auto             vertexCount = data.positions.size() / 3;
     const auto             positions   = reinterpret_cast<glm::vec3*>(data.positions.data());
     auto                   normals     = reinterpret_cast<glm::vec3*>(data.normals.data());
-    auto                   tangents    = reinterpret_cast<glm::vec3*>(data.tangents.data());
+    std::vector<glm::vec3> tangents    = {};
     std::vector<glm::vec3> bitangents  = {};
     const auto             uvs         = reinterpret_cast<glm::vec2*>(data.uvs.data());
 
+    tangents.resize(vertexCount);
     bitangents.resize(vertexCount);
-    data.tangents.resize(vertexCount * 3);
 
     for (size_t idx = 0; idx < data.indices.size(); idx += 3)
     {
@@ -271,6 +274,9 @@ void GLTF::CalculateTangents(GltfData& data)
         tangents[v] =
             glm::normalize(tangents[v] - normals[v] * glm::dot(normals[v], tangents[v])) * sign;
     }
+
+    data.tangents.resize(vertexCount * 3);
+    memcpy(data.tangents.data(), tangents.data(), data.tangents.size() * sizeof(float));
 }
 
 bool GLTF::ReadTextures(const cgltf_primitive& primitive, GltfData& data)
@@ -311,6 +317,7 @@ bool GLTF::ReadTextures(const cgltf_primitive& primitive, GltfData& data)
     data.textures.orm      = ReadTexture(ormView, TextureType::TEX_ORM);
     data.textures.normal   = ReadTexture(normalView, TextureType::TEX_NORMAL);
     data.textures.emissive = ReadTexture(emissiveView, TextureType::TEX_EMISSIVE);
+    return true;
 }
 
 ResourceHandle<Texture> GLTF::ReadTexture(const cgltf_texture_view* view, TextureType type)

@@ -24,7 +24,7 @@ namespace yar
 class Camera : public Component
 {
   public:
-    Camera()
+    Camera(Entity* owner) : Component(owner)
     {
         transform = {};
         fov       = 60.0f;
@@ -171,7 +171,7 @@ class Camera : public Component
 class NoclipCamera : public Camera
 {
   public:
-    NoclipCamera() : Camera()
+    NoclipCamera(Entity* owner) : Camera(owner)
     {
         MoveSpeed   = 0.25f;
         Sensitivity = 2.0f;

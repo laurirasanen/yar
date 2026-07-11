@@ -106,8 +106,15 @@ void Scene::Render()
 void Scene::CullNodes()
 {
     const auto startTime = Time::Now();
-    const auto camera    = g_renderer->GetCamera();
     auto&      stats     = g_renderer->GetRenderStats();
+    const auto camera    = g_renderer->GetCamera();
+
+    if (camera == nullptr)
+    {
+        m_nodes.clear();
+        stats.SceneCullTime = Time::Now() - startTime;
+        return;
+    }
 
     std::vector<std::shared_ptr<Node>> visible;
     for (auto& node : m_nodes)
@@ -149,7 +156,13 @@ void Scene::BatchNodes()
 void Scene::SortBatches()
 {
     const auto startTime = Time::Now();
+    auto&      stats     = g_renderer->GetRenderStats();
     const auto camera    = g_renderer->GetCamera();
+    if (camera == nullptr)
+    {
+        stats.SceneSortTime = Time::Now() - startTime;
+        return;
+    }
     const auto cameraPos = camera->transform.GetPosition();
 
     for (auto& batch : m_batches)
@@ -180,7 +193,6 @@ void Scene::SortBatches()
         );
     }
 
-    auto& stats         = g_renderer->GetRenderStats();
     stats.SceneSortTime = Time::Now() - startTime;
 }
 

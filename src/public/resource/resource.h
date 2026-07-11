@@ -20,11 +20,11 @@ class ResourceHandle
 {
 
   public:
-    explicit ResourceHandle()
+    explicit ResourceHandle() : m_initialized(false)
     {
     }
 
-    explicit ResourceHandle(const std::string& id) : m_resourceId(id)
+    explicit ResourceHandle(const std::string& id) : m_resourceId(id), m_initialized(true)
     {
     }
 
@@ -41,6 +41,11 @@ class ResourceHandle
     T* Get() const;
 
     bool IsValid() const;
+
+    bool IsInitialized() const
+    {
+        return m_initialized;
+    }
 
     const std::string& GetId() const
     {
@@ -64,6 +69,7 @@ class ResourceHandle
 
   private:
     std::string m_resourceId;
+    bool        m_initialized;
 };
 
 class Resource
@@ -147,18 +153,25 @@ class ResourceManager
     }
 
     template<typename T>
-    ResourceHandle<T> Copy(const ResourceHandle<T> resource)
+    void AddRef(const ResourceHandle<T>& resource)
     {
         static_assert(std::is_base_of<Resource, T>::value, "T must derive from Resource");
 
         if (!resource.IsValid())
         {
-            throw std::runtime_error("Tried to copy invalid resource");
+            return;
         }
 
         auto& typeResources = m_resources[std::type_index(typeid(T))];
-        typeResources[resource->GetId()].refCount++;
-        return resource;
+        typeResources[resource.GetId()].refCount++;
+    }
+
+    template<typename T>
+    ResourceHandle<T> Copy(const ResourceHandle<T>& resource)
+    {
+        AddRef(resource);
+        auto& typeResources = m_resources[std::type_index(typeid(T))];
+        return typeResources[resource.GetId()];
     }
 
     template<typename T, typename... Args>
@@ -290,30 +303,69 @@ extern std::shared_ptr<ResourceManager> g_resources;
 template<typename T>
 ResourceHandle<T>::ResourceHandle(const ResourceHandle<T>& other)
 {
-    *this = g_resources->Copy<T>(other);
+    if (other.IsInitialized())
+    {
+        g_resources->AddRef(other);
+        m_resourceId  = other.GetId();
+        m_initialized = true;
+    }
+    else
+    {
+        m_resourceId  = "";
+        m_initialized = false;
+    }
 }
 
 template<typename T>
 ResourceHandle<T>& ResourceHandle<T>::operator=(const ResourceHandle<T>& other)
 {
-    return *this = g_resources->Copy<T>(other);
+    if (this == &other)
+    {
+        return *this;
+    }
+
+    if (other.IsInitialized())
+    {
+        g_resources->AddRef(other);
+        m_resourceId  = other.GetId();
+        m_initialized = true;
+    }
+    else
+    {
+        m_resourceId  = "";
+        m_initialized = false;
+    }
+
+    return *this;
 }
 
 template<typename T>
 ResourceHandle<T>::~ResourceHandle()
 {
-    g_resources->Release<T>(m_resourceId);
+    if (m_initialized)
+    {
+        g_resources->Release<T>(m_resourceId);
+    }
 }
 
 template<typename T>
 T* ResourceHandle<T>::Get() const
 {
+    if (!m_initialized)
+    {
+#if !NDEBUG
+        throw std::runtime_error("Tried to Get() from an uinitialized handle");
+#endif
+
+        return nullptr;
+    }
+
     return g_resources->GetResource<T>(m_resourceId);
 }
 
 template<typename T>
 bool ResourceHandle<T>::IsValid() const
 {
-    return g_resources->GetResource<T>(m_resourceId) != nullptr;
+    return m_initialized && g_resources->GetResource<T>(m_resourceId) != nullptr;
 }
 }; // namespace yar

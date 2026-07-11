@@ -11,7 +11,7 @@ namespace yar
 class RigidBodyComponent : public Component
 {
   public:
-    RigidBodyComponent(PhysicsBodyType type) : Component(), m_type(type)
+    RigidBodyComponent(Entity* owner, PhysicsBodyType type) : Component(owner), m_type(type)
     {
         auto transform  = m_owner->GetComponent<TransformComponent>()->GetTransform();
         m_prevTransform = *transform;

@@ -1,5 +1,7 @@
 #include "buffer.h"
 
+#include <format>
+
 namespace yar
 {
 Buffer::Buffer(
@@ -124,6 +126,12 @@ Buffer::~Buffer()
 
 void Buffer::Write(const void* data, size_t size, size_t offset)
 {
+    if (offset + size > m_size)
+    {
+        throw std::runtime_error(
+            std::format("Tried to write past buffer ({} + {} > {})", offset, size, m_size)
+        );
+    }
     vmaCopyMemoryToAllocation(g_vma, data, m_vmaAllocation, offset, size);
 }
 

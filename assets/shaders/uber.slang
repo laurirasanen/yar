@@ -15,8 +15,8 @@ struct VertexOut
 };
 
 [shader("vertex")] VertexOut vertex(
-    uint vertexID : SV_VertexID
-    uniform GlobalData* globalData,
+    uint vertexID : SV_VertexID,
+    uniform GlobalData* globalData
 ) {
     VertexOut output;
 
@@ -52,7 +52,7 @@ struct VertexOut
 
 [shader("pixel")] PixelOut pixel(
     VertexOut input,
-    uniform GlobalData* globalData,
+    uniform GlobalData* globalData
 )
 {
     PixelOut output;

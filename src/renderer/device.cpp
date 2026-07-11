@@ -1046,7 +1046,8 @@ void VulkanDevice::CreateDescriptorPools()
 {
     VkDescriptorPoolSize uboPoolSize {};
     uboPoolSize.type            = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC;
-    uboPoolSize.descriptorCount = MAX_FRAMES_IN_FLIGHT;
+    const uint32_t bufferCount  = 4;
+    uboPoolSize.descriptorCount = bufferCount * MAX_FRAMES_IN_FLIGHT;
 
     VkDescriptorPoolSize imagePoolSize {};
     imagePoolSize.type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;

@@ -22,7 +22,7 @@ float4 SampleAlbedo(float2 uv)
         return missingAlbedo;
     }
 
-    return textures[firstTexIdx].SampleLevel(0, uv).rgba;
+    return textures[firstTexIdx].SampleLevel(uv, 0).rgba;
 }
 
 float3 SampleORM(float2 uv)
@@ -42,7 +42,7 @@ float3 SampleORM(float2 uv)
         return missingORM;
     }
 
-    float3 texVal = textures[firstTexIdx + 1].SampleLevel(0, uv).rgb;
+    float3 texVal = textures[firstTexIdx + 1].SampleLevel(uv, 0).rgb;
 
     const uint firstParamIdx = materials[matIdx].params[2];
     if (firstParamIdx < UINT32_MAX)
@@ -79,7 +79,7 @@ float3 SampleNormal(float2 uv)
         return missingNormal;
     }
 
-    return textures[firstTexIdx + 2].SampleLevel(0, uv).rgb;
+    return textures[firstTexIdx + 2].SampleLevel(uv, 0).rgb;
 }
 
 float3 SampleEmissive(float2 uv)
@@ -99,7 +99,7 @@ float3 SampleEmissive(float2 uv)
         return missingEmissive;
     }
 
-    float3 texVal = textures[firstTexIdx + 3].SampleLevel(0, uv).rgb;
+    float3 texVal = textures[firstTexIdx + 3].SampleLevel(uv, 0).rgb;
 
     const uint firstParamIdx = materials[matIdx].params[2];
     if (firstParamIdx < UINT32_MAX)
@@ -142,13 +142,13 @@ layout(binding = 0, set = 0)
 ConstantBuffer<ObjectData> objectData;
 
 layout(binding = 1, set = 0)
-ConstantBuffer<Vertex> vertices;
+ConstantBuffer<Vertex[]> vertices;
 
 layout(binding = 2, set = 0)
-ConstantBuffer<Material> materials;
+ConstantBuffer<Material[]> materials;
 
 layout(binding = 3, set = 0)
-ConstantBuffer<float> parameters;
+ConstantBuffer<float[]> parameters;
 
 layout(binding = 4, set = 0)
 Sampler2D textures[];

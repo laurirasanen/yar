@@ -8,7 +8,7 @@ namespace yar
 class MeshComponent : public Component
 {
   public:
-    MeshComponent(ResourceHandle<Mesh> mesh) : Component(), m_mesh(mesh)
+    MeshComponent(Entity* owner, ResourceHandle<Mesh> mesh) : Component(owner), m_mesh(mesh)
     {
     }
 

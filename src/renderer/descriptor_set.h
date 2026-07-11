@@ -53,6 +53,7 @@ class DescriptorSet
     }
 
   private:
+    VkDevice                             m_vkDevice;
     std::vector<VkDescriptorSetLayout>   m_vkLayouts;
     std::vector<VkDescriptorSet>         m_vkSets;
     std::vector<std::shared_ptr<Buffer>> m_objectBuffers;

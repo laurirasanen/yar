@@ -12,7 +12,7 @@ namespace yar
 class SkyComponent : public Component
 {
   public:
-    SkyComponent(const std::string& path) : Component(), m_path(path)
+    SkyComponent(Entity* owner, const std::string& path) : Component(owner), m_path(path)
     {
     }
 

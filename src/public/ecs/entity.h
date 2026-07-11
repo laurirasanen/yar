@@ -116,7 +116,7 @@ class Entity
             return static_cast<T*>(it->second);
         }
 
-        auto component         = std::make_unique<T>(std::forward<Args>(args)...);
+        auto component         = std::make_unique<T>(this, std::forward<Args>(args)...);
         T*   componentPtr      = component.get();
         m_componentMap[typeID] = componentPtr;
         m_components.push_back(std::move(component));

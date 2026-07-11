@@ -5,6 +5,7 @@
 #include "../shader/compiler.h"
 #include "resource.h"
 
+#include <cstring>
 #include <format>
 #include <string>
 
@@ -65,8 +66,26 @@ class Shader : public Resource
             );
         }
 
+        VkShaderStageFlagBits stage;
+        if (strcmp(m_entry.c_str(), SHADER_ENTRY_VERTEX) == 0)
+        {
+            stage = VK_SHADER_STAGE_VERTEX_BIT;
+        }
+        else if (strcmp(m_entry.c_str(), SHADER_ENTRY_PIXEL) == 0)
+        {
+            stage = VK_SHADER_STAGE_FRAGMENT_BIT;
+        }
+        else if (strcmp(m_entry.c_str(), SHADER_ENTRY_COMPUTE) == 0)
+        {
+            stage = VK_SHADER_STAGE_COMPUTE_BIT;
+        }
+        else
+        {
+            throw std::runtime_error(std::format("Unhandled shader entry {}", m_entry));
+        }
+
         m_moduleInfo = GetShaderCreateInfo(spirv, size);
-        m_stageInfo  = FillShaderStageCreateInfo(&m_moduleInfo, VK_SHADER_STAGE_FRAGMENT_BIT);
+        m_stageInfo  = FillShaderStageCreateInfo(&m_moduleInfo, stage);
 
         return true;
     }

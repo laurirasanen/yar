@@ -15,6 +15,7 @@ DescriptorSet::DescriptorSet(uint32_t maxFrames)
 {
     const auto  renderer = static_pointer_cast<Renderer>(g_renderer);
     const auto& device   = renderer->GetDevice();
+    m_vkDevice           = device.GetVkDevice();
 
     VkDescriptorSetLayoutBinding objectBinding = {};
     objectBinding.binding                      = BINDING_OBJECTS;
@@ -85,12 +86,7 @@ DescriptorSet::DescriptorSet(uint32_t maxFrames)
     for (uint32_t i = 0; i < maxFrames; i++)
     {
         VK_CHECK(
-            vkCreateDescriptorSetLayout(
-                device.GetVkDevice(),
-                &layoutInfo,
-                nullptr,
-                &m_vkLayouts[i]
-            ),
+            vkCreateDescriptorSetLayout(m_vkDevice, &layoutInfo, nullptr, &m_vkLayouts[i]),
             "Failed to create descriptor set layout"
         );
     }
@@ -98,14 +94,11 @@ DescriptorSet::DescriptorSet(uint32_t maxFrames)
 
 DescriptorSet::~DescriptorSet()
 {
-    const auto  renderer = static_pointer_cast<Renderer>(g_renderer);
-    const auto& device   = renderer->GetDevice();
-
     m_objectBuffers.clear();
 
     for (auto& layout : m_vkLayouts)
     {
-        vkDestroyDescriptorSetLayout(device.GetVkDevice(), layout, nullptr);
+        vkDestroyDescriptorSetLayout(m_vkDevice, layout, nullptr);
     }
 }
 
@@ -124,7 +117,7 @@ void DescriptorSet::Alloc()
     allocInfo.pSetLayouts        = m_vkLayouts.data();
 
     VK_CHECK(
-        vkAllocateDescriptorSets(device.GetVkDevice(), &allocInfo, m_vkSets.data()),
+        vkAllocateDescriptorSets(m_vkDevice, &allocInfo, m_vkSets.data()),
         "Failed to allocate descriptor sets"
     );
 
@@ -135,7 +128,7 @@ void DescriptorSet::Alloc()
     {
         m_objectBuffers.push_back(
             std::make_shared<Buffer>(
-                device.GetVkDevice(),
+                m_vkDevice,
                 UniformBuffer,
                 SecretThirdOption,
                 sizeof(ShaderObjectData),
@@ -160,13 +153,8 @@ void DescriptorSet::Alloc()
         writes.push_back(write);
 
         m_vertexBuffers.push_back(
-            std::make_shared<Buffer>(
-                device.GetVkDevice(),
-                UniformBuffer,
-                SecretThirdOption,
-                sizeof(float),
-                VERT_BUFF_SIZE
-            )
+            std::make_shared<
+                Buffer>(m_vkDevice, UniformBuffer, SecretThirdOption, sizeof(float), VERT_BUFF_SIZE)
         );
 
         buffer.buffer = m_vertexBuffers[i]->GetVkBuffer();
@@ -180,7 +168,7 @@ void DescriptorSet::Alloc()
 
         m_materialBuffers.push_back(
             std::make_shared<Buffer>(
-                device.GetVkDevice(),
+                m_vkDevice,
                 UniformBuffer,
                 SecretThirdOption,
                 sizeof(ShaderMaterialData),
@@ -199,7 +187,7 @@ void DescriptorSet::Alloc()
 
         m_parameterBuffers.push_back(
             std::make_shared<Buffer>(
-                device.GetVkDevice(),
+                m_vkDevice,
                 UniformBuffer,
                 SecretThirdOption,
                 sizeof(float),
@@ -218,7 +206,7 @@ void DescriptorSet::Alloc()
     }
 
     vkUpdateDescriptorSets(
-        device.GetVkDevice(),
+        m_vkDevice,
         static_cast<uint32_t>(writes.size()),
         writes.data(),
         0,
@@ -237,9 +225,6 @@ void DescriptorSet::Update(uint32_t frameIndex, const std::vector<std::shared_pt
     {
         throw std::runtime_error("exceeded max object count");
     }
-
-    const auto  renderer = static_pointer_cast<Renderer>(g_renderer);
-    const auto& device   = renderer->GetDevice();
 
     std::vector<VkDescriptorImageInfo> textureInfos = {};
 
@@ -301,7 +286,7 @@ void DescriptorSet::Update(uint32_t frameIndex, const std::vector<std::shared_pt
     std::array<VkWriteDescriptorSet, 1> writes = {textureWrite};
 
     vkUpdateDescriptorSets(
-        device.GetVkDevice(),
+        m_vkDevice,
         static_cast<uint32_t>(writes.size()),
         writes.data(),
         0,
@@ -314,9 +299,6 @@ void DescriptorSet::Update(uint32_t frameIndex, const std::vector<std::shared_pt
 
 void DescriptorSet::SetSky(const SkyComponent* sky)
 {
-    auto        renderer = static_pointer_cast<Renderer>(g_renderer);
-    const auto& device   = renderer->GetDevice();
-
     const auto                         color         = sky->GetColor();
     const auto                         lut           = sky->GetLUT();
     const auto                         diffuse       = sky->GetDiffuse();
@@ -401,7 +383,7 @@ void DescriptorSet::SetSky(const SkyComponent* sky)
     }
 
     vkUpdateDescriptorSets(
-        device.GetVkDevice(),
+        m_vkDevice,
         static_cast<uint32_t>(writes.size()),
         writes.data(),
         0,

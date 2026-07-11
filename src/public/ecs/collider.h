@@ -8,8 +8,8 @@ namespace yar
 class ColliderComponent : public Component
 {
   public:
-    ColliderComponent(PhysicsShapeType shape, glm::vec3 size) :
-        Component(),
+    ColliderComponent(Entity* owner, PhysicsShapeType shape, glm::vec3 size) :
+        Component(owner),
         m_shape(shape),
         m_size(size)
     {

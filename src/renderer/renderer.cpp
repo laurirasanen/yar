@@ -26,6 +26,8 @@ Renderer::~Renderer()
 
     vkDeviceWaitIdle(m_device.GetVkDevice());
 
+    m_pipelines.clear();
+
     g_scene.reset();
 
     m_descriptorSet.reset();

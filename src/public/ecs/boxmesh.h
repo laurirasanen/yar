@@ -11,7 +11,7 @@ namespace yar
 class BoxMeshComponent : public Component
 {
   public:
-    BoxMeshComponent(const glm::vec3& size) : Component()
+    BoxMeshComponent(Entity* owner, const glm::vec3& size) : Component(owner)
     {
         const uint32_t vertexCount = 24;
         // clang-format off

@@ -32,7 +32,7 @@ class Component
         Destroyed
     };
 
-    Component() = default;
+    Component(Entity* owner) : m_owner(owner) {};
 
     virtual ~Component()
     {
