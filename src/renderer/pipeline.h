@@ -156,11 +156,14 @@ class VulkanPipeline
             shaderStages.push_back(m_shader->GetStageInfo(SHADER_ENTRY_COMPUTE));
         }
 
+        VkPipelineVertexInputStateCreateInfo vertexInputState {};
+        vertexInputState.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
+
         VkGraphicsPipelineCreateInfo graphicsCreateInfo {};
         graphicsCreateInfo.sType               = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO;
         graphicsCreateInfo.pNext               = &pipelineCreateInfo;
         graphicsCreateInfo.renderPass          = VK_NULL_HANDLE;
-        graphicsCreateInfo.pVertexInputState   = nullptr;
+        graphicsCreateInfo.pVertexInputState   = &vertexInputState;
         graphicsCreateInfo.pInputAssemblyState = &inputAssemblyState;
         graphicsCreateInfo.pViewportState      = &viewportState;
         graphicsCreateInfo.pRasterizationState = &rasterizationState;
