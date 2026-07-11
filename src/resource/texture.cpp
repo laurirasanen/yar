@@ -97,6 +97,12 @@ bool Texture::DoLoad()
 
         m_image = m_ktxVulkanTexture->image;
 
+        renderer->SetDebugName(
+            VK_OBJECT_TYPE_IMAGE,
+            (uint64_t)m_image,
+            std::format("{} {}x{}", GetId(), m_width, m_height).c_str()
+        );
+
         m_format   = m_ktxVulkanTexture->imageFormat;
         m_mips     = m_ktxVulkanTexture->levelCount;
         m_viewType = m_ktxVulkanTexture->viewType;
@@ -112,7 +118,8 @@ bool Texture::DoLoad()
         }
 
         void* pixels = nullptr;
-        int   width, height, channels;
+        int   width, height, originalChannels;
+        m_channels = 4;
 
         switch (m_type)
         {
@@ -127,8 +134,8 @@ bool Texture::DoLoad()
                     static_cast<int>(m_size),
                     &width,
                     &height,
-                    &channels,
-                    0
+                    &originalChannels,
+                    static_cast<int>(m_channels)
                 );
                 break;
             }
@@ -140,8 +147,8 @@ bool Texture::DoLoad()
                     static_cast<int>(m_size),
                     &width,
                     &height,
-                    &channels,
-                    0
+                    &originalChannels,
+                    static_cast<int>(m_channels)
                 );
                 break;
             }
@@ -159,12 +166,17 @@ bool Texture::DoLoad()
             return false;
         }
 
-        m_width    = static_cast<uint32_t>(width);
-        m_height   = static_cast<uint32_t>(height);
-        m_channels = static_cast<uint32_t>(channels);
-        m_format   = VK_FORMAT_UNDEFINED;
-        m_mips     = 1;
-        m_viewType = VK_IMAGE_VIEW_TYPE_2D;
+        if (static_cast<int>(m_channels) != originalChannels)
+        {
+            LOG_DEBUG("Converted {}: channels {} -> {}", GetId(), originalChannels, m_channels);
+        }
+
+        m_width              = static_cast<uint32_t>(width);
+        m_height             = static_cast<uint32_t>(height);
+        m_format             = VK_FORMAT_UNDEFINED;
+        m_mips               = 1;
+        m_viewType           = VK_IMAGE_VIEW_TYPE_2D;
+        uint32_t elementSize = 1;
 
         switch (m_channels)
         {
@@ -189,7 +201,8 @@ bool Texture::DoLoad()
 
                     case TextureType::TEX_IBL:
                     {
-                        m_format = VK_FORMAT_R32G32B32A32_SFLOAT;
+                        m_format    = VK_FORMAT_R32G32B32A32_SFLOAT;
+                        elementSize = 4;
                         break;
                     }
 
@@ -227,7 +240,8 @@ bool Texture::DoLoad()
 
                     case TextureType::TEX_IBL:
                     {
-                        m_format = VK_FORMAT_R32G32B32_SFLOAT;
+                        m_format    = VK_FORMAT_R32G32B32_SFLOAT;
+                        elementSize = 4;
                         break;
                     }
 
@@ -250,6 +264,8 @@ bool Texture::DoLoad()
                 return false;
             }
         }
+
+        m_size = m_width * m_height * m_channels * elementSize;
 
         VkImageCreateInfo imageInfo = {};
         imageInfo.sType             = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
@@ -281,6 +297,12 @@ bool Texture::DoLoad()
                 &m_vmaAllocationInfo
             ),
             "Failed to create image"
+        );
+
+        renderer->SetDebugName(
+            VK_OBJECT_TYPE_IMAGE,
+            (uint64_t)m_image,
+            std::format("{} {}x{}", GetId(), m_width, m_height).c_str()
         );
 
         LOG_DEBUG("Created image {}", static_cast<void*>(m_image));
@@ -324,6 +346,12 @@ bool Texture::DoLoad()
             m_size,
             1
         );
+        renderer->SetDebugName(
+            VK_OBJECT_TYPE_BUFFER,
+            (uint64_t)hostBuffer->GetVkBuffer(),
+            std::format("{} staging buffer", GetId()).c_str()
+        );
+
         void* hostData;
         hostBuffer->Map(&hostData);
         std::memcpy(hostData, pixels, m_size);
@@ -378,6 +406,12 @@ bool Texture::DoLoad()
         "Failed to create image view"
     );
 
+    renderer->SetDebugName(
+        VK_OBJECT_TYPE_IMAGE_VIEW,
+        (uint64_t)m_imageView,
+        std::format("{} view", GetId()).c_str()
+    );
+
     VkSamplerCreateInfo samplerInfo     = {};
     samplerInfo.sType                   = VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO;
     samplerInfo.minFilter               = VK_FILTER_LINEAR;
@@ -399,6 +433,12 @@ bool Texture::DoLoad()
     VK_CHECK(
         vkCreateSampler(device.GetVkDevice(), &samplerInfo, nullptr, &m_sampler),
         "Failed to create image sampler"
+    );
+
+    renderer->SetDebugName(
+        VK_OBJECT_TYPE_SAMPLER,
+        (uint64_t)m_sampler,
+        std::format("{} sampler", GetId()).c_str()
     );
 
     return true;
