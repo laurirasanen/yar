@@ -3,7 +3,6 @@
 
 #include "../public/log.h"
 #include "../public/platform/env.h"
-#include "../public/util.h"
 #include "common.h"
 #include "instance.h"
 
@@ -144,10 +143,33 @@ VulkanInstance::VulkanInstance(std::shared_ptr<SDLWindow> window) : m_window(win
     createInfo.pApplicationInfo        = &appInfo;
     createInfo.enabledExtensionCount   = static_cast<uint32_t>(extensions.size());
     createInfo.ppEnabledExtensionNames = extensions.data();
+    createInfo.enabledLayerCount       = 0;
+    createInfo.pNext                   = nullptr;
+
+    VkDebugUtilsMessengerCreateInfoEXT debugCreateInfo;
+
+    VkLayerSettingsCreateInfoEXT settingsCreateInfo;
+    const char*                  layer    = "VK_LAYER_KHRONOS_validation";
+    const VkBool32               on       = VK_TRUE;
+    const VkBool32               off      = VK_FALSE;
+    const char*                  action[] = {"VK_DBG_LAYER_ACTION_LOG_MSG"};
+    const char*                  flags[]  = {"info", "warn", "perf", "error", "debug"};
+
+    // clang-format off
+    std::vector<VkLayerSettingEXT> settings = {
+        {layer, "legacy_detection",            VK_LAYER_SETTING_TYPE_BOOL32_EXT, 1, &on},
+        {layer, "validate_sync",               VK_LAYER_SETTING_TYPE_BOOL32_EXT, 1, &on},
+        {layer, "validate_core",               VK_LAYER_SETTING_TYPE_BOOL32_EXT, 1, &off},
+        {layer, "gpuav_enable",                VK_LAYER_SETTING_TYPE_BOOL32_EXT, 1, &on},
+        {layer, "validate_best_practices",     VK_LAYER_SETTING_TYPE_BOOL32_EXT, 1, &on},
+        {layer, "validate_best_practices_amd", VK_LAYER_SETTING_TYPE_BOOL32_EXT, 1, &on},
+        {layer, "debug_action",                VK_LAYER_SETTING_TYPE_STRING_EXT, 1, action},
+        {layer, "report_flags",                VK_LAYER_SETTING_TYPE_STRING_EXT, 5, flags}
+    };
+    // clang-format on
 
     if (m_enableValidationLayers)
     {
-        VkDebugUtilsMessengerCreateInfoEXT debugCreateInfo;
         createInfo.enabledLayerCount   = static_cast<uint32_t>(m_validationLayers.size());
         createInfo.ppEnabledLayerNames = m_validationLayers.data();
 
@@ -156,50 +178,20 @@ VulkanInstance::VulkanInstance(std::shared_ptr<SDLWindow> window) : m_window(win
 
         if (m_enableLayerSettings)
         {
-            const char*    layer    = "VK_LAYER_KHRONOS_validation";
-            const VkBool32 on       = VK_TRUE;
-            const VkBool32 off      = VK_FALSE;
-            const char*    action[] = {"VK_DBG_LAYER_ACTION_LOG_MSG"};
-            const char*    flags[]  = {"info", "warn", "perf", "error", "debug"};
-
-            // clang-format off
-            const VkLayerSettingEXT settings[] = {
-                {layer, "legacy_detection",            VK_LAYER_SETTING_TYPE_BOOL32_EXT, 1, &on},
-                {layer, "validate_sync",               VK_LAYER_SETTING_TYPE_BOOL32_EXT, 1, &on},
-                {layer, "validate_core",               VK_LAYER_SETTING_TYPE_BOOL32_EXT, 1, &off},
-                {layer, "gpuav_enable",                VK_LAYER_SETTING_TYPE_BOOL32_EXT, 1, &on},
-                {layer, "validate_best_practices",     VK_LAYER_SETTING_TYPE_BOOL32_EXT, 1, &on},
-                {layer, "validate_best_practices_amd", VK_LAYER_SETTING_TYPE_BOOL32_EXT, 1, &on},
-                {layer, "debug_action",                VK_LAYER_SETTING_TYPE_STRING_EXT, 1, action},
-                {layer, "report_flags",                VK_LAYER_SETTING_TYPE_STRING_EXT, 5, flags}
-            };
-            // clang-format on
-
-            VkLayerSettingsCreateInfoEXT settingsCreateInfo;
             settingsCreateInfo.sType        = VK_STRUCTURE_TYPE_LAYER_SETTINGS_CREATE_INFO_EXT;
             settingsCreateInfo.pNext        = nullptr;
-            settingsCreateInfo.settingCount = ARRAY_SIZE(settings);
-            settingsCreateInfo.pSettings    = settings;
+            settingsCreateInfo.settingCount = static_cast<uint32_t>(settings.size());
+            settingsCreateInfo.pSettings    = settings.data();
 
             debugCreateInfo.pNext = &settingsCreateInfo;
         }
-
-        VK_CHECK(
-            vkCreateInstance(&createInfo, nullptr, &m_vkInstance),
-            "Failed to create instance"
-        );
-
-        SetupDebugMessenger();
     }
-    else
-    {
-        createInfo.enabledLayerCount = 0;
-        createInfo.pNext             = nullptr;
 
-        VK_CHECK(
-            vkCreateInstance(&createInfo, nullptr, &m_vkInstance),
-            "Failed to create instance"
-        );
+    VK_CHECK(vkCreateInstance(&createInfo, nullptr, &m_vkInstance), "Failed to create instance");
+
+    if (m_enableValidationLayers)
+    {
+        SetupDebugMessenger();
     }
 
     CreateSurface();
