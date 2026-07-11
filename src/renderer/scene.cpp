@@ -74,11 +74,13 @@ void Scene::Render()
     for (const auto& batch : m_batches)
     {
         renderer->BeginDebugLabel(std::format("Batch {}", batchIdx).c_str(), {});
+        batchIdx++;
 
         const auto& nodes = batch.second.Nodes;
 
         if (nodes.size() <= 0)
         {
+            renderer->EndDebugLabel();
             continue;
         }
 
@@ -94,8 +96,6 @@ void Scene::Render()
             renderer->DrawWithBuffers(nodes[i]->GetIndexBuffer());
             nodeIdx++;
         }
-
-        batchIdx++;
 
         renderer->EndDebugLabel();
     }

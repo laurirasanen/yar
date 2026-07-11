@@ -15,7 +15,10 @@ namespace yar
 std::shared_ptr<Scene>          g_scene;
 std::shared_ptr<ShaderCompiler> g_shaderCompiler;
 
-Renderer::Renderer(std::shared_ptr<SDLWindow> window) : m_instance(window), m_device(m_instance)
+Renderer::Renderer(std::shared_ptr<SDLWindow> window) :
+    IRenderer(),
+    m_instance(window),
+    m_device(m_instance)
 {
     LOG_INFO("Creating Renderer");
 }

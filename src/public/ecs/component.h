@@ -115,8 +115,8 @@ class Component
     {
     }
 
-    Entity* m_owner;
-    State   m_state;
+    Entity* m_owner = nullptr;
+    State   m_state = State::Uninitialized;
 
     friend class Entity;
 };

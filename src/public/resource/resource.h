@@ -68,8 +68,8 @@ class ResourceHandle
     }
 
   private:
-    std::string m_resourceId;
-    bool        m_initialized;
+    std::string m_resourceId  = "";
+    bool        m_initialized = false;
 };
 
 class Resource
@@ -126,8 +126,8 @@ class Resource
     virtual bool DoUnload() = 0;
 
   private:
-    const std::string m_resourceId;
-    bool              m_loaded = false;
+    const std::string m_resourceId = "";
+    bool              m_loaded     = false;
 };
 
 class ResourceManager

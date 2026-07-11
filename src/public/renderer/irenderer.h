@@ -38,7 +38,7 @@ struct RenderStats
 class IRenderer
 {
   public:
-    IRenderer()          = default;
+    IRenderer() : m_camera(nullptr) {};
     virtual ~IRenderer() = default;
 
     IRenderer(const IRenderer&)            = delete;
@@ -133,7 +133,7 @@ class IRenderer
   protected:
     RenderStats m_renderStats;
 
-    Camera* m_camera = nullptr;
+    Camera* m_camera;
 };
 
 extern std::shared_ptr<IRenderer> g_renderer;
