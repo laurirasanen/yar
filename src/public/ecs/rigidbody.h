@@ -54,7 +54,7 @@ class RigidBodyComponent : public Component
     {
         auto transform  = m_owner->GetComponent<TransformComponent>()->GetTransform();
         m_prevTransform = *transform;
-        m_nextTransform = *g_physics->GetTransform(m_body);
+        m_nextTransform = g_physics->GetTransform(m_body);
         m_lerp          = 0;
     }
 

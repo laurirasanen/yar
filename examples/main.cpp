@@ -2,6 +2,7 @@
 #include "ecs/boxmesh.h"
 #include "ecs/camera.h"
 #include "ecs/entity.h"
+#include "ecs/mesh.h"
 #include "ecs/rigidbody.h"
 #include "ecs/sky.h"
 #include "engine/entry.h"
@@ -15,6 +16,8 @@
 #include "window/input.h"
 #include "window/iwindow.h"
 #include "world/iworld.h"
+
+#include <glm/vec3.hpp>
 
 using namespace yar;
 
@@ -107,7 +110,7 @@ class ExampleApp : public IApplication
         trans->SetEulerRotation({90.0f, 180.0f, 0});
         trans->SetScale({0.25f, 0.25f, 0.25f});
         damagedHelmet->AddComponent<MeshComponent>(mesh);
-        auto body = damagedHelmet->AddComponent<RigidBody>(PhysicsBodyType::BODY_DYNAMIC);
+        auto body = damagedHelmet->AddComponent<RigidBodyComponent>(PhysicsBodyType::BODY_DYNAMIC);
         body->AddCollider(PhysicsShapeType::SHAPE_SPHERE, {}, {}, {0.2f, 0.2f, 0.2f});
 
         g_world->AddEntity(damagedHelmet);
@@ -125,7 +128,7 @@ class ExampleApp : public IApplication
         trans      = floor->AddComponent<TransformComponent>()->GetTransform();
         trans->SetPosition({0, -1.0f, 0});
         trans->SetRotation(glm::angleAxis(-glm::radians(5.0f), VEC_Z));
-        floor->AddComponent<BoxMeshComponent>({5.0f, 0.1f, 5.0f});
+        floor->AddComponent<BoxMeshComponent>(glm::vec3 {5.0f, 0.1f, 5.0f});
         body = floor->AddComponent<RigidBodyComponent>(PhysicsBodyType::BODY_STATIC);
         body->AddCollider(PhysicsShapeType::SHAPE_BOX, {}, {}, {5.0f, 0.1f, 5.0f});
 
@@ -134,7 +137,7 @@ class ExampleApp : public IApplication
         auto wall = std::make_shared<Entity>("wall");
         trans     = wall->AddComponent<TransformComponent>()->GetTransform();
         trans->SetPosition({5.0f, 0, 0});
-        wall->AddComponent<BoxMeshComponent>({0.1f, 5.0f, 5.0f});
+        wall->AddComponent<BoxMeshComponent>(glm::vec3 {0.1f, 5.0f, 5.0f});
         body = wall->AddComponent<RigidBodyComponent>(PhysicsBodyType::BODY_STATIC);
         body->AddCollider(PhysicsShapeType::SHAPE_BOX, {}, {}, {0.1f, 5.0f, 5.0f});
 

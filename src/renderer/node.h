@@ -87,7 +87,7 @@ class Node
         m_children.push_back(node);
     }
 
-    bool FrustumCull(const std::shared_ptr<Camera>& camera)
+    bool FrustumCull(const Camera* camera)
     {
         return !camera->IsInFrustum(m_aabb);
     }

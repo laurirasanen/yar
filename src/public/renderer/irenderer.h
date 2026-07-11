@@ -51,7 +51,7 @@ class IRenderer
         m_camera = camera;
     }
 
-    virtual const Camera* GetCamera()
+    virtual Camera* GetCamera()
     {
         return m_camera;
     }

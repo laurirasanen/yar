@@ -2,8 +2,8 @@
 
 #include "node.h"
 
-#include <map>
 #include <memory>
+#include <unordered_map>
 #include <vector>
 
 namespace yar
@@ -37,8 +37,8 @@ class Scene
 
     void UpdateDescriptor();
 
-    std::vector<std::shared_ptr<Node>> m_nodes;
-    std::map<Material, RenderBatch>    m_batches;
+    std::vector<std::shared_ptr<Node>>        m_nodes;
+    std::unordered_map<Material, RenderBatch> m_batches;
 };
 
 extern std::shared_ptr<Scene> g_scene;

@@ -70,11 +70,9 @@ Engine::~Engine()
     g_renderer->WaitForIdle();
 
     m_app.reset();
-    g_scene.reset();
     g_world.reset();
     g_ui.reset();
     g_window.reset();
-    g_assets.reset();
     g_renderer.reset();
 }
 
@@ -148,9 +146,9 @@ void Engine::Frame()
 
     const auto deltaTime = static_cast<float>(Time::DeltaFrame);
 
-    m_app->Frame(deltaTime);
+    m_app->Update(deltaTime);
 
-    const auto camera = g_renderer->GetCamera();
+    auto camera = g_renderer->GetCamera();
     camera->HandleInput(m_frameInput);
 
     if (m_frameInput.wantsResize)
@@ -162,7 +160,7 @@ void Engine::Frame()
         g_renderer->Resize();
     }
 
-    g_world->Frame(deltaTime);
+    g_world->Update(deltaTime);
 
     if (m_frameInput.WasPressed(Key::KEY_MOUSE_GRAB))
     {

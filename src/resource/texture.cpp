@@ -23,7 +23,7 @@ Texture::Texture(std::string name, TextureType type) :
 {
 }
 
-Texture::Texture(std::string name, TextureType type, size_t size, void* data) :
+Texture::Texture(std::string name, TextureType type, size_t size, const void* data) :
     Resource(name),
     m_type(type),
     m_size(size),

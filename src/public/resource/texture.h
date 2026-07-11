@@ -30,7 +30,7 @@ class Texture : public Resource
   public:
     Texture() = delete;
     explicit Texture(std::string name, TextureType type);
-    explicit Texture(std::string name, TextureType type, size_t size, void* data);
+    explicit Texture(std::string name, TextureType type, size_t size, const void* data);
     ~Texture();
 
     Texture(const Texture&)            = delete;
@@ -80,7 +80,7 @@ class Texture : public Resource
   private:
     TextureType m_type;
     size_t      m_size;
-    void*       m_data;
+    const void* m_data;
 
     uint32_t m_width;
     uint32_t m_height;

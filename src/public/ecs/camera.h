@@ -68,7 +68,7 @@ class Camera : public Component
         frustum.far.clip    = trans[3] - trans[2];
     }
 
-    bool IsInFrustum(const glm::vec3 pos, float margin = 0.0f)
+    bool IsInFrustum(const glm::vec3 pos, float margin = 0.0f) const
     {
         // clang-format off
         if (frustum.left.SignedDistance(pos)   < margin) return false;
@@ -82,14 +82,14 @@ class Camera : public Component
         return true;
     }
 
-    bool IsInFrustum(const Sphere& sphere)
+    bool IsInFrustum(const Sphere& sphere) const
     {
         return IsInFrustum(sphere.center, -sphere.radius);
     }
 
     // special case for AABB since it may cover the whole frustum,
     // with all corners being outside it.
-    bool IsInFrustum(const AABB& aabb)
+    bool IsInFrustum(const AABB& aabb) const
     {
         const FrustumPlane planes[] = {
             frustum.left,
@@ -131,7 +131,7 @@ class Camera : public Component
         return true;
     }
 
-    float GetDistance(const AABB& aabb)
+    float GetDistance(const AABB& aabb) const
     {
         const glm::vec3 corners[] = {
             glm::vec3(aabb.min.x, aabb.min.y, aabb.min.z),

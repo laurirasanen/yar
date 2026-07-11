@@ -39,10 +39,10 @@ class SubMesh
     {
     }
 
-    SubMesh(const SubMesh&)            = delete;
-    SubMesh(SubMesh&&)                 = delete;
-    SubMesh& operator=(const SubMesh&) = delete;
-    SubMesh& operator=(SubMesh&&)      = delete;
+    SubMesh(const SubMesh&)            = default;
+    SubMesh(SubMesh&&)                 = default;
+    SubMesh& operator=(const SubMesh&) = default;
+    SubMesh& operator=(SubMesh&&)      = default;
 
     uint32_t GetVertexCount() const
     {
@@ -103,7 +103,7 @@ class Mesh : public Resource
     {
         std::vector<GltfData> data;
 
-        if (!GLTF::Load(m_path, data))
+        if (!GLTF::Load(GetId(), data))
         {
             return false;
         }
@@ -159,7 +159,7 @@ class Mesh : public Resource
             }
             AABB aabb(vecs);
 
-            m_subMeshes.push_back(vertexCount, vertices, indexBuffer, material, aabb);
+            m_subMeshes.emplace_back(vertexCount, vertices, indexBuffer, material, aabb);
         }
 
         return true;

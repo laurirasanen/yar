@@ -7,9 +7,11 @@
 #include "../public/util.h"
 
 #include <glm/geometric.hpp>
+#include <glm/vec2.hpp>
 #include <glm/vec3.hpp>
 
 #include <cstdint>
+#include <memory>
 
 namespace yar
 {
@@ -228,12 +230,14 @@ bool GLTF::ReadFloats(cgltf_accessor* accessor, std::vector<float>& floats)
 void GLTF::CalculateTangents(GltfData& data)
 {
     const auto             vertexCount = data.positions.size() / 3;
+    const auto             positions   = reinterpret_cast<glm::vec3*>(data.positions.data());
+    auto                   normals     = reinterpret_cast<glm::vec3*>(data.normals.data());
+    auto                   tangents    = reinterpret_cast<glm::vec3*>(data.tangents.data());
     std::vector<glm::vec3> bitangents  = {};
-    bitangents.resize(vertexCount);
-    data.tangents.resize(vertexCount);
+    const auto             uvs         = reinterpret_cast<glm::vec2*>(data.uvs.data());
 
-    const auto positions = static_pointer_cast<glm::vec3>(data.positions.data());
-    const auto uvs       = static_pointer_cast<glm::vec2>(data.uvs.data());
+    bitangents.resize(vertexCount);
+    data.tangents.resize(vertexCount * 3);
 
     for (size_t idx = 0; idx < data.indices.size(); idx += 3)
     {
@@ -252,9 +256,9 @@ void GLTF::CalculateTangents(GltfData& data)
         const auto tangent   = r * (edge1 * uv2.y - edge2 * uv1.y);
         const auto bitangent = -r * (edge2 * uv1.x - edge1 * uv2.x);
 
-        data.tangents[idx0] += tangent;
-        data.tangents[idx1] += tangent;
-        data.tangents[idx2] += tangent;
+        tangents[idx0] += tangent;
+        tangents[idx1] += tangent;
+        tangents[idx2] += tangent;
         bitangents[idx0] += bitangent;
         bitangents[idx1] += bitangent;
         bitangents[idx2] += bitangent;
@@ -262,13 +266,10 @@ void GLTF::CalculateTangents(GltfData& data)
 
     for (size_t v = 0; v < vertexCount; v++)
     {
-        const auto cross = glm::cross(data.normals[v], data.tangents[v]);
+        const auto cross = glm::cross(normals[v], tangents[v]);
         const auto sign  = glm::dot(cross, bitangents[v]) < 0 ? -1.0f : 1.0f;
-        data.tangents[v] =
-            glm::normalize(
-                data.tangents[v] - data.normals[v] * glm::dot(data.normals[v], data.tangents[v])
-            )
-            * sign;
+        tangents[v] =
+            glm::normalize(tangents[v] - normals[v] * glm::dot(normals[v], tangents[v])) * sign;
     }
 }
 
