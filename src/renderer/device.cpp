@@ -1044,10 +1044,15 @@ void VulkanDevice::CreateSyncObjects()
 
 void VulkanDevice::CreateDescriptorPools()
 {
-    VkDescriptorPoolSize uboPoolSize {};
-    uboPoolSize.type            = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC;
-    const uint32_t bufferCount  = 4;
-    uboPoolSize.descriptorCount = bufferCount * MAX_FRAMES_IN_FLIGHT;
+    VkDescriptorPoolSize ubdPoolSize {};
+    ubdPoolSize.type            = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC;
+    const uint32_t ubdCount     = 1;
+    ubdPoolSize.descriptorCount = ubdCount * MAX_FRAMES_IN_FLIGHT;
+
+    VkDescriptorPoolSize sbPoolSize {};
+    sbPoolSize.type            = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
+    const uint32_t sbCount     = 3;
+    sbPoolSize.descriptorCount = sbCount * MAX_FRAMES_IN_FLIGHT;
 
     VkDescriptorPoolSize imagePoolSize {};
     imagePoolSize.type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
@@ -1057,7 +1062,7 @@ void VulkanDevice::CreateDescriptorPools()
     imagePoolSize.descriptorCount =
         MAX_FRAMES_IN_FLIGHT * (MAX_OBJECTS * texturesPerObject + globalTextures);
 
-    std::array<VkDescriptorPoolSize, 2> poolSizes = {uboPoolSize, imagePoolSize};
+    std::array<VkDescriptorPoolSize, 3> poolSizes = {ubdPoolSize, sbPoolSize, imagePoolSize};
 
     VkDescriptorPoolCreateInfo poolInfo {};
     poolInfo.sType                 = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;

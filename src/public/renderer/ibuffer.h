@@ -10,6 +10,7 @@ enum BufferType
     VertexBuffer,
     IndexBuffer,
     UniformBuffer,
+    StorageBuffer,
     ShaderDataBuffer,
     ImageBuffer,
 };

@@ -42,6 +42,13 @@ Buffer::Buffer(
             break;
         }
 
+        case StorageBuffer:
+        {
+            bufferInfo.usage |= VK_BUFFER_USAGE_STORAGE_BUFFER_BIT;
+            allocInfo.requiredFlags |= VK_MEMORY_PROPERTY_HOST_COHERENT_BIT;
+            break;
+        }
+
         case ShaderDataBuffer:
         {
             bufferInfo.usage |= VK_BUFFER_USAGE_SHADER_DEVICE_ADDRESS_BIT;

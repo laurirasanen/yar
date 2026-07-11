@@ -26,21 +26,21 @@ DescriptorSet::DescriptorSet(uint32_t maxFrames)
 
     VkDescriptorSetLayoutBinding vertexBinding = {};
     vertexBinding.binding                      = BINDING_VERTICES;
-    vertexBinding.descriptorType               = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC;
+    vertexBinding.descriptorType               = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
     vertexBinding.descriptorCount              = 1;
     vertexBinding.stageFlags         = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT;
     vertexBinding.pImmutableSamplers = nullptr;
 
     VkDescriptorSetLayoutBinding materialBinding = {};
     materialBinding.binding                      = BINDING_MATERIALS;
-    materialBinding.descriptorType               = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC;
+    materialBinding.descriptorType               = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
     materialBinding.descriptorCount              = 1;
     materialBinding.stageFlags         = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT;
     materialBinding.pImmutableSamplers = nullptr;
 
     VkDescriptorSetLayoutBinding paramsBinding = {};
     paramsBinding.binding                      = BINDING_PARAMS;
-    paramsBinding.descriptorType               = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC;
+    paramsBinding.descriptorType               = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
     paramsBinding.descriptorCount              = 1;
     paramsBinding.stageFlags         = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT;
     paramsBinding.pImmutableSamplers = nullptr;
@@ -153,7 +153,7 @@ void DescriptorSet::Alloc()
 
         m_vertexBuffers.push_back(
             std::make_shared<
-                Buffer>(m_vkDevice, UniformBuffer, SecretThirdOption, sizeof(float), VERT_BUFF_SIZE)
+                Buffer>(m_vkDevice, StorageBuffer, SecretThirdOption, sizeof(float), VERT_BUFF_SIZE)
         );
 
         buffer.buffer = m_vertexBuffers[i]->GetVkBuffer();
@@ -161,13 +161,14 @@ void DescriptorSet::Alloc()
         buffer.range  = sizeof(float) * VERT_BUFF_SIZE;
         buffers.push_back(buffer);
 
-        write.dstBinding = BINDING_VERTICES;
+        write.dstBinding     = BINDING_VERTICES;
+        write.descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
         writes.push_back(write);
 
         m_materialBuffers.push_back(
             std::make_shared<Buffer>(
                 m_vkDevice,
-                UniformBuffer,
+                StorageBuffer,
                 SecretThirdOption,
                 sizeof(ShaderMaterialData),
                 MAX_OBJECTS
@@ -185,7 +186,7 @@ void DescriptorSet::Alloc()
         m_parameterBuffers.push_back(
             std::make_shared<Buffer>(
                 m_vkDevice,
-                UniformBuffer,
+                StorageBuffer,
                 SecretThirdOption,
                 sizeof(float),
                 MAX_OBJECTS * 6
@@ -238,14 +239,20 @@ void DescriptorSet::Update(uint32_t frameIndex, const std::vector<std::shared_pt
         const auto& mat         = nodes[i]->GetMaterial();
         const auto  materialIdx = i;
 
-        const auto& textures = mat.GetTextures();
-        for (const auto& tex : textures)
+        std::vector<ResourceHandle<Texture>> textures = {};
+
+        for (const auto& tex : mat.GetTextures())
         {
+            if (!tex.IsValid())
+            {
+                continue;
+            }
             VkDescriptorImageInfo info = {};
             info.imageLayout           = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
             info.imageView             = tex->GetImageView();
             info.sampler               = tex->GetSampler();
             textureInfos.push_back(info);
+            textures.push_back(tex);
         }
 
         const auto& params = mat.GetParameters();

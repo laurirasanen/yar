@@ -142,13 +142,13 @@ layout(binding = 0, set = 0)
 ConstantBuffer<ObjectData> objectData;
 
 layout(binding = 1, set = 0)
-ConstantBuffer<Vertex[]> vertices;
+StructuredBuffer<Vertex> vertices;
 
 layout(binding = 2, set = 0)
-ConstantBuffer<Material[]> materials;
+StructuredBuffer<Material> materials;
 
 layout(binding = 3, set = 0)
-ConstantBuffer<float[]> parameters;
+StructuredBuffer<float> parameters;
 
 layout(binding = 4, set = 0)
 Sampler2D textures[];
