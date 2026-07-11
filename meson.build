@@ -189,7 +189,7 @@ engine_lib = library(
 engine_dep = declare_dependency(
   link_with: [engine_lib],
   dependencies: [],
-  include_directories: ['src/public']
+  include_directories: ['src/public', thirdparty_inc]
 )
 
 subdir('assets')

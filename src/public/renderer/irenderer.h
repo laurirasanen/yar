@@ -46,12 +46,12 @@ class IRenderer
     IRenderer& operator=(const IRenderer&) = delete;
     IRenderer& operator=(IRenderer&&)      = delete;
 
-    virtual void SetCamera(std::shared_ptr<Camera> camera)
+    virtual void SetCamera(Camera* camera)
     {
         m_camera = camera;
     }
 
-    virtual std::shared_ptr<Camera> GetCamera()
+    virtual const Camera* GetCamera()
     {
         return m_camera;
     }
@@ -133,7 +133,7 @@ class IRenderer
   protected:
     RenderStats m_renderStats;
 
-    std::shared_ptr<Camera> m_camera;
+    Camera* m_camera;
 };
 
 extern std::shared_ptr<IRenderer> g_renderer;

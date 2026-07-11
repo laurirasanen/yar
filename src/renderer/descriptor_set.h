@@ -3,9 +3,7 @@
 #include <vulkan/vulkan_core.h>
 
 #include "../public/ecs/sky.h"
-#include "../renderer/mesh.h"
 #include "buffer.h"
-#include "data_types.h"
 #include "node.h"
 
 #include <memory>

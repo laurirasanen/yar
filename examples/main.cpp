@@ -1,13 +1,13 @@
+#include "../public/ui/iui.h"
 #include "ecs/boxmesh.h"
 #include "ecs/camera.h"
 #include "ecs/entity.h"
 #include "ecs/rigidbody.h"
 #include "ecs/sky.h"
 #include "engine/entry.h"
+#include "engine/iapp.h"
 #include "engine/iengine.h"
 #include "engine/iphysics.h"
-#include "iapp.h"
-#include "iui.h"
 #include "log.h"
 #include "renderer/irenderer.h"
 #include "time_util.h"
@@ -33,8 +33,6 @@ class ExampleApp : public IApplication
         cam->GetComponent<TransformComponent>()->GetTransform()->SetPosition({0.10f, 0.15f, -0.8f});
 
         g_world->AddEntity(cam);
-
-        g_renderer->SetCamera(m_camera);
 
         m_loaded = false;
         return 0;

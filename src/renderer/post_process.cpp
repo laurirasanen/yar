@@ -1,8 +1,8 @@
 #include "post_process.h"
-#include "../shader/compiler.h"
+#include "common.h"
 #include "device.h"
 #include "renderer.h"
-#include "src/renderer/common.h"
+
 #include <vulkan/vulkan_core.h>
 
 namespace yar
@@ -26,26 +26,9 @@ PostProcessPass::PostProcessPass(
 {
     const auto  renderer = static_pointer_cast<Renderer>(g_renderer);
     const auto& device   = renderer->GetDevice();
-    size_t      size;
 
-    const void* spirv = g_shaderCompiler->GetSpirv(shader, SHADER_ENTRY_PIXEL, size);
-    if (!spirv)
-    {
-        throw std::runtime_error(std::format("failed to load {} fragment shader", shader));
-    }
-
-    auto fragModule = GetShaderCreateInfo(spirv, size);
-
-    spirv = g_shaderCompiler->GetSpirv(shader, SHADER_ENTRY_VERTEX, size);
-    if (!spirv)
-    {
-        throw std::runtime_error(std::format("failed to load {} vertex shader", shader));
-    }
-
-    auto        vertModule = GetShaderCreateInfo(spirv, size);
-    auto        shaderFrag = FillShaderStageCreateInfo(&fragModule, VK_SHADER_STAGE_FRAGMENT_BIT);
-    auto        shaderVert = FillShaderStageCreateInfo(&vertModule, VK_SHADER_STAGE_VERTEX_BIT);
-    std::vector stages {shaderFrag, shaderVert};
+    auto vertShader = g_resources->Load<Shader>(shader, SHADER_ENTRY_VERTEX);
+    auto fragShader = g_resources->Load<Shader>(shader, SHADER_ENTRY_PIXEL);
 
     std::vector<VkDescriptorSetLayoutBinding> texBindings = {};
     texBindings.resize(numTextures);
@@ -90,11 +73,12 @@ PostProcessPass::PostProcessPass(
         );
     }
 
-    const std::vector<VkDescriptorSetLayout> layouts = {m_descriptorSetLayout};
+    const std::vector<ResourceHandle<Shader>> shaders = {vertShader, fragShader};
+    const std::vector<VkDescriptorSetLayout>  layouts = {m_descriptorSetLayout};
 
     m_pipeline = std::make_shared<VulkanPipeline>(
         device.GetVkDevice(),
-        stages,
+        shaders,
         layouts,
         outputColorFormat,
         device.GetDepthFormat(),

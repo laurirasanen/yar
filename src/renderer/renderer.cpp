@@ -8,6 +8,7 @@
 #include "../public/renderer/irenderer.h"
 #include "data_types.h"
 #include "renderer.h"
+#include "scene.h"
 
 namespace yar
 {
@@ -107,7 +108,10 @@ void Renderer::UpdateUniforms()
 {
     auto currentFrame = m_device.GetCurrentFrame();
 
-    m_shaderGlobalData[currentFrame]->Update(m_camera);
+    if (m_camera != nullptr)
+    {
+        m_shaderGlobalData[currentFrame]->Update(m_camera);
+    }
 
     std::memcpy(
         m_shaderGlobalBuffers[currentFrame]->GetAllocationInfo().pMappedData,

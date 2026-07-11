@@ -48,7 +48,7 @@ struct ShaderGlobalData
         SetIBLStrength(0.4f);
     }
 
-    void Update(const std::shared_ptr<Camera> cam)
+    void Update(const Camera* cam)
     {
         view     = cam->view;
         proj     = cam->proj;

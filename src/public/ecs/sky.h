@@ -1,8 +1,7 @@
 #pragma once
 
 #include "../platform/fs.h"
-#include "../resource/handle.h"
-#include "../resource/manager.h"
+#include "../resource/resource.h"
 #include "../resource/texture.h"
 #include "component.h"
 

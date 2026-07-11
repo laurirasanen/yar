@@ -10,7 +10,7 @@
 
 namespace yar
 {
-constexpr std::shared_ptr<PhysicsBody> InternalBody(std::shared_ptr<IPhysicsBody> body)
+constexpr std::shared_ptr<PhysicsBody> InternalBody(std::shared_ptr<IPhysicsBody>& body)
 {
     const auto b = dynamic_pointer_cast<PhysicsBody>(body);
     if (b == nullptr)

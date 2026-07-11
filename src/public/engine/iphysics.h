@@ -39,10 +39,14 @@ struct PhysicsStats
 
 class IPhysicsShape
 {
+  public:
+    virtual ~IPhysicsShape() = default;
 };
 
 class IPhysicsBody
 {
+  public:
+    virtual ~IPhysicsBody() = default;
 };
 
 class IPhysics

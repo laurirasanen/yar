@@ -5,6 +5,9 @@
 #include "../shader/compiler.h"
 #include "resource.h"
 
+#include <format>
+#include <string>
+
 namespace yar
 {
 constexpr static VkShaderModuleCreateInfo GetShaderCreateInfo(const void* data, size_t size)
@@ -33,11 +36,21 @@ constexpr static VkPipelineShaderStageCreateInfo FillShaderStageCreateInfo(
 class Shader : public Resource
 {
   public:
-    Shader(const std::string& id, const std::string& entry) :
+    explicit Shader(const std::string& id, const std::string& entry) :
         Resource(std::format("{}_{}", id, entry)),
         m_name(id),
         m_entry(entry)
     {
+    }
+
+    const VkShaderModuleCreateInfo& GetModuleInfo()
+    {
+        return m_moduleInfo;
+    }
+
+    const VkPipelineShaderStageCreateInfo& GetStageInfo()
+    {
+        return m_stageInfo;
     }
 
   protected:

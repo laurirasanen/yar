@@ -1,9 +1,9 @@
 #include <cstring>
 
 #include "../public/log.h"
-#include "../platform/fs.h"
+#include "../public/platform/fs.h"
+#include "../public/shader/compiler.h"
 #include "../public/util.h"
-#include "compiler.h"
 
 namespace yar
 {

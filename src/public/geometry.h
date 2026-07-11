@@ -46,7 +46,13 @@ struct AABB
     glm::vec3 max;
     glm::vec3 center;
 
-    AABB(const std::vector<glm::vec3>& positions)
+    AABB()                       = default;
+    AABB(const AABB&)            = default;
+    AABB(AABB&&)                 = default;
+    AABB& operator=(const AABB&) = default;
+    AABB& operator=(AABB&&)      = default;
+
+    explicit AABB(const std::vector<glm::vec3>& positions)
     {
         min = positions[0];
         max = positions[0];
@@ -71,7 +77,7 @@ struct AABB
             t.ToGlobalSpace(glm::vec4(max.x, max.y, max.z, 1.0f)),
         };
 
-        AABB aabb;
+        AABB aabb = {};
 
         aabb.min = corners[0];
         aabb.max = corners[0];

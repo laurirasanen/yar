@@ -3,8 +3,8 @@
 #include "../public/ecs/camera.h"
 #include "../public/geometry.h"
 #include "../public/material.h"
-#include "../transform.h"
-#include "renderer.h"
+#include "../public/renderer/ibuffer.h"
+#include "../public/transform.h"
 
 #include <glm/gtc/constants.hpp>
 #include <memory>
@@ -14,13 +14,7 @@ namespace yar
 class Node
 {
   public:
-    Node() :
-        m_transform({}),
-        m_globalTransform({}),
-        m_aabb({}),
-        m_globalAABB({}),
-        m_parent(nullptr),
-        m_children({})
+    Node() : m_parent(nullptr)
     {
     }
 
@@ -64,7 +58,7 @@ class Node
         return m_parent;
     }
 
-    virtual void SetParent(Node* parent)
+    void SetParent(Node* parent)
     {
         m_parent = parent;
         UpdateGlobalTransform();
@@ -136,7 +130,7 @@ class Node
 
     bool IsRenderable()
     {
-        return m_indexBuffer != nullptr && m_vertexBuffer != nullptr;
+        return m_indexBuffer != nullptr && m_vertices.size() > 0;
     }
 
     void SetIndexBuffer(std::shared_ptr<IBuffer> buff)

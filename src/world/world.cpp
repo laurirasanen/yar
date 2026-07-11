@@ -1,6 +1,7 @@
 #include "world.h"
 #include "../engine/physics.h"
 #include "../public/log.h"
+#include "../public/renderer/irenderer.h"
 #include "../renderer/scene.h"
 
 namespace yar
@@ -18,7 +19,7 @@ World::~World()
     LOG_INFO("Destroying World");
 }
 
-void World::AddNode(std::shared_ptr<Entity> entity)
+void World::AddEntity(std::shared_ptr<Entity> entity)
 {
     entity->Initialize();
     m_entities.push_back(entity);
@@ -54,6 +55,17 @@ void World::Render()
     if (!m_enabled)
     {
         return;
+    }
+
+    g_renderer->SetCamera(nullptr);
+    for (const auto& ent : m_entities)
+    {
+        const auto cam = ent->GetComponent<Camera>();
+        if (cam && cam->IsActive())
+        {
+            g_renderer->SetCamera(cam);
+            break;
+        }
     }
 
     g_scene->Update(m_entities);

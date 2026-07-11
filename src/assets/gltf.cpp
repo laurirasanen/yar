@@ -7,6 +7,7 @@
 #include "../public/util.h"
 
 #include <glm/geometric.hpp>
+#include <glm/vec3.hpp>
 
 #include <cstdint>
 
@@ -53,20 +54,11 @@ bool GLTF::Load(const std::string& path, std::vector<GltfData>& output)
 
     size_t totalIndexCount  = 0;
     size_t totalVertexCount = 0;
-    size_t totalPrimCount   = 0;
-    size_t loadedPrimCount  = 0;
-
-    for (size_t i = 0; i < data->meshes_count; i++)
-    {
-        totalPrimCount += data->meshes[i].primitives_count;
-    }
 
     for (size_t i = 0; i < data->meshes_count; i++)
     {
         for (size_t primIdx = 0; primIdx < data->meshes[i].primitives_count; primIdx++)
         {
-            loadedPrimCount++;
-
             const auto& primitive = data->meshes[i].primitives[primIdx];
 
             if (primitive.type != cgltf_primitive_type_triangles)
@@ -81,7 +73,7 @@ bool GLTF::Load(const std::string& path, std::vector<GltfData>& output)
             {
                 LOG_ERROR("Failed to read gltf indices: {}", cpath);
                 cgltf_free(data);
-                return;
+                return false;
             }
 
             if (parsedData.indices.size() <= 0)
@@ -94,20 +86,20 @@ bool GLTF::Load(const std::string& path, std::vector<GltfData>& output)
             {
                 LOG_ERROR("Failed to read gltf vertices: {}", cpath);
                 cgltf_free(data);
-                return;
+                return false;
             }
 
             if (!ReadTextures(primitive, parsedData))
             {
                 LOG_ERROR("Failed to read gltf textures: {}", cpath);
                 cgltf_free(data);
-                return;
+                return false;
             }
 
             output.push_back(parsedData);
 
-            totalIndexCount += indices.size();
-            totalVertexCount += vertices.size();
+            totalIndexCount += parsedData.indices.size();
+            totalVertexCount += parsedData.positions.size() / 3;
         }
     }
 

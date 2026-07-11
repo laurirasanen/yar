@@ -2,13 +2,12 @@
 #include <cstring>
 #include <memory>
 
+#include "../public/material.h"
+#include "../public/renderer/ibuffer.h"
 #include "common.h"
 #include "data_types.h"
 #include "descriptor_set.h"
-#include "image.h"
-#include "material.h"
 #include "renderer.h"
-#include "src/public/renderer/ibuffer.h"
 
 namespace yar
 {
@@ -258,30 +257,32 @@ void DescriptorSet::Update(uint32_t frameIndex, const std::vector<std::shared_pt
         {
             VkDescriptorImageInfo info = {};
             info.imageLayout           = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-            info.imageView             = tex->GetVkImageView();
-            info.sampler               = tex->GetVkSampler();
-            textures.push_back(info);
+            info.imageView             = tex->GetImageView();
+            info.sampler               = tex->GetSampler();
+            textureInfos.push_back(info);
         }
 
         const auto& params = mat.GetParameters();
 
         ShaderMaterialData matData = {};
         matData.params[0]          = textures.size() > 0 ? firstTexIdx : UINT32_MAX;
-        matData.params[1]          = textures.size();
+        matData.params[1]          = static_cast<uint32_t>(textures.size());
         matData.params[2]          = params.size() > 0 ? firstParamIdx : UINT32_MAX;
-        matData.params[3]          = params.size();
+        matData.params[3]          = static_cast<uint32_t>(params.size());
 
         ShaderObjectData object = {};
         object.params[0]        = materialIdx;
 
-        m_parameterBuffers[frameIndex]->Write(params, firstParamIdx);
+        m_parameterBuffers[frameIndex]
+            ->Write(params.data(), params.size() * sizeof(float), firstParamIdx * sizeof(float));
         m_materialBuffers[frameIndex]
             ->Write(&matData, sizeof(ShaderMaterialData), materialIdx * sizeof(ShaderMaterialData));
         m_objectBuffers[frameIndex]
             ->Write(&object, sizeof(ShaderObjectData), i * sizeof(ShaderObjectData));
 
         const auto& vertices = nodes[i]->GetVertices();
-        m_vertexBuffers[frameIndex]->Write(vertices, vertexOffset);
+        m_vertexBuffers[frameIndex]
+            ->Write(vertices.data(), vertices.size() * sizeof(float), vertexOffset * sizeof(float));
 
         firstTexIdx += textures.size();
         firstParamIdx += params.size();
@@ -311,7 +312,7 @@ void DescriptorSet::Update(uint32_t frameIndex, const std::vector<std::shared_pt
     stats.TextureCount += static_cast<uint32_t>(textureInfos.size());
 }
 
-void DescriptorSet::SetSky(const Sky* sky)
+void DescriptorSet::SetSky(const SkyComponent* sky)
 {
     auto        renderer = static_pointer_cast<Renderer>(g_renderer);
     const auto& device   = renderer->GetDevice();

@@ -34,7 +34,7 @@ Texture::Texture(std::string name, TextureType type, size_t size, void* data) :
 bool Texture::DoLoad()
 {
     const auto& renderer = static_pointer_cast<Renderer>(g_renderer);
-    const auto  device   = renderer->GetDevice();
+    const auto& device   = renderer->GetDevice();
 
     std::vector<uint8_t> bytes;
     if (m_data == nullptr)
@@ -74,9 +74,7 @@ bool Texture::DoLoad()
 
         if (result != KTX_SUCCESS)
         {
-            LOG_ERROR(
-                std::format("Failed to create KTX {}: {}", GetId(), static_cast<int>(result))
-            );
+            LOG_ERROR("Failed to create KTX {}: {}", GetId(), static_cast<int>(result));
             return false;
         }
 
@@ -91,9 +89,7 @@ bool Texture::DoLoad()
 
         if (result != KTX_SUCCESS)
         {
-            LOG_ERROR(
-                std::format("Failed to upload KTX {}: {}", GetId(), static_cast<int>(result))
-            );
+            LOG_ERROR("Failed to upload KTX {}: {}", GetId(), static_cast<int>(result));
             return false;
         }
 
@@ -117,6 +113,7 @@ bool Texture::DoLoad()
         }
 
         void* pixels = nullptr;
+        int   width, height, channels;
 
         switch (m_type)
         {
@@ -127,11 +124,11 @@ bool Texture::DoLoad()
             case TextureType::TEX_IBL_LUT:
             {
                 pixels = stbi_load_from_memory(
-                    static_cast<const stbi_uc*>(data),
-                    static_cast<int>(size),
-                    &m_width,
-                    &m_height,
-                    &m_channels,
+                    static_cast<const stbi_uc*>(m_data),
+                    static_cast<int>(m_size),
+                    &width,
+                    &height,
+                    &channels,
                     0
                 );
                 break;
@@ -140,11 +137,11 @@ bool Texture::DoLoad()
             case TextureType::TEX_IBL:
             {
                 pixels = stbi_loadf_from_memory(
-                    static_cast<const stbi_uc*>(data),
-                    static_cast<int>(size),
-                    &m_width,
-                    &m_height,
-                    &m_channels,
+                    static_cast<const stbi_uc*>(m_data),
+                    static_cast<int>(m_size),
+                    &width,
+                    &height,
+                    &channels,
                     0
                 );
                 break;
@@ -152,7 +149,7 @@ bool Texture::DoLoad()
 
             default:
             {
-                LOG_ERROR(std::format("Unknown texture type {}", static_cast<int>(type)));
+                LOG_ERROR("Unknown texture type {}", static_cast<int>(m_type));
                 return false;
             }
         }
@@ -163,6 +160,9 @@ bool Texture::DoLoad()
             return false;
         }
 
+        m_width    = static_cast<uint32_t>(width);
+        m_height   = static_cast<uint32_t>(height);
+        m_channels = static_cast<uint32_t>(channels);
         m_format   = VK_FORMAT_UNDEFINED;
         m_mips     = 1;
         m_viewType = VK_IMAGE_VIEW_TYPE_2D;
@@ -171,7 +171,7 @@ bool Texture::DoLoad()
         {
             case 4:
             {
-                switch (type)
+                switch (m_type)
                 {
                     case TextureType::TEX_ALBEDO:
                     {
@@ -198,7 +198,7 @@ bool Texture::DoLoad()
                     {
                         LOG_ERROR(
                             "Unhandled texture type {}, channels {}",
-                            static_cast<int>(type),
+                            static_cast<int>(m_type),
                             m_channels
                         );
                         return false;
@@ -209,7 +209,7 @@ bool Texture::DoLoad()
 
             case 3:
             {
-                switch (type)
+                switch (m_type)
                 {
                     case TextureType::TEX_ALBEDO:
                     {
@@ -236,7 +236,7 @@ bool Texture::DoLoad()
                     {
                         LOG_ERROR(
                             "Unhandled texture type {}, channels {}",
-                            static_cast<int>(type),
+                            static_cast<int>(m_type),
                             m_channels
                         );
                         return false;
@@ -322,15 +322,15 @@ bool Texture::DoLoad()
             renderer->GetDevice().GetVkDevice(),
             BufferType::ImageBuffer,
             Host,
-            size,
+            m_size,
             1
         );
         void* hostData;
         hostBuffer->Map(&hostData);
-        std::memcpy(hostData, pixels, size);
+        std::memcpy(hostData, pixels, m_size);
         hostBuffer->Unmap();
-        stbi_image_free(m_pixels);
-        m_pixels = nullptr;
+        stbi_image_free(pixels);
+        pixels = nullptr;
 
         VkBufferImageCopy region               = {};
         region.bufferOffset                    = 0;
@@ -341,7 +341,7 @@ bool Texture::DoLoad()
         region.imageSubresource.baseArrayLayer = 0;
         region.imageSubresource.layerCount     = 1;
         region.imageOffset                     = {0, 0, 0};
-        region.imageExtent                     = {width, height, 1};
+        region.imageExtent                     = {m_width, m_height, 1};
 
         vkCmdCopyBufferToImage(
             commandBuffer,
@@ -395,7 +395,7 @@ bool Texture::DoLoad()
     samplerInfo.mipmapMode              = VK_SAMPLER_MIPMAP_MODE_LINEAR;
     samplerInfo.mipLodBias              = 0.0f;
     samplerInfo.minLod                  = 0.0f;
-    samplerInfo.maxLod                  = m_mips - 1.0f;
+    samplerInfo.maxLod                  = static_cast<float>(m_mips) - 1.0f;
 
     VK_CHECK(
         vkCreateSampler(device.GetVkDevice(), &samplerInfo, nullptr, &m_sampler),
@@ -407,16 +407,15 @@ bool Texture::DoLoad()
 
 bool Texture::DoUnload()
 {
-    vkDestroySampler(m_renderer->GetDevice().GetVkDevice(), m_sampler, nullptr);
-    vkDestroyImageView(m_renderer->GetDevice().GetVkDevice(), m_imageView, nullptr);
+    const auto& renderer = static_pointer_cast<Renderer>(g_renderer);
+    VkDevice    device   = renderer->GetDevice().GetVkDevice();
+
+    vkDestroySampler(device, m_sampler, nullptr);
+    vkDestroyImageView(device, m_imageView, nullptr);
 
     if (m_type == TextureType::TEX_KTX)
     {
-        ktxVulkanTexture_Destruct(
-            m_ktxVulkanTexture.get(),
-            m_renderer->GetDevice().GetVkDevice(),
-            nullptr
-        );
+        ktxVulkanTexture_Destruct(m_ktxVulkanTexture.get(), device, nullptr);
     }
     else
     {

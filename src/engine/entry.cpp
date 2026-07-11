@@ -1,4 +1,4 @@
-#include "../public/entry.h"
+#include "../public/engine/entry.h"
 #include "../public/log.h"
 #include "engine.h"
 

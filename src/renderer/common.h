@@ -237,29 +237,6 @@ constexpr static uint32_t VkFormatChannels(VkFormat format)
     }
 }
 
-constexpr static VkShaderModuleCreateInfo GetShaderCreateInfo(const void* data, size_t size)
-{
-    VkShaderModuleCreateInfo createInfo {};
-    createInfo.sType    = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO;
-    createInfo.codeSize = size;
-    createInfo.pCode    = static_cast<const uint32_t*>(data);
-    return createInfo;
-}
-
-constexpr static VkPipelineShaderStageCreateInfo FillShaderStageCreateInfo(
-    VkShaderModuleCreateInfo* module,
-    VkShaderStageFlagBits     stage
-)
-{
-    VkPipelineShaderStageCreateInfo createInfo {};
-    createInfo.sType  = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
-    createInfo.stage  = stage;
-    createInfo.module = VK_NULL_HANDLE;
-    createInfo.pName  = "main";
-    createInfo.pNext  = module;
-    return createInfo;
-}
-
 static void CreateImage(
     VkImage*          image,
     VmaAllocation*    imageAllocation,

@@ -157,7 +157,7 @@ class Mesh : public Resource
                 vecs[i].y = d.positions[i * 3 + 1];
                 vecs[i].z = d.positions[i * 3 + 2];
             }
-            auto aabb = AABB(vecs);
+            AABB aabb(vecs);
 
             m_subMeshes.push_back(vertexCount, vertices, indexBuffer, material, aabb);
         }

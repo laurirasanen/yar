@@ -18,6 +18,16 @@ class Material
     {
     }
 
+    const ResourceHandle<Shader> GetVertexShader() const
+    {
+        return m_vert;
+    }
+
+    const ResourceHandle<Shader> GetFragmentShader() const
+    {
+        return m_frag;
+    }
+
     void SetTextures(const std::vector<ResourceHandle<Texture>>& tex)
     {
         m_textures = tex;

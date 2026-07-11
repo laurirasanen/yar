@@ -122,7 +122,7 @@ Buffer::~Buffer()
     vmaDestroyBuffer(g_vma, m_vkBuffer, m_vmaAllocation);
 }
 
-void Buffer::Write(void* data, size_t size, size_t offset)
+void Buffer::Write(const void* data, size_t size, size_t offset)
 {
     vmaCopyMemoryToAllocation(g_vma, data, m_vmaAllocation, offset, size);
 }

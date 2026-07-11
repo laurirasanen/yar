@@ -1,28 +1,25 @@
 #pragma once
 
+#include <map>
 #include <memory>
-#include <stdexcept>
 
 #include <glm/gtc/quaternion.hpp>
 #include <glm/vec3.hpp>
 #include <imgui_impl_vulkan.h>
 #include <vulkan/vulkan_core.h>
 
+#include "../public/ecs/sky.h"
 #include "../public/geometry.h"
 #include "../public/renderer/irenderer.h"
 #include "../window/window.h"
-#include "../world/sky.h"
 #include "buffer.h"
 #include "common.h"
 #include "data_types.h"
 #include "descriptor_set.h"
 #include "device.h"
-#include "image.h"
 #include "instance.h"
-#include "mesh.h"
-#include "scene.h"
-
-#include <memory>
+#include "node.h"
+#include "pipeline.h"
 
 namespace yar
 {
@@ -272,6 +269,26 @@ class Renderer : public IRenderer
         return m_device.GetSwapchainImageCount();
     }
 
+    std::shared_ptr<VulkanPipeline> GetPipeline(const Material& mat)
+    {
+        const auto& id      = mat.GetVertexShader()->GetId();
+        const auto  shaders = {mat.GetVertexShader(), mat.GetFragmentShader()};
+        auto&       pipe    = m_pipelines[id];
+        if (pipe == nullptr)
+        {
+            pipe = std::make_shared<VulkanPipeline>(
+                m_device.GetVkDevice(),
+                shaders,
+                m_descriptorSet->GetLayouts(),
+                m_device.GetColorFormat(),
+                m_device.GetDepthFormat(),
+                true,
+                true
+            );
+        }
+        return pipe;
+    }
+
   private:
     VulkanInstance m_instance;
     VulkanDevice   m_device;
@@ -280,6 +297,8 @@ class Renderer : public IRenderer
 
     std::vector<std::shared_ptr<Buffer>>           m_shaderGlobalBuffers;
     std::vector<std::shared_ptr<ShaderGlobalData>> m_shaderGlobalData;
+
+    std::map<std::string, std::shared_ptr<VulkanPipeline>> m_pipelines;
 
     // Hold so we don't call Buffer destructor
     // while still in use by command buffer.

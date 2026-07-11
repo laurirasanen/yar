@@ -46,17 +46,17 @@ class GLTF
     GLTF& operator=(const GLTF&) = delete;
     GLTF& operator=(GLTF&&)      = delete;
 
-    bool Load(const std::string& path, std::vector<GltfData>& data);
+    static bool Load(const std::string& path, std::vector<GltfData>& data);
 
   private:
-    bool ReadIndices(const cgltf_primitive& primitive, GltfData& data);
+    static bool ReadIndices(const cgltf_primitive& primitive, GltfData& data);
 
-    bool ReadVertices(const cgltf_primitive& primitive, GltfData& data);
-    bool ReadFloats(cgltf_accessor* accessor, std::vector<float>& floats);
+    static bool ReadVertices(const cgltf_primitive& primitive, GltfData& data);
+    static bool ReadFloats(cgltf_accessor* accessor, std::vector<float>& floats);
 
-    void CalculateTangents(GltfData& data);
+    static void CalculateTangents(GltfData& data);
 
-    bool                    ReadTextures(const cgltf_primitive& primitive, GltfData& data);
-    ResourceHandle<Texture> ReadTexture(const cgltf_texture_view* view, TextureType type);
+    static bool                    ReadTextures(const cgltf_primitive& primitive, GltfData& data);
+    static ResourceHandle<Texture> ReadTexture(const cgltf_texture_view* view, TextureType type);
 };
 }; // namespace yar

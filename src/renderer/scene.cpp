@@ -1,7 +1,6 @@
 #include "scene.h"
 #include "../public/ecs/entity.h"
 #include "../public/ecs/mesh.h"
-#include "../public/log.h"
 #include "../public/renderer/irenderer.h"
 #include "../public/resource/mesh.h"
 #include "../public/time_util.h"
@@ -40,7 +39,7 @@ void Scene::Update(const std::vector<std::shared_ptr<Entity>>& entities)
         {
             auto node = std::make_shared<Node>();
             node->SetIndexBuffer(m.GetIndexBuffer());
-            node->SetVertexBuffer(m.GetVertexBuffer());
+            node->SetVertices(m.GetVertices());
             node->SetAABB(m.GetAABB());
             node->SetMaterial(m.GetMaterial());
             node->SetTransform(t);
@@ -74,25 +73,23 @@ void Scene::Render()
 
     for (const auto& batch : m_batches)
     {
-        renderer->BeginDebugLabel(
-            std::format("Batch {} ({})", batchIdx, RenderPipelineNames[batch.first]).c_str(),
-            {}
-        );
+        renderer->BeginDebugLabel(std::format("Batch {}", batchIdx).c_str(), {});
 
         const auto& nodes = batch.second.Nodes;
         stats.NodeCount += nodes.size();
 
+        const auto& pipe = renderer->GetPipeline(batch.first);
+
         if (nodes.size() > 0)
         {
-            g_renderer->BindPipeline(batch.first);
+            g_renderer->BindPipeline(pipe->GetVkPipeline(), pipe->GetVkPipelineLayout());
         }
 
         for (uint32_t i = 0; i < nodes.size(); i++)
         {
-            stats.VertexCount += nodes[i]->GetVertexCount();
             stats.IndexCount += nodes[i]->GetIndexCount();
-            g_renderer->BindDescriptor(nodeIdx);
-            nodes[i]->Render();
+            g_renderer->BindDescriptor(nodeIdx, pipe->GetVkPipelineLayout());
+            renderer->DrawWithBuffers(nodes[i]->GetIndexBuffer());
             nodeIdx++;
         }
 
@@ -110,13 +107,12 @@ void Scene::CullNodes()
     const auto camera    = g_renderer->GetCamera();
     auto&      stats     = g_renderer->GetRenderStats();
 
-    std::vector<std::shared_ptr<Entity>> visible;
+    std::vector<std::shared_ptr<Node>> visible;
     for (auto& node : m_nodes)
     {
         if (node->FrustumCull(camera))
         {
             stats.CulledNodeCount++;
-            stats.CulledVertexCount += node->GetVertexCount();
             stats.CulledIndexCount += node->GetIndexCount();
         }
         else
@@ -159,6 +155,7 @@ void Scene::SortBatches()
             batch.second.Nodes.begin(),
             batch.second.Nodes.end(),
             [&cameraPos](std::shared_ptr<Node> a, std::shared_ptr<Node> b) {
+                /*
                 const auto queueA = a->GetMaterial()->GetQueue();
                 const auto queueB = b->GetMaterial()->GetQueue();
 
@@ -168,13 +165,14 @@ void Scene::SortBatches()
                 }
 
                 if (queueA == queueB)
+                */
                 {
                     const auto distA = glm::length(cameraPos - a->GetAABB().center);
                     const auto distB = glm::length(cameraPos - b->GetAABB().center);
                     return distA < distB;
                 }
 
-                return false;
+                // return false;
             }
         );
     }
@@ -189,7 +187,7 @@ void Scene::UpdateDescriptor()
     auto&      stats     = g_renderer->GetRenderStats();
 
     // TODO this kinda sucks
-    std::vector<std::shared_ptr<Entity>> flattened = {};
+    std::vector<std::shared_ptr<Node>> flattened = {};
     flattened.reserve(m_nodes.size());
 
     for (const auto& batch : m_batches)

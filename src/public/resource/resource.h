@@ -20,18 +20,21 @@ class ResourceHandle
 {
 
   public:
-    ResourceHandle()
+    explicit ResourceHandle()
     {
     }
 
-    ResourceHandle(const std::string& id) : m_resourceId(id)
+    explicit ResourceHandle(const std::string& id) : m_resourceId(id)
     {
     }
 
     ResourceHandle(const ResourceHandle&);
-    ResourceHandle(ResourceHandle&&);
+
+    ResourceHandle(ResourceHandle&&) = default;
+
     ResourceHandle& operator=(const ResourceHandle&);
-    ResourceHandle& operator=(ResourceHandle&&);
+
+    ResourceHandle& operator=(ResourceHandle&&) = default;
 
     ~ResourceHandle();
 
@@ -141,6 +144,21 @@ class ResourceManager
         {
             m_workerThread.join();
         }
+    }
+
+    template<typename T>
+    ResourceHandle<T> Copy(const ResourceHandle<T> resource)
+    {
+        static_assert(std::is_base_of<Resource, T>::value, "T must derive from Resource");
+
+        if (!resource.IsValid())
+        {
+            throw std::runtime_error("Tried to copy invalid resource");
+        }
+
+        auto& typeResources = m_resources[std::type_index(typeid(T))];
+        typeResources[resource->GetId()].refCount++;
+        return resource;
     }
 
     template<typename T, typename... Args>
@@ -272,20 +290,14 @@ extern std::shared_ptr<ResourceManager> g_resources;
 template<typename T>
 ResourceHandle<T>::ResourceHandle(const ResourceHandle<T>& other)
 {
-    return g_resources->Load<T>(other.GetId());
+    *this = g_resources->Copy<T>(other);
 }
-
-template<typename T>
-ResourceHandle<T>::ResourceHandle(ResourceHandle<T>&& other) = default;
 
 template<typename T>
 ResourceHandle<T>& ResourceHandle<T>::operator=(const ResourceHandle<T>& other)
 {
-    return g_resources->Load<T>(other.GetId());
+    return *this = g_resources->Copy<T>(other);
 }
-
-template<typename T>
-ResourceHandle<T>& ResourceHandle<T>::operator=(ResourceHandle<T>&& other) = default;
 
 template<typename T>
 ResourceHandle<T>::~ResourceHandle()

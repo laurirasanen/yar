@@ -1,6 +1,5 @@
 #pragma once
 
-#include "../public/renderer/irenderer.h"
 #include "node.h"
 
 #include <map>

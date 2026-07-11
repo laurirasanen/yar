@@ -8,8 +8,8 @@
 #include <glm/gtc/quaternion.hpp>
 #include <glm/vec3.hpp>
 
+#include "../public/engine/iapp.h"
 #include "../public/engine/iengine.h"
-#include "../public/iapp.h"
 #include "../public/window/input.h"
 #include "../renderer/renderer.h"
 
