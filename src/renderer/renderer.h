@@ -169,9 +169,6 @@ class Renderer : public IRenderer
             index->Draw(commandBuffer, 0, 1);
 
             m_frameBuffers.push_back(index);
-
-            m_renderStats.NodeCount++;
-            m_renderStats.IndexCount += index->GetElementCount();
         }
     }
 
