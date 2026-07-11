@@ -149,7 +149,6 @@ void DescriptorSet::Alloc()
         write.dstArrayElement      = 0;
         write.descriptorType       = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC;
         write.descriptorCount      = 1;
-        write.pBufferInfo          = &buffers.back();
         writes.push_back(write);
 
         m_vertexBuffers.push_back(
@@ -162,8 +161,7 @@ void DescriptorSet::Alloc()
         buffer.range  = sizeof(float) * VERT_BUFF_SIZE;
         buffers.push_back(buffer);
 
-        write.dstBinding  = BINDING_VERTICES;
-        write.pBufferInfo = &buffers.back();
+        write.dstBinding = BINDING_VERTICES;
         writes.push_back(write);
 
         m_materialBuffers.push_back(
@@ -181,8 +179,7 @@ void DescriptorSet::Alloc()
         buffer.range  = sizeof(ShaderMaterialData) * MAX_OBJECTS;
         buffers.push_back(buffer);
 
-        write.dstBinding  = BINDING_MATERIALS;
-        write.pBufferInfo = &buffers.back();
+        write.dstBinding = BINDING_MATERIALS;
         writes.push_back(write);
 
         m_parameterBuffers.push_back(
@@ -200,9 +197,13 @@ void DescriptorSet::Alloc()
         buffer.range  = sizeof(float) * MAX_OBJECTS * 6;
         buffers.push_back(buffer);
 
-        write.dstBinding  = BINDING_PARAMS;
-        write.pBufferInfo = &buffers.back();
+        write.dstBinding = BINDING_PARAMS;
         writes.push_back(write);
+    }
+
+    for (uint32_t i = 0; i < writes.size(); i++)
+    {
+        writes[i].pBufferInfo = &buffers[i];
     }
 
     vkUpdateDescriptorSets(
