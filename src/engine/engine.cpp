@@ -110,19 +110,23 @@ int Engine::Run(std::shared_ptr<IApplication> app)
 
         if (Time::TimeForEngineFrame())
         {
-            Frame();
+            if (!Frame())
+            {
+                LOG_INFO("Engine::Frame exit");
+                break;
+            }
         }
     }
 
     return 0;
 }
 
-void Engine::Frame()
+bool Engine::Frame()
 {
     auto acquired = m_mainFrameSemaphore.try_acquire();
     if (!acquired)
     {
-        return;
+        return true;
     }
 
     Time::UpdateFrameDelta();
@@ -143,6 +147,13 @@ void Engine::Frame()
     while (Time::Now() < start + sleep)
     {
         std::this_thread::yield();
+        if (Time::TimeForEngineTick())
+        {
+            if (!Tick())
+            {
+                return false;
+            }
+        }
     }
     Time::AntiLag = Time::Now() - start;
 
@@ -192,6 +203,8 @@ void Engine::Frame()
     m_frameInput.Clear();
 
     m_threadFrameSemaphore.release();
+
+    return true;
 }
 
 bool Engine::Tick()

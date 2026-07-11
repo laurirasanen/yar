@@ -34,7 +34,7 @@ class Engine : public IEngine
     }
 
   private:
-    void Frame();
+    bool Frame();
     bool Tick();
 
     void UpdateInput();
