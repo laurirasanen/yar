@@ -3,6 +3,8 @@
 
 #define MAT_MVP (mul(objectData.model, globalData->viewProj))
 
+#define SKY_ENABLED (globalData->settings.z >= 0)
+
 #define UINT32_MAX 4294967295
 
 float4 SampleAlbedo(float2 uv)
@@ -142,7 +144,7 @@ layout(binding = 0, set = 0)
 ConstantBuffer<ObjectData> objectData;
 
 layout(binding = 1, set = 0)
-StructuredBuffer<Vertex> vertices;
+StructuredBuffer<Vertex, ScalarDataLayout> vertices;
 
 layout(binding = 2, set = 0)
 StructuredBuffer<Material> materials;

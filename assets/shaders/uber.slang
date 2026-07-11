@@ -75,17 +75,25 @@ struct VertexOut
     const float3 viewDir = normalize(input.tangentEye - input.tangentPos);
     const float3 halfDir = normalize(viewDir + lightDir);
 
-    float3 color = BRDF_IBL(
-        globalData,
-        input.normal,
-        normalDir,
-        input.viewDir,
-        viewDir,
-        albedo.rgb,
-        roughness,
-        metallic,
-        occlusion
-    );
+    float3 color;
+    if (SKY_ENABLED)
+    {
+        color = BRDF_IBL(
+            globalData,
+            input.normal,
+            normalDir,
+            input.viewDir,
+            viewDir,
+            albedo.rgb,
+            roughness,
+            metallic,
+            occlusion
+        );
+    }
+    else
+    {
+        color = albedo.rgb;
+    }
 
     const float3 emissive = SampleEmissive(input.uv);
     color += emissive;

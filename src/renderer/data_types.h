@@ -46,6 +46,7 @@ struct ShaderGlobalData
         SetExposure(1.0f);
         SetContrast(1.0f);
         SetIBLStrength(0.4f);
+        SetIBLMips(-1.0f);
     }
 
     void Update(const Camera* cam)

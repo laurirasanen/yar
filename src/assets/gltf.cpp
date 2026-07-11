@@ -234,7 +234,7 @@ void GLTF::CalculateTangents(GltfData& data)
 {
     const auto             vertexCount = data.positions.size() / 3;
     const auto             positions   = reinterpret_cast<glm::vec3*>(data.positions.data());
-    auto                   normals     = reinterpret_cast<glm::vec3*>(data.normals.data());
+    const auto             normals     = reinterpret_cast<glm::vec3*>(data.normals.data());
     std::vector<glm::vec3> tangents    = {};
     std::vector<glm::vec3> bitangents  = {};
     const auto             uvs         = reinterpret_cast<glm::vec2*>(data.uvs.data());

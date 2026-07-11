@@ -952,6 +952,7 @@ void VulkanDevice::CreateLogicalDevice()
     vk12Features.runtimeDescriptorArray = VK_TRUE;
     vk12Features.shaderInt8             = VK_TRUE;
     vk12Features.storagePushConstant8   = VK_TRUE;
+    vk12Features.scalarBlockLayout      = VK_TRUE;
     vk12Features.pNext                  = &vk11Features;
 
     // 1.3
