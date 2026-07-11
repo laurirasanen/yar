@@ -67,5 +67,7 @@ class VulkanInstance
 #else
     constexpr static bool m_enableValidationLayers = true;
 #endif
+
+    bool m_enableLayerSettings = true;
 };
 } // namespace yar

@@ -2,6 +2,7 @@
 #include <stdexcept>
 
 #include "../public/log.h"
+#include "../public/platform/env.h"
 #include "../public/util.h"
 #include "common.h"
 #include "instance.h"
@@ -126,6 +127,11 @@ VulkanInstance::VulkanInstance(std::shared_ptr<SDLWindow> window) : m_window(win
     appInfo.engineVersion      = VK_MAKE_VERSION(1, 0, 0);
     appInfo.apiVersion         = VK_API_VERSION_1_4;
 
+    if (Environment::IsSet("RENDERDOC_CAPFILE"))
+    {
+        m_enableLayerSettings = false;
+    }
+
     if (m_enableValidationLayers && !ValidationLayersSupported())
     {
         throw std::runtime_error("Validation layers not available");
@@ -148,32 +154,35 @@ VulkanInstance::VulkanInstance(std::shared_ptr<SDLWindow> window) : m_window(win
         PopulateDebugMessengerCreateInfo(debugCreateInfo);
         createInfo.pNext = &debugCreateInfo;
 
-        const char*    layer    = "VK_LAYER_KHRONOS_validation";
-        const VkBool32 on       = VK_TRUE;
-        const VkBool32 off      = VK_FALSE;
-        const char*    action[] = {"VK_DBG_LAYER_ACTION_LOG_MSG"};
-        const char*    flags[]  = {"info", "warn", "perf", "error", "debug"};
+        if (m_enableLayerSettings)
+        {
+            const char*    layer    = "VK_LAYER_KHRONOS_validation";
+            const VkBool32 on       = VK_TRUE;
+            const VkBool32 off      = VK_FALSE;
+            const char*    action[] = {"VK_DBG_LAYER_ACTION_LOG_MSG"};
+            const char*    flags[]  = {"info", "warn", "perf", "error", "debug"};
 
-        // clang-format off
-        const VkLayerSettingEXT settings[] = {
-            {layer, "legacy_detection",            VK_LAYER_SETTING_TYPE_BOOL32_EXT, 1, &on},
-            {layer, "validate_sync",               VK_LAYER_SETTING_TYPE_BOOL32_EXT, 1, &on},
-            {layer, "validate_core",               VK_LAYER_SETTING_TYPE_BOOL32_EXT, 1, &off},
-            {layer, "gpuav_enable",                VK_LAYER_SETTING_TYPE_BOOL32_EXT, 1, &on},
-            {layer, "validate_best_practices",     VK_LAYER_SETTING_TYPE_BOOL32_EXT, 1, &on},
-            {layer, "validate_best_practices_amd", VK_LAYER_SETTING_TYPE_BOOL32_EXT, 1, &on},
-            {layer, "debug_action",                VK_LAYER_SETTING_TYPE_STRING_EXT, 1, action},
-            {layer, "report_flags",                VK_LAYER_SETTING_TYPE_STRING_EXT, 5, flags}
-        };
-        // clang-format on
+            // clang-format off
+            const VkLayerSettingEXT settings[] = {
+                {layer, "legacy_detection",            VK_LAYER_SETTING_TYPE_BOOL32_EXT, 1, &on},
+                {layer, "validate_sync",               VK_LAYER_SETTING_TYPE_BOOL32_EXT, 1, &on},
+                {layer, "validate_core",               VK_LAYER_SETTING_TYPE_BOOL32_EXT, 1, &off},
+                {layer, "gpuav_enable",                VK_LAYER_SETTING_TYPE_BOOL32_EXT, 1, &on},
+                {layer, "validate_best_practices",     VK_LAYER_SETTING_TYPE_BOOL32_EXT, 1, &on},
+                {layer, "validate_best_practices_amd", VK_LAYER_SETTING_TYPE_BOOL32_EXT, 1, &on},
+                {layer, "debug_action",                VK_LAYER_SETTING_TYPE_STRING_EXT, 1, action},
+                {layer, "report_flags",                VK_LAYER_SETTING_TYPE_STRING_EXT, 5, flags}
+            };
+            // clang-format on
 
-        VkLayerSettingsCreateInfoEXT settingsCreateInfo;
-        settingsCreateInfo.sType        = VK_STRUCTURE_TYPE_LAYER_SETTINGS_CREATE_INFO_EXT;
-        settingsCreateInfo.pNext        = nullptr;
-        settingsCreateInfo.settingCount = ARRAY_SIZE(settings);
-        settingsCreateInfo.pSettings    = settings;
+            VkLayerSettingsCreateInfoEXT settingsCreateInfo;
+            settingsCreateInfo.sType        = VK_STRUCTURE_TYPE_LAYER_SETTINGS_CREATE_INFO_EXT;
+            settingsCreateInfo.pNext        = nullptr;
+            settingsCreateInfo.settingCount = ARRAY_SIZE(settings);
+            settingsCreateInfo.pSettings    = settings;
 
-        debugCreateInfo.pNext = &settingsCreateInfo;
+            debugCreateInfo.pNext = &settingsCreateInfo;
+        }
 
         VK_CHECK(
             vkCreateInstance(&createInfo, nullptr, &m_vkInstance),
@@ -231,7 +240,10 @@ std::vector<const char*> VulkanInstance::GetRequiredExtensions()
     if (m_enableValidationLayers)
     {
         extensions.push_back(VK_EXT_DEBUG_UTILS_EXTENSION_NAME);
-        extensions.push_back(VK_EXT_LAYER_SETTINGS_EXTENSION_NAME);
+        if (m_enableLayerSettings)
+        {
+            extensions.push_back(VK_EXT_LAYER_SETTINGS_EXTENSION_NAME);
+        }
     }
 
     return extensions;
@@ -290,7 +302,6 @@ void VulkanInstance::SetupDebugMessenger()
     VkDebugUtilsMessengerCreateInfoEXT createInfo {};
     PopulateDebugMessengerCreateInfo(createInfo);
 
-    // todo alloc cb
     VK_CHECK(
         _CreateDebugUtilsMessengerEXT(m_vkInstance, &createInfo, nullptr, &m_vkDebugMessenger),
         "Failed to set up debug messenger"
