@@ -60,10 +60,18 @@ void World::Render()
     g_renderer->SetCamera(nullptr);
     for (const auto& ent : m_entities)
     {
-        const auto cam = ent->GetComponent<Camera>();
+        // TODO this is silly
+        const auto cam = ent->GetComponent<NoclipCamera>();
         if (cam && cam->IsActive())
         {
             g_renderer->SetCamera(cam);
+            break;
+        }
+
+        const auto cam2 = ent->GetComponent<Camera>();
+        if (cam2 && cam2->IsActive())
+        {
+            g_renderer->SetCamera(cam2);
             break;
         }
     }
