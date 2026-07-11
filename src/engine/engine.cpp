@@ -6,6 +6,7 @@
 #include <imgui.h>
 
 #include "../public/log.h"
+#include "../public/platform/env.h"
 #include "../public/resource/resource.h"
 #include "../public/time_util.h"
 #include "../ui/ui.h"
@@ -24,6 +25,8 @@ std::shared_ptr<IRenderer>       g_renderer;
 Engine::Engine()
 {
     LOG_INFO("Creating Engine");
+
+    LOG_DEBUG("ENVIRONMENT:\n{}", Environment::GetAll().c_str());
 
     Time::SetStart();
 
