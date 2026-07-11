@@ -10,7 +10,6 @@
 #include <climits>
 #include <cstdint>
 #include <cstdlib>
-#include <format>
 #include <string>
 
 namespace yar
@@ -54,7 +53,7 @@ bool Texture::DoLoad()
         ktxTexture*         kTexture;
         KTX_error_code      result;
         ktxVulkanDeviceInfo vdi;
-        m_ktxVulkanTexture = std::make_unique<ktxVulkanTexture>();
+        m_ktxVulkanTexture = std::make_shared<ktxVulkanTexture>();
 
         ktxVulkanDeviceInfo_Construct(
             &vdi,
@@ -395,7 +394,7 @@ bool Texture::DoLoad()
     samplerInfo.mipmapMode              = VK_SAMPLER_MIPMAP_MODE_LINEAR;
     samplerInfo.mipLodBias              = 0.0f;
     samplerInfo.minLod                  = 0.0f;
-    samplerInfo.maxLod                  = static_cast<float>(m_mips) - 1.0f;
+    samplerInfo.maxLod                  = static_cast<float>(m_mips - 1);
 
     VK_CHECK(
         vkCreateSampler(device.GetVkDevice(), &samplerInfo, nullptr, &m_sampler),

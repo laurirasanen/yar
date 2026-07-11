@@ -152,6 +152,8 @@ engine_deps = [
 engine_src = files([
   'src/assets/gltf.cpp',
 
+  'src/ecs/component.cpp',
+
   'src/engine/engine.cpp',
   'src/engine/entry.cpp',
   'src/engine/physics.cpp',

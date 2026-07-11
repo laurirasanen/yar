@@ -76,14 +76,16 @@ void Scene::Render()
         renderer->BeginDebugLabel(std::format("Batch {}", batchIdx).c_str(), {});
 
         const auto& nodes = batch.second.Nodes;
+
+        if (nodes.size() <= 0)
+        {
+            continue;
+        }
+
         stats.NodeCount += nodes.size();
 
-        const auto& pipe = renderer->GetPipeline(batch.first);
-
-        if (nodes.size() > 0)
-        {
-            g_renderer->BindPipeline(pipe->GetVkPipeline(), pipe->GetVkPipelineLayout());
-        }
+        const auto& pipe = renderer->GetPipeline(nodes[0]->GetMaterial());
+        g_renderer->BindPipeline(pipe->GetVkPipeline(), pipe->GetVkPipelineLayout());
 
         for (uint32_t i = 0; i < nodes.size(); i++)
         {
@@ -137,7 +139,8 @@ void Scene::BatchNodes()
 
     for (const auto& node : m_nodes)
     {
-        m_batches[node->GetMaterial()].Nodes.push_back(node);
+        const auto& id = node->GetMaterial().GetVertexShader()->GetId();
+        m_batches[id].Nodes.push_back(node);
     }
 
     stats.SceneBatchTime = Time::Now() - startTime;

@@ -31,7 +31,10 @@ class Texture : public Resource
     Texture() = delete;
     explicit Texture(std::string name, TextureType type);
     explicit Texture(std::string name, TextureType type, size_t size, const void* data);
-    ~Texture();
+
+    ~Texture()
+    {
+    }
 
     Texture(const Texture&)            = delete;
     Texture(Texture&&)                 = delete;
@@ -96,6 +99,6 @@ class Texture : public Resource
     VkImageViewType m_viewType;
     VkFormat        m_format;
 
-    std::unique_ptr<ktxVulkanTexture> m_ktxVulkanTexture;
+    std::shared_ptr<ktxVulkanTexture> m_ktxVulkanTexture;
 };
 }; // namespace yar

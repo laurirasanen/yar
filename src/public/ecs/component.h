@@ -8,9 +8,6 @@ class Entity;
 
 class ComponentTypeIDSystem
 {
-  private:
-    static size_t nextTypeID;
-
   public:
     template<typename T>
     static size_t GetTypeID()
@@ -18,9 +15,10 @@ class ComponentTypeIDSystem
         static size_t typeID = nextTypeID++;
         return typeID;
     }
-};
 
-size_t ComponentTypeIDSystem::nextTypeID = 0;
+  private:
+    static size_t nextTypeID;
+};
 
 class Component
 {
