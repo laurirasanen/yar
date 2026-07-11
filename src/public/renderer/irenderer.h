@@ -133,7 +133,7 @@ class IRenderer
   protected:
     RenderStats m_renderStats;
 
-    Camera* m_camera;
+    Camera* m_camera = nullptr;
 };
 
 extern std::shared_ptr<IRenderer> g_renderer;
