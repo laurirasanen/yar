@@ -263,7 +263,10 @@ void DescriptorSet::Update(uint32_t frameIndex, const std::vector<std::shared_pt
         matData.params[2]          = params.size() > 0 ? firstParamIdx : UINT32_MAX;
         matData.params[3]          = static_cast<uint32_t>(params.size());
 
+        const auto&      trans  = nodes[i]->GetGlobalTransform();
         ShaderObjectData object = {};
+        object.model            = trans.GetModelMatrix();
+        object.normal           = trans.GetRotationMatrix();
         object.params[0]        = materialIdx;
 
         m_parameterBuffers[frameIndex]
