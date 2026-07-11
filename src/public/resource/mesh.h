@@ -132,8 +132,7 @@ class Mesh : public Resource
 
             auto indexBuffer = g_renderer->GetIndexBuffer(d.indices);
 
-            auto vertShader = g_resources->Load<Shader>("uber.slang", SHADER_ENTRY_VERTEX);
-            auto fragShader = g_resources->Load<Shader>("uber.slang", SHADER_ENTRY_PIXEL);
+            auto shader = g_resources->Load<Shader>("uber.slang");
 
             std::vector<ResourceHandle<Texture>> textures =
                 {d.textures.albedo, d.textures.orm, d.textures.normal, d.textures.emissive};
@@ -145,7 +144,7 @@ class Mesh : public Resource
                 d.parameters.emissive[1],
                 d.parameters.emissive[2]
             };
-            auto material = Material(vertShader, fragShader);
+            auto material = Material(shader);
             material.SetTextures(textures);
             material.SetParameters(params);
 

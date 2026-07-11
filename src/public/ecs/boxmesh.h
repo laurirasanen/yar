@@ -74,10 +74,9 @@ class BoxMeshComponent : public Component
             static_cast<uint32_t>(indices.size())
         );
 
-        auto vertShader = g_resources->Load<Shader>("uber.slang", SHADER_ENTRY_VERTEX);
-        auto fragShader = g_resources->Load<Shader>("uber.slang", SHADER_ENTRY_PIXEL);
+        auto shader = g_resources->Load<Shader>("uber.slang");
 
-        auto material = Material(vertShader, fragShader);
+        auto material = Material(shader);
 
         std::vector<glm::vec3> vecs = {};
         vecs.resize(vertexCount);

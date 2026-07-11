@@ -106,7 +106,7 @@ const void* ShaderCompiler::GetSpirv(std::string moduleName, std::string entryNa
         }
     }
 
-    LOG_ERROR("Program {} {} not found", moduleName, entryName);
+    LOG_DEBUG("Program {} {} not found", moduleName, entryName);
     return nullptr;
 }
 

@@ -2,6 +2,7 @@
 
 #include <memory>
 
+#include "src/public/shader/compiler.h"
 #include "vulkan/vulkan_core.h"
 
 #include "../public/log.h"
@@ -17,16 +18,16 @@ class VulkanPipeline
     VulkanPipeline() = delete;
 
     VulkanPipeline(
-        const VkDevice                             device,
-        const std::vector<ResourceHandle<Shader>>& shaders,
-        const std::vector<VkDescriptorSetLayout>&  descriptorLayouts,
-        VkFormat                                   colorFormat,
-        VkFormat                                   depthFormat,
-        bool                                       enableCulling = true,
-        bool                                       enableDepth   = true
+        const VkDevice                            device,
+        const ResourceHandle<Shader>&             shader,
+        const std::vector<VkDescriptorSetLayout>& descriptorLayouts,
+        VkFormat                                  colorFormat,
+        VkFormat                                  depthFormat,
+        bool                                      enableCulling = true,
+        bool                                      enableDepth   = true
     ) :
         m_device(device),
-        m_shaders(shaders)
+        m_shader(shader)
     {
         LOG_DEBUG("Creating VulkanPipeline");
 
@@ -142,9 +143,17 @@ class VulkanPipeline
         pipelineCreateInfo.stencilAttachmentFormat = VK_FORMAT_UNDEFINED;
 
         std::vector<VkPipelineShaderStageCreateInfo> shaderStages = {};
-        for (const auto& sh : m_shaders)
+        if (m_shader->HasEntry(SHADER_ENTRY_VERTEX))
         {
-            shaderStages.push_back(sh->GetStageInfo());
+            shaderStages.push_back(m_shader->GetStageInfo(SHADER_ENTRY_VERTEX));
+        }
+        if (m_shader->HasEntry(SHADER_ENTRY_PIXEL))
+        {
+            shaderStages.push_back(m_shader->GetStageInfo(SHADER_ENTRY_PIXEL));
+        }
+        if (m_shader->HasEntry(SHADER_ENTRY_COMPUTE))
+        {
+            shaderStages.push_back(m_shader->GetStageInfo(SHADER_ENTRY_COMPUTE));
         }
 
         VkGraphicsPipelineCreateInfo graphicsCreateInfo {};
@@ -211,7 +220,7 @@ class VulkanPipeline
   private:
     VkDevice m_device;
 
-    std::vector<ResourceHandle<Shader>> m_shaders;
+    ResourceHandle<Shader> m_shader;
 
     VkPipelineLayout m_vkPipelineLayout;
     VkPipeline       m_vkPipeline;

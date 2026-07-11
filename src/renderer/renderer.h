@@ -271,14 +271,13 @@ class Renderer : public IRenderer
 
     std::shared_ptr<VulkanPipeline> GetPipeline(const Material& mat)
     {
-        const auto& id      = mat.GetVertexShader()->GetId();
-        const auto  shaders = {mat.GetVertexShader(), mat.GetFragmentShader()};
-        auto&       pipe    = m_pipelines[id];
+        const auto& id   = mat.GetShader()->GetId();
+        auto&       pipe = m_pipelines[id];
         if (pipe == nullptr)
         {
             pipe = std::make_shared<VulkanPipeline>(
                 m_device.GetVkDevice(),
-                shaders,
+                mat.GetShader(),
                 m_descriptorSet->GetLayouts(),
                 m_device.GetColorFormat(),
                 m_device.GetDepthFormat(),

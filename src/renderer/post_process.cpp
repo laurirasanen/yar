@@ -27,9 +27,6 @@ PostProcessPass::PostProcessPass(
     const auto  renderer = static_pointer_cast<Renderer>(g_renderer);
     const auto& device   = renderer->GetDevice();
 
-    auto vertShader = g_resources->Load<Shader>(shader, SHADER_ENTRY_VERTEX);
-    auto fragShader = g_resources->Load<Shader>(shader, SHADER_ENTRY_PIXEL);
-
     std::vector<VkDescriptorSetLayoutBinding> texBindings = {};
     texBindings.resize(numTextures);
 
@@ -73,12 +70,11 @@ PostProcessPass::PostProcessPass(
         );
     }
 
-    const std::vector<ResourceHandle<Shader>> shaders = {vertShader, fragShader};
-    const std::vector<VkDescriptorSetLayout>  layouts = {m_descriptorSetLayout};
+    const std::vector<VkDescriptorSetLayout> layouts = {m_descriptorSetLayout};
 
     m_pipeline = std::make_shared<VulkanPipeline>(
         device.GetVkDevice(),
-        shaders,
+        g_resources->Load<Shader>(shader),
         layouts,
         outputColorFormat,
         device.GetDepthFormat(),

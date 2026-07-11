@@ -14,18 +14,13 @@ class Material
     {
     }
 
-    Material(ResourceHandle<Shader> vert, ResourceHandle<Shader> frag) : m_vert(vert), m_frag(frag)
+    Material(ResourceHandle<Shader> shader) : m_shader(shader)
     {
     }
 
-    const ResourceHandle<Shader> GetVertexShader() const
+    const ResourceHandle<Shader> GetShader() const
     {
-        return m_vert;
-    }
-
-    const ResourceHandle<Shader> GetFragmentShader() const
-    {
-        return m_frag;
+        return m_shader;
     }
 
     void SetTextures(const std::vector<ResourceHandle<Texture>>& tex)
@@ -49,8 +44,7 @@ class Material
     }
 
   private:
-    ResourceHandle<Shader> m_vert;
-    ResourceHandle<Shader> m_frag;
+    ResourceHandle<Shader> m_shader;
 
     std::vector<ResourceHandle<Texture>> m_textures;
     std::vector<float>                   m_parameters;

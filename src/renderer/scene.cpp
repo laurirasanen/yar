@@ -146,7 +146,7 @@ void Scene::BatchNodes()
 
     for (const auto& node : m_nodes)
     {
-        const auto& id = node->GetMaterial().GetVertexShader()->GetId();
+        const auto& id = node->GetMaterial().GetShader()->GetId();
         m_batches[id].Nodes.push_back(node);
     }
 

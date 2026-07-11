@@ -3,11 +3,12 @@
 #include <vulkan/vulkan_core.h>
 
 #include "../shader/compiler.h"
+#include "../util.h"
 #include "resource.h"
 
 #include <cstring>
-#include <format>
 #include <string>
+#include <unordered_map>
 
 namespace yar
 {
@@ -37,55 +38,46 @@ constexpr static VkPipelineShaderStageCreateInfo FillShaderStageCreateInfo(
 class Shader : public Resource
 {
   public:
-    explicit Shader(const std::string& id, const std::string& entry) :
-        Resource(std::format("{}_{}", id, entry)),
-        m_name(id),
-        m_entry(entry)
+    explicit Shader(const std::string& id) : Resource(id), m_name(id)
     {
     }
 
-    const VkShaderModuleCreateInfo& GetModuleInfo()
+    bool HasEntry(const std::string& entry)
     {
-        return m_moduleInfo;
+        return m_moduleInfo.contains(entry);
     }
 
-    const VkPipelineShaderStageCreateInfo& GetStageInfo()
+    const VkShaderModuleCreateInfo& GetModuleInfo(const std::string& entry)
     {
-        return m_stageInfo;
+        return m_moduleInfo[entry];
+    }
+
+    const VkPipelineShaderStageCreateInfo& GetStageInfo(const std::string& entry)
+    {
+        return m_stageInfo[entry];
     }
 
   protected:
     bool DoLoad() override
     {
-        size_t      size;
-        const void* spirv = g_shaderCompiler->GetSpirv(m_name, m_entry, size);
-        if (!spirv)
-        {
-            throw std::runtime_error(
-                std::format("failed to load shader {} entry {}", m_name, m_entry)
-            );
-        }
+        const std::string entryNames[] =
+            {SHADER_ENTRY_VERTEX, SHADER_ENTRY_PIXEL, SHADER_ENTRY_COMPUTE};
+        const VkShaderStageFlagBits stages[] =
+            {VK_SHADER_STAGE_VERTEX_BIT, VK_SHADER_STAGE_FRAGMENT_BIT, VK_SHADER_STAGE_COMPUTE_BIT};
 
-        VkShaderStageFlagBits stage;
-        if (strcmp(m_entry.c_str(), SHADER_ENTRY_VERTEX) == 0)
+        size_t size;
+        for (uint32_t i = 0; i < ARRAY_SIZE(entryNames); i++)
         {
-            stage = VK_SHADER_STAGE_VERTEX_BIT;
-        }
-        else if (strcmp(m_entry.c_str(), SHADER_ENTRY_PIXEL) == 0)
-        {
-            stage = VK_SHADER_STAGE_FRAGMENT_BIT;
-        }
-        else if (strcmp(m_entry.c_str(), SHADER_ENTRY_COMPUTE) == 0)
-        {
-            stage = VK_SHADER_STAGE_COMPUTE_BIT;
-        }
-        else
-        {
-            throw std::runtime_error(std::format("Unhandled shader entry {}", m_entry));
-        }
+            const void* spirv = g_shaderCompiler->GetSpirv(m_name, entryNames[i], size);
+            if (!spirv)
+            {
+                continue;
+            }
 
-        m_moduleInfo = GetShaderCreateInfo(spirv, size);
-        m_stageInfo  = FillShaderStageCreateInfo(&m_moduleInfo, stage);
+            m_moduleInfo[entryNames[i]] = GetShaderCreateInfo(spirv, size);
+            m_stageInfo[entryNames[i]] =
+                FillShaderStageCreateInfo(&m_moduleInfo[entryNames[i]], stages[i]);
+        }
 
         return true;
     }
@@ -96,9 +88,8 @@ class Shader : public Resource
     }
 
   private:
-    std::string                     m_name;
-    std::string                     m_entry;
-    VkShaderModuleCreateInfo        m_moduleInfo;
-    VkPipelineShaderStageCreateInfo m_stageInfo;
+    std::string                                                      m_name;
+    std::unordered_map<std::string, VkShaderModuleCreateInfo>        m_moduleInfo;
+    std::unordered_map<std::string, VkPipelineShaderStageCreateInfo> m_stageInfo;
 };
 }; // namespace yar
