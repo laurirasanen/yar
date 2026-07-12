@@ -506,6 +506,8 @@ void VulkanDevice::DestroySwapchain()
 
     vkDestroySwapchainKHR(m_vkDevice, m_vkSwapchain, nullptr);
 
+    vkDestroySampler(m_vkDevice, m_colorAttachment.Sampler, nullptr);
+    vkDestroySampler(m_vkDevice, m_depthAttachment.Sampler, nullptr);
     vkDestroyImageView(m_vkDevice, m_colorAttachment.ImageView, nullptr);
     vkDestroyImageView(m_vkDevice, m_depthAttachment.ImageView, nullptr);
     vmaDestroyImage(g_vma, m_colorAttachment.Image, m_colorAttachment.Allocation);
