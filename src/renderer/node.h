@@ -3,6 +3,7 @@
 #include "../public/ecs/camera.h"
 #include "../public/geometry.h"
 #include "../public/material.h"
+#include "../public/renderer/data_types.h"
 #include "../public/renderer/ibuffer.h"
 #include "../public/transform.h"
 
@@ -14,7 +15,7 @@ namespace yar
 class Node
 {
   public:
-    Node() : m_parent(nullptr)
+    Node() : m_parent(nullptr), m_indexBuffer(nullptr), m_vertices(nullptr)
     {
     }
 
@@ -130,7 +131,7 @@ class Node
 
     bool IsRenderable()
     {
-        return m_indexBuffer != nullptr && m_vertices.size() > 0;
+        return m_indexBuffer != nullptr && m_vertices != nullptr;
     }
 
     void SetIndexBuffer(std::shared_ptr<IBuffer> buff)
@@ -138,7 +139,7 @@ class Node
         m_indexBuffer = buff;
     }
 
-    void SetVertices(std::vector<float> v)
+    void SetVertices(std::shared_ptr<std::vector<ShaderVertex>> v)
     {
         m_vertices = v;
     }
@@ -148,14 +149,27 @@ class Node
         return m_indexBuffer;
     }
 
-    const std::vector<float>& GetVertices()
+    const std::shared_ptr<std::vector<ShaderVertex>> GetVertices() const
     {
         return m_vertices;
     }
 
     uint32_t GetIndexCount() const
     {
+        if (m_indexBuffer == nullptr)
+        {
+            return 0;
+        }
         return m_indexBuffer->GetElementCount();
+    }
+
+    uint32_t GetVertexCount() const
+    {
+        if (m_vertices == nullptr)
+        {
+            return 0;
+        }
+        return static_cast<uint32_t>(m_vertices->size());
     }
 
     void SetMaterial(const Material& mat)
@@ -169,14 +183,14 @@ class Node
     }
 
   private:
-    Transform                          m_transform;
-    Transform                          m_globalTransform;
-    AABB                               m_aabb;
-    AABB                               m_globalAABB;
-    Node*                              m_parent;
-    std::vector<std::shared_ptr<Node>> m_children;
-    Material                           m_material;
-    std::shared_ptr<IBuffer>           m_indexBuffer;
-    std::vector<float>                 m_vertices;
+    Transform                                  m_transform;
+    Transform                                  m_globalTransform;
+    AABB                                       m_aabb;
+    AABB                                       m_globalAABB;
+    Node*                                      m_parent;
+    std::vector<std::shared_ptr<Node>>         m_children;
+    Material                                   m_material;
+    std::shared_ptr<IBuffer>                   m_indexBuffer;
+    std::shared_ptr<std::vector<ShaderVertex>> m_vertices;
 };
 }; // namespace yar

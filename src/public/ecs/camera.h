@@ -68,6 +68,21 @@ class Camera : public Component
         frustum.far.clip    = trans[3] - trans[2];
     }
 
+    void UpdateShaderData(ShaderGlobalData* data)
+    {
+        data->view     = view;
+        data->proj     = proj;
+        data->viewProj = proj * view;
+
+        data->invView     = glm::inverse(view);
+        data->invProj     = glm::inverse(proj);
+        data->invViewProj = glm::inverse(data->viewProj);
+
+        data->viewport = viewport;
+
+        data->eye = glm::vec4(transform.GetPosition(), 0);
+    }
+
     bool IsInFrustum(const glm::vec3 pos, float margin = 0.0f) const
     {
         // clang-format off

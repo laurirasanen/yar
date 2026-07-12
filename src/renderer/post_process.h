@@ -1,7 +1,7 @@
 #pragma once
 
+#include "../public/renderer/data_types.h"
 #include "common.h"
-#include "data_types.h"
 #include "pipeline.h"
 
 #include <memory>
@@ -58,8 +58,8 @@ class PostProcessPass
     const char* m_name;
 
     std::shared_ptr<VulkanPipeline> m_pipeline;
-    VkDescriptorSetLayout                        m_descriptorSetLayout;
-    std::vector<VkDescriptorSet>                 m_descriptorSets;
+    VkDescriptorSetLayout           m_descriptorSetLayout;
+    std::vector<VkDescriptorSet>    m_descriptorSets;
 
     VkAttachmentLoadOp   m_outputLoadOp;
     RenderAttachment     m_colorOutput;

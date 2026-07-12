@@ -1,5 +1,6 @@
 #pragma once
 
+#include "../renderer/data_types.h"
 #include "../resource/mesh.h"
 #include "../resource/shader.h"
 #include "component.h"
@@ -13,44 +14,44 @@ class BoxMeshComponent : public Component
   public:
     BoxMeshComponent(Entity* owner, const glm::vec3& size) : Component(owner)
     {
-        const uint32_t vertexCount = 24;
         // clang-format off
-        std::vector<float> vertices = {
+        auto vertices = std::make_shared<std::vector<ShaderVertex>>();
+        (*vertices) = {
             // FRONT 0 - 3
-             size.x,  size.y,  size.z,  0.0f,  0.0f,  1.0f,  1.0f,  0.0f,  0.0f, 0.0f, 0.0f,
-             size.x, -size.y,  size.z,  0.0f,  0.0f,  1.0f,  1.0f,  0.0f,  0.0f, 0.0f, 1.0f,
-            -size.x,  size.y,  size.z,  0.0f,  0.0f,  1.0f,  1.0f,  0.0f,  0.0f, 1.0f, 0.0f,
-            -size.x, -size.y,  size.z,  0.0f,  0.0f,  1.0f,  1.0f,  0.0f,  0.0f, 1.0f, 1.0f,
+            {{ size.x,  size.y,  size.z},  {0.0f,  0.0f,  1.0f},  {1.0f,  0.0f,  0.0f}, {0.0f, 0.0f}},
+            {{ size.x, -size.y,  size.z},  {0.0f,  0.0f,  1.0f},  {1.0f,  0.0f,  0.0f}, {0.0f, 1.0f}},
+            {{-size.x,  size.y,  size.z},  {0.0f,  0.0f,  1.0f},  {1.0f,  0.0f,  0.0f}, {1.0f, 0.0f}},
+            {{-size.x, -size.y,  size.z},  {0.0f,  0.0f,  1.0f},  {1.0f,  0.0f,  0.0f}, {1.0f, 1.0f}},
 
             // BACK 4 - 7
-             size.x,  size.y, -size.z,  0.0f,  0.0f, -1.0f, -1.0f,  0.0f,  0.0f, 1.0f, 1.0f,
-             size.x, -size.y, -size.z,  0.0f,  0.0f, -1.0f, -1.0f,  0.0f,  0.0f, 1.0f, 0.0f,
-            -size.x,  size.y, -size.z,  0.0f,  0.0f, -1.0f, -1.0f,  0.0f,  0.0f, 0.0f, 1.0f,
-            -size.x, -size.y, -size.z,  0.0f,  0.0f, -1.0f, -1.0f,  0.0f,  0.0f, 0.0f, 0.0f,
+            {{ size.x,  size.y, -size.z},  {0.0f,  0.0f, -1.0f}, {-1.0f,  0.0f,  0.0f}, {1.0f, 1.0f}},
+            {{ size.x, -size.y, -size.z},  {0.0f,  0.0f, -1.0f}, {-1.0f,  0.0f,  0.0f}, {1.0f, 0.0f}},
+            {{-size.x,  size.y, -size.z},  {0.0f,  0.0f, -1.0f}, {-1.0f,  0.0f,  0.0f}, {0.0f, 1.0f}},
+            {{-size.x, -size.y, -size.z},  {0.0f,  0.0f, -1.0f}, {-1.0f,  0.0f,  0.0f}, {0.0f, 0.0f}},
 
             // LEFT 8 - 11
-            size.x,   size.y, -size.z,  1.0f,  0.0f,  0.0f,  0.0f,  0.0f, -1.0f, 1.0f, 1.0f,
-            size.x,  -size.y, -size.z,  1.0f,  0.0f,  0.0f,  0.0f,  0.0f, -1.0f, 1.0f, 0.0f,
-            size.x,   size.y,  size.z,  1.0f,  0.0f,  0.0f,  0.0f,  0.0f, -1.0f, 0.0f, 1.0f,
-            size.x,  -size.y,  size.z,  1.0f,  0.0f,  0.0f,  0.0f,  0.0f, -1.0f, 0.0f, 0.0f,
+            {{ size.x,   size.y, -size.z}, {1.0f,  0.0f,  0.0f},  {0.0f,  0.0f, -1.0f}, {1.0f, 1.0f}},
+            {{ size.x,  -size.y, -size.z}, {1.0f,  0.0f,  0.0f},  {0.0f,  0.0f, -1.0f}, {1.0f, 0.0f}},
+            {{ size.x,   size.y,  size.z}, {1.0f,  0.0f,  0.0f},  {0.0f,  0.0f, -1.0f}, {0.0f, 1.0f}},
+            {{ size.x,  -size.y,  size.z}, {1.0f,  0.0f,  0.0f},  {0.0f,  0.0f, -1.0f}, {0.0f, 0.0f}},
 
             // RIGHT 12 - 15
-            -size.x,  size.y, -size.z, -1.0f,  0.0f,  0.0f,  0.0f,  0.0f,  1.0f, 0.0f, 1.0f,
-            -size.x, -size.y, -size.z, -1.0f,  0.0f,  0.0f,  0.0f,  0.0f,  1.0f, 0.0f, 0.0f,
-            -size.x,  size.y,  size.z, -1.0f,  0.0f,  0.0f,  0.0f,  0.0f,  1.0f, 1.0f, 1.0f,
-            -size.x, -size.y,  size.z, -1.0f,  0.0f,  0.0f,  0.0f,  0.0f,  1.0f, 1.0f, 0.0f,
+            {{-size.x,  size.y, -size.z}, {-1.0f,  0.0f,  0.0f},  {0.0f,  0.0f,  1.0f}, {0.0f, 1.0f}},
+            {{-size.x, -size.y, -size.z}, {-1.0f,  0.0f,  0.0f},  {0.0f,  0.0f,  1.0f}, {0.0f, 0.0f}},
+            {{-size.x,  size.y,  size.z}, {-1.0f,  0.0f,  0.0f},  {0.0f,  0.0f,  1.0f}, {1.0f, 1.0f}},
+            {{-size.x, -size.y,  size.z}, {-1.0f,  0.0f,  0.0f},  {0.0f,  0.0f,  1.0f}, {1.0f, 0.0f}},
 
             // TOP 16 - 19
-             size.x,  size.y,  size.z,  0.0f,  1.0f,  0.0f,  0.0f,  1.0f,  0.0f, 1.0f, 1.0f,
-             size.x,  size.y, -size.z,  0.0f,  1.0f,  0.0f,  0.0f,  1.0f,  0.0f, 1.0f, 0.0f,
-            -size.x,  size.y,  size.z,  0.0f,  1.0f,  0.0f,  0.0f,  1.0f,  0.0f, 0.0f, 1.0f,
-            -size.x,  size.y, -size.z,  0.0f,  1.0f,  0.0f,  0.0f,  1.0f,  0.0f, 0.0f, 0.0f,
+            {{ size.x,  size.y,  size.z},  {0.0f,  1.0f,  0.0f},  {0.0f,  1.0f,  0.0f}, {1.0f, 1.0f}},
+            {{ size.x,  size.y, -size.z},  {0.0f,  1.0f,  0.0f},  {0.0f,  1.0f,  0.0f}, {1.0f, 0.0f}},
+            {{-size.x,  size.y,  size.z},  {0.0f,  1.0f,  0.0f},  {0.0f,  1.0f,  0.0f}, {0.0f, 1.0f}},
+            {{-size.x,  size.y, -size.z},  {0.0f,  1.0f,  0.0f},  {0.0f,  1.0f,  0.0f}, {0.0f, 0.0f}},
 
             // BOTTOM 20 - 23
-             size.x, -size.y,  size.z,  0.0f, -1.0f,  0.0f,  0.0f, -1.0f,  0.0f, 0.0f, 0.0f,
-             size.x, -size.y, -size.z,  0.0f, -1.0f,  0.0f,  0.0f, -1.0f,  0.0f, 0.0f, 1.0f,
-            -size.x, -size.y,  size.z,  0.0f, -1.0f,  0.0f,  0.0f, -1.0f,  0.0f, 1.0f, 0.0f,
-            -size.x, -size.y, -size.z,  0.0f, -1.0f,  0.0f,  0.0f, -1.0f,  0.0f, 1.0f, 1.0f,
+            {{ size.x, -size.y,  size.z},  {0.0f, -1.0f,  0.0f},  {0.0f, -1.0f,  0.0f}, {0.0f, 0.0f}},
+            {{ size.x, -size.y, -size.z},  {0.0f, -1.0f,  0.0f},  {0.0f, -1.0f,  0.0f}, {0.0f, 1.0f}},
+            {{-size.x, -size.y,  size.z},  {0.0f, -1.0f,  0.0f},  {0.0f, -1.0f,  0.0f}, {1.0f, 0.0f}},
+            {{-size.x, -size.y, -size.z},  {0.0f, -1.0f,  0.0f},  {0.0f, -1.0f,  0.0f}, {1.0f, 1.0f}},
         };
         std::vector<uint32_t> indices = {
             // FRONT
@@ -78,17 +79,9 @@ class BoxMeshComponent : public Component
 
         auto material = Material(shader);
 
-        std::vector<glm::vec3> vecs = {};
-        vecs.resize(vertexCount);
-        for (uint32_t i = 0; i < vertexCount; i++)
-        {
-            vecs[i].x = vertices[i * 11 + 0];
-            vecs[i].y = vertices[i * 11 + 1];
-            vecs[i].z = vertices[i * 11 + 2];
-        }
-        auto aabb = AABB(vecs);
+        auto aabb = AABB(vertices);
 
-        m_mesh = std::make_shared<SubMesh>(vertexCount, vertices, indexBuffer, material, aabb);
+        m_mesh = std::make_shared<SubMesh>(vertices, indexBuffer, material, aabb);
     }
 
     const std::shared_ptr<SubMesh> GetSubMesh() const

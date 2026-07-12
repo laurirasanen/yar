@@ -18,7 +18,7 @@ class MeshComponent : public Component
         const auto& meshes = m_mesh->GetSubMeshes();
         for (const auto& mesh : meshes)
         {
-            count += mesh.GetIndexCount();
+            count += mesh->GetIndexCount();
         }
         return count;
     }
@@ -29,7 +29,7 @@ class MeshComponent : public Component
         const auto& meshes = m_mesh->GetSubMeshes();
         for (const auto& mesh : meshes)
         {
-            count += mesh.GetVertexCount();
+            count += mesh->GetVertexCount();
         }
         return count;
     }

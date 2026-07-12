@@ -10,11 +10,11 @@
 
 #include "../public/ecs/sky.h"
 #include "../public/geometry.h"
+#include "../public/renderer/data_types.h"
 #include "../public/renderer/irenderer.h"
 #include "../window/window.h"
 #include "buffer.h"
 #include "common.h"
-#include "data_types.h"
 #include "descriptor_set.h"
 #include "device.h"
 #include "instance.h"

@@ -14,8 +14,6 @@
 #include <glm/matrix.hpp>
 #include <glm/vec3.hpp>
 
-#include "../public/ecs/camera.h"
-
 namespace yar
 {
 struct ShaderGlobalData
@@ -47,21 +45,6 @@ struct ShaderGlobalData
         SetContrast(1.0f);
         SetIBLStrength(0.4f);
         SetIBLMips(-1.0f);
-    }
-
-    void Update(const Camera* cam)
-    {
-        view     = cam->view;
-        proj     = cam->proj;
-        viewProj = proj * view;
-
-        invView     = glm::inverse(view);
-        invProj     = glm::inverse(proj);
-        invViewProj = glm::inverse(viewProj);
-
-        viewport = cam->viewport;
-
-        eye = glm::vec4(cam->transform.GetPosition(), 0);
     }
 
     void SetExposure(float exposure)

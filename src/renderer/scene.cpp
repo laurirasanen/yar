@@ -1,11 +1,12 @@
 #include "scene.h"
+#include "../public/ecs/boxmesh.h"
 #include "../public/ecs/entity.h"
 #include "../public/ecs/mesh.h"
+#include "../public/ecs/transform.h"
 #include "../public/renderer/irenderer.h"
 #include "../public/resource/mesh.h"
 #include "../public/time_util.h"
 #include "../renderer/renderer.h"
-#include "src/public/ecs/transform.h"
 
 namespace yar
 {
@@ -27,21 +28,36 @@ void Scene::Update(const std::vector<std::shared_ptr<Entity>>& entities)
     for (const auto& ent : entities)
     {
         const auto mesh  = ent->GetComponent<MeshComponent>();
+        const auto box   = ent->GetComponent<BoxMeshComponent>();
         const auto trans = ent->GetComponent<TransformComponent>();
-        if (!mesh || !trans)
+        if (!trans)
         {
             continue;
         }
         const auto t = *trans->GetTransform();
 
-        const auto subMeshes = mesh->GetMesh()->GetSubMeshes();
-        for (const auto& m : subMeshes)
+        if (mesh != nullptr)
         {
-            auto node = std::make_shared<Node>();
-            node->SetIndexBuffer(m.GetIndexBuffer());
-            node->SetVertices(m.GetVertices());
-            node->SetAABB(m.GetAABB());
-            node->SetMaterial(m.GetMaterial());
+            const auto subMeshes = mesh->GetMesh()->GetSubMeshes();
+            for (const auto& m : subMeshes)
+            {
+                auto node = std::make_shared<Node>();
+                node->SetIndexBuffer(m->GetIndexBuffer());
+                node->SetVertices(m->GetVertices());
+                node->SetAABB(m->GetAABB());
+                node->SetMaterial(m->GetMaterial());
+                node->SetTransform(t);
+                m_nodes.push_back(node);
+            }
+        }
+        if (box != nullptr)
+        {
+            const auto m    = box->GetSubMesh();
+            auto       node = std::make_shared<Node>();
+            node->SetIndexBuffer(m->GetIndexBuffer());
+            node->SetVertices(m->GetVertices());
+            node->SetAABB(m->GetAABB());
+            node->SetMaterial(m->GetMaterial());
             node->SetTransform(t);
             m_nodes.push_back(node);
         }
@@ -92,6 +108,7 @@ void Scene::Render()
         for (uint32_t i = 0; i < nodes.size(); i++)
         {
             stats.IndexCount += nodes[i]->GetIndexCount();
+            stats.VertexCount += nodes[i]->GetVertexCount();
             g_renderer->BindDescriptor(nodeIdx, pipe->GetVkPipelineLayout());
             renderer->DrawWithBuffers(nodes[i]->GetIndexBuffer());
             nodeIdx++;
@@ -119,10 +136,11 @@ void Scene::CullNodes()
     std::vector<std::shared_ptr<Node>> visible;
     for (auto& node : m_nodes)
     {
-        if (node->FrustumCull(camera))
+        if (!node->IsRenderable() || node->FrustumCull(camera))
         {
             stats.CulledNodeCount++;
             stats.CulledIndexCount += node->GetIndexCount();
+            stats.CulledVertexCount += node->GetVertexCount();
         }
         else
         {

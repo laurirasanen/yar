@@ -3,9 +3,9 @@
 #include <memory>
 
 #include "../public/material.h"
+#include "../public/renderer/data_types.h"
 #include "../public/renderer/ibuffer.h"
 #include "common.h"
-#include "data_types.h"
 #include "descriptor_set.h"
 #include "renderer.h"
 
@@ -152,13 +152,18 @@ void DescriptorSet::Alloc()
         writes.push_back(write);
 
         m_vertexBuffers.push_back(
-            std::make_shared<
-                Buffer>(m_vkDevice, StorageBuffer, SecretThirdOption, sizeof(float), VERT_BUFF_SIZE)
+            std::make_shared<Buffer>(
+                m_vkDevice,
+                StorageBuffer,
+                SecretThirdOption,
+                sizeof(ShaderVertex),
+                VERT_BUFF_SIZE
+            )
         );
 
         buffer.buffer = m_vertexBuffers[i]->GetVkBuffer();
         buffer.offset = 0;
-        buffer.range  = sizeof(float) * VERT_BUFF_SIZE;
+        buffer.range  = sizeof(ShaderVertex) * VERT_BUFF_SIZE;
         buffers.push_back(buffer);
 
         write.dstBinding     = BINDING_VERTICES;
@@ -267,23 +272,33 @@ void DescriptorSet::Update(uint32_t frameIndex, const std::vector<std::shared_pt
         ShaderObjectData object = {};
         object.model            = trans.GetModelMatrix();
         object.normal           = trans.GetRotationMatrix();
-        object.params[0]        = (vertexOffset * sizeof(float)) / sizeof(ShaderVertex);
+        object.params[0]        = vertexOffset;
         object.params[1]        = materialIdx;
 
-        m_parameterBuffers[frameIndex]
-            ->Write(params.data(), params.size() * sizeof(float), firstParamIdx * sizeof(float));
+        if (params.size() > 0)
+        {
+            m_parameterBuffers[frameIndex]->Write(
+                params.data(),
+                params.size() * sizeof(float),
+                firstParamIdx * sizeof(float)
+            );
+        }
+
         m_materialBuffers[frameIndex]
             ->Write(&matData, sizeof(ShaderMaterialData), materialIdx * sizeof(ShaderMaterialData));
         m_objectBuffers[frameIndex]
             ->Write(&object, sizeof(ShaderObjectData), i * sizeof(ShaderObjectData));
 
         const auto& vertices = nodes[i]->GetVertices();
-        m_vertexBuffers[frameIndex]
-            ->Write(vertices.data(), vertices.size() * sizeof(float), vertexOffset * sizeof(float));
+        m_vertexBuffers[frameIndex]->Write(
+            vertices->data(),
+            vertices->size() * sizeof(ShaderVertex),
+            vertexOffset * sizeof(ShaderVertex)
+        );
 
         firstTexIdx += textures.size();
         firstParamIdx += params.size();
-        vertexOffset += vertices.size();
+        vertexOffset += vertices->size();
     }
 
     VkWriteDescriptorSet textureWrite = {};

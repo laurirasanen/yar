@@ -5,8 +5,6 @@
 #include <vulkan/vulkan_core.h>
 
 #include "../public/log.h"
-#include "../public/renderer/irenderer.h"
-#include "data_types.h"
 #include "renderer.h"
 #include "scene.h"
 
@@ -115,7 +113,7 @@ void Renderer::UpdateUniforms()
 
     if (m_camera != nullptr)
     {
-        m_shaderGlobalData[currentFrame]->Update(m_camera);
+        m_camera->UpdateShaderData(m_shaderGlobalData[currentFrame].get());
     }
 
     std::memcpy(

@@ -7,10 +7,10 @@
 #include "../assets/gltf.h"
 #include "../geometry.h"
 #include "../material.h"
+#include "../renderer/data_types.h"
 #include "../renderer/ibuffer.h"
 #include "../renderer/irenderer.h"
 #include "resource.h"
-#include "src/public/shader/compiler.h"
 
 namespace yar
 {
@@ -20,13 +20,12 @@ class SubMesh
     SubMesh() = delete;
 
     SubMesh(
-        uint32_t                 vertexCount,
-        std::vector<float>       vertices,
-        std::shared_ptr<IBuffer> indexBuffer,
-        Material                 material,
-        AABB                     aabb
+        std::shared_ptr<std::vector<ShaderVertex>> vertices,
+        std::shared_ptr<IBuffer>                   indexBuffer,
+        Material                                   material,
+        AABB                                       aabb
     ) :
-        m_vertexCount(vertexCount),
+        m_vertexCount(static_cast<uint32_t>(vertices->size())),
         m_indexCount(indexBuffer->GetElementCount()),
         m_vertices(vertices),
         m_indexBuffer(indexBuffer),
@@ -54,7 +53,7 @@ class SubMesh
         return m_indexCount;
     }
 
-    const std::vector<float>& GetVertices() const
+    const std::shared_ptr<std::vector<ShaderVertex>> GetVertices() const
     {
         return m_vertices;
     }
@@ -78,8 +77,8 @@ class SubMesh
     uint32_t m_vertexCount;
     uint32_t m_indexCount;
 
-    std::vector<float>       m_vertices;
-    std::shared_ptr<IBuffer> m_indexBuffer;
+    std::shared_ptr<std::vector<ShaderVertex>> m_vertices;
+    std::shared_ptr<IBuffer>                   m_indexBuffer;
 
     Material m_material;
 
@@ -93,7 +92,7 @@ class Mesh : public Resource
     {
     }
 
-    const std::vector<SubMesh>& GetSubMeshes() const
+    const std::vector<std::shared_ptr<SubMesh>>& GetSubMeshes() const
     {
         return m_subMeshes;
     }
@@ -110,24 +109,25 @@ class Mesh : public Resource
 
         for (const auto& d : data)
         {
-            const uint32_t     vertexCount = static_cast<uint32_t>(d.positions.size() / 3);
-            std::vector<float> vertices;
+            const uint32_t vertexCount = static_cast<uint32_t>(d.positions.size() / 3);
+            auto           vertices    = std::make_shared<std::vector<ShaderVertex>>();
+            vertices->resize(vertexCount);
             for (uint32_t i = 0; i < vertexCount; i++)
             {
-                vertices.push_back(d.positions[i * 3 + 0]);
-                vertices.push_back(d.positions[i * 3 + 1]);
-                vertices.push_back(d.positions[i * 3 + 2]);
+                (*vertices)[i].position.x = d.positions[i * 3 + 0];
+                (*vertices)[i].position.y = d.positions[i * 3 + 1];
+                (*vertices)[i].position.z = d.positions[i * 3 + 2];
 
-                vertices.push_back(d.normals[i * 3 + 0]);
-                vertices.push_back(d.normals[i * 3 + 1]);
-                vertices.push_back(d.normals[i * 3 + 2]);
+                (*vertices)[i].normal.x = d.normals[i * 3 + 0];
+                (*vertices)[i].normal.y = d.normals[i * 3 + 1];
+                (*vertices)[i].normal.z = d.normals[i * 3 + 2];
 
-                vertices.push_back(d.tangents[i * 3 + 0]);
-                vertices.push_back(d.tangents[i * 3 + 1]);
-                vertices.push_back(d.tangents[i * 3 + 2]);
+                (*vertices)[i].tangent.x = d.tangents[i * 3 + 0];
+                (*vertices)[i].tangent.y = d.tangents[i * 3 + 1];
+                (*vertices)[i].tangent.z = d.tangents[i * 3 + 2];
 
-                vertices.push_back(d.uvs[i * 2 + 0]);
-                vertices.push_back(d.uvs[i * 2 + 1]);
+                (*vertices)[i].uv.x = d.uvs[i * 2 + 0];
+                (*vertices)[i].uv.y = d.uvs[i * 2 + 1];
             }
 
             auto indexBuffer = g_renderer->GetIndexBuffer(d.indices);
@@ -148,17 +148,10 @@ class Mesh : public Resource
             material.SetTextures(textures);
             material.SetParameters(params);
 
-            std::vector<glm::vec3> vecs = {};
-            vecs.resize(vertexCount);
-            for (uint32_t i = 0; i < vertexCount; i++)
-            {
-                vecs[i].x = d.positions[i * 3 + 0];
-                vecs[i].y = d.positions[i * 3 + 1];
-                vecs[i].z = d.positions[i * 3 + 2];
-            }
-            AABB aabb(vecs);
+            AABB aabb(vertices);
 
-            m_subMeshes.emplace_back(vertexCount, vertices, indexBuffer, material, aabb);
+            auto sub = std::make_shared<SubMesh>(vertices, indexBuffer, material, aabb);
+            m_subMeshes.push_back(sub);
         }
 
         return true;
@@ -171,6 +164,6 @@ class Mesh : public Resource
     }
 
   private:
-    std::vector<SubMesh> m_subMeshes;
+    std::vector<std::shared_ptr<SubMesh>> m_subMeshes;
 };
 }; // namespace yar
