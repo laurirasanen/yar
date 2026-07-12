@@ -55,17 +55,17 @@ class BoxMeshComponent : public Component
         };
         std::vector<uint32_t> indices = {
             // FRONT
-            0,  3,  2,  1,  3,  0,
+            2,  3,  0,   0,  3,  1,
             // BACK
-            6,  7,  4,  4,  7,  5,
+            4,  7,  6,   5,  7,  4,
             // LEFT
-            8,  11, 10, 9,  11, 8,
+            10, 11, 8,   8,  11, 9,
             // RIGHT
-            14, 15, 12, 12, 15, 13,
+            12, 15, 14,  13, 15, 12,
             // TOP
-            16, 19, 18, 17, 19, 16,
+            16, 19, 18,  17, 19, 16,
             // BOTTOM
-            22, 23, 20, 20, 23, 21,
+            22, 23, 20,  20, 23, 21,
         };
         // clang-format on
         auto indexBuffer = g_renderer->CreateBuffer(
