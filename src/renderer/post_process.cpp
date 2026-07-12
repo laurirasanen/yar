@@ -294,6 +294,7 @@ void PostProcessPass::DestroyOutput()
     const auto renderer = static_pointer_cast<Renderer>(g_renderer);
     const auto vkDevice = renderer->GetDevice().GetVkDevice();
 
+    vkDestroySampler(vkDevice, m_colorOutput.Sampler, nullptr);
     vkDestroyImageView(vkDevice, m_colorOutput.ImageView, nullptr);
     vmaDestroyImage(g_vma, m_colorOutput.Image, m_colorOutput.Allocation);
 }
