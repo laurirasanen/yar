@@ -24,6 +24,7 @@ void Scene::Update(const std::vector<std::shared_ptr<Entity>>& entities)
     auto&      stats     = g_renderer->GetRenderStats();
 
     m_nodes.clear();
+    m_sky = nullptr;
 
     for (const auto& ent : entities)
     {
@@ -114,6 +115,15 @@ void Scene::Render()
             nodeIdx++;
         }
 
+        renderer->EndDebugLabel();
+    }
+
+    if (m_sky)
+    {
+        renderer->BeginDebugLabel("Sky", {0.5f, 0.75f, 1.0f, 0.8f});
+        const auto& pipe = renderer->GetPipeline(m_sky->GetMaterial());
+        g_renderer->BindPipeline(pipe->GetVkPipeline(), pipe->GetVkPipelineLayout());
+        vkCmdDraw(renderer->GetDevice().GetCommandBuffer(), 3, 1, 0, 0);
         renderer->EndDebugLabel();
     }
 

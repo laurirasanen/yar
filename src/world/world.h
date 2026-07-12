@@ -4,6 +4,7 @@
 #include <mutex>
 
 #include "../public/ecs/entity.h"
+#include "../public/ecs/sky.h"
 #include "../public/world/iworld.h"
 
 namespace yar
@@ -29,5 +30,7 @@ class World : public IWorld
     std::mutex m_worldMutex;
 
     std::vector<std::shared_ptr<Entity>> m_entities;
+
+    SkyComponent* m_sky;
 };
 } // namespace yar

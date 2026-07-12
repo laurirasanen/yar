@@ -1,5 +1,6 @@
 #pragma once
 
+#include "../public/ecs/sky.h"
 #include "node.h"
 
 #include <memory>
@@ -26,6 +27,11 @@ class Scene
 
     void Update(const std::vector<std::shared_ptr<Entity>>& entities);
 
+    void SetSky(SkyComponent* sky)
+    {
+        m_sky = sky;
+    }
+
     void Render();
 
   private:
@@ -39,6 +45,8 @@ class Scene
 
     std::vector<std::shared_ptr<Node>>           m_nodes;
     std::unordered_map<std::string, RenderBatch> m_batches;
+
+    SkyComponent* m_sky;
 };
 
 extern std::shared_ptr<Scene> g_scene;

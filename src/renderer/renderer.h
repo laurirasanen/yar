@@ -278,8 +278,8 @@ class Renderer : public IRenderer
                 m_descriptorSet->GetLayouts(),
                 m_device.GetColorFormat(),
                 m_device.GetDepthFormat(),
-                true,
-                true
+                mat.CullingEnabled(),
+                mat.DepthEnabled()
             );
         }
         return pipe;

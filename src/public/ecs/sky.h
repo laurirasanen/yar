@@ -1,7 +1,9 @@
 #pragma once
 
+#include "../material.h"
 #include "../platform/fs.h"
 #include "../resource/resource.h"
+#include "../resource/shader.h"
 #include "../resource/texture.h"
 #include "component.h"
 
@@ -36,6 +38,11 @@ class SkyComponent : public Component
         return m_lut;
     }
 
+    const Material& GetMaterial() const
+    {
+        return m_material;
+    }
+
   protected:
     void OnInitialize() override
     {
@@ -50,6 +57,10 @@ class SkyComponent : public Component
         m_lut      = g_resources->Load<Texture>(iblLUTPath, TextureType::TEX_IBL_LUT);
         m_diffuse  = g_resources->Load<Texture>(iblDiffusePath, TextureType::TEX_KTX);
         m_specular = g_resources->Load<Texture>(iblSpecularPath, TextureType::TEX_KTX);
+
+        m_shader   = g_resources->Load<Shader>("sky.slang");
+        m_material = Material(m_shader);
+        m_material.EnableCulling(false);
     }
 
     void OnDestroy() override
@@ -67,5 +78,8 @@ class SkyComponent : public Component
     ResourceHandle<Texture> m_diffuse;
     ResourceHandle<Texture> m_specular;
     ResourceHandle<Texture> m_lut;
+
+    ResourceHandle<Shader> m_shader;
+    Material               m_material;
 };
 }; // namespace yar

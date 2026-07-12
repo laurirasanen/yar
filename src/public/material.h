@@ -43,10 +43,33 @@ class Material
         return m_parameters;
     }
 
+    bool CullingEnabled() const
+    {
+        return m_enableCulling;
+    }
+
+    bool DepthEnabled() const
+    {
+        return m_enableDepth;
+    }
+
+    void EnableCulling(bool enabled)
+    {
+        m_enableCulling = enabled;
+    }
+
+    void EnableDepth(bool enabled)
+    {
+        m_enableDepth = enabled;
+    }
+
   private:
     ResourceHandle<Shader> m_shader;
 
     std::vector<ResourceHandle<Texture>> m_textures;
     std::vector<float>                   m_parameters;
+
+    bool m_enableCulling = true;
+    bool m_enableDepth   = true;
 };
 }; // namespace yar

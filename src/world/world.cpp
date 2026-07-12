@@ -8,7 +8,7 @@ namespace yar
 {
 std::shared_ptr<IPhysics> g_physics;
 
-World::World() : IWorld()
+World::World() : IWorld(), m_sky(nullptr)
 {
     LOG_INFO("Creating World");
     g_physics = std::make_shared<Physics>();
@@ -23,6 +23,13 @@ void World::AddEntity(std::shared_ptr<Entity> entity)
 {
     entity->Initialize();
     m_entities.push_back(entity);
+
+    auto sky = entity->GetComponent<SkyComponent>();
+    if (sky)
+    {
+        m_sky = sky;
+        g_renderer->SetSky(sky);
+    }
 }
 
 void World::Update(float deltaTime)
@@ -77,6 +84,7 @@ void World::Render()
     }
 
     g_scene->Update(m_entities);
+    g_scene->SetSky(m_sky);
     g_scene->Render();
 }
 } // namespace yar
