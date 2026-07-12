@@ -53,7 +53,15 @@ class GLTF
     static bool ReadVertices(const cgltf_primitive& primitive, GltfData& data);
     static bool ReadFloats(cgltf_accessor* accessor, std::vector<float>& floats);
 
-    static bool                    ReadTextures(const cgltf_primitive& primitive, GltfData& data);
-    static ResourceHandle<Texture> ReadTexture(const cgltf_texture_view* view, TextureType type);
+    static bool ReadTextures(
+        const std::string&     prefix,
+        const cgltf_primitive& primitive,
+        GltfData&              data
+    );
+    static ResourceHandle<Texture> ReadTexture(
+        const std::string&        prefix,
+        const cgltf_texture_view* view,
+        TextureType               type
+    );
 };
 }; // namespace yar

@@ -92,7 +92,7 @@ bool GLTF::Load(const std::string& path, std::vector<GltfData>& output)
                 return false;
             }
 
-            if (!ReadTextures(primitive, parsedData))
+            if (!ReadTextures(full_path, primitive, parsedData))
             {
                 LOG_ERROR("Failed to read gltf textures: {}", cpath);
                 cgltf_free(data);
@@ -228,7 +228,7 @@ bool GLTF::ReadFloats(cgltf_accessor* accessor, std::vector<float>& floats)
     return readCount == floatCount;
 }
 
-bool GLTF::ReadTextures(const cgltf_primitive& primitive, GltfData& data)
+bool GLTF::ReadTextures(const std::string& prefix, const cgltf_primitive& primitive, GltfData& data)
 {
     if (!primitive.material)
     {
@@ -262,14 +262,18 @@ bool GLTF::ReadTextures(const cgltf_primitive& primitive, GltfData& data)
         }
     }
 
-    data.textures.albedo   = ReadTexture(albedoView, TextureType::TEX_ALBEDO);
-    data.textures.orm      = ReadTexture(ormView, TextureType::TEX_ORM);
-    data.textures.normal   = ReadTexture(normalView, TextureType::TEX_NORMAL);
-    data.textures.emissive = ReadTexture(emissiveView, TextureType::TEX_EMISSIVE);
+    data.textures.albedo   = ReadTexture(prefix, albedoView, TextureType::TEX_ALBEDO);
+    data.textures.orm      = ReadTexture(prefix, ormView, TextureType::TEX_ORM);
+    data.textures.normal   = ReadTexture(prefix, normalView, TextureType::TEX_NORMAL);
+    data.textures.emissive = ReadTexture(prefix, emissiveView, TextureType::TEX_EMISSIVE);
     return true;
 }
 
-ResourceHandle<Texture> GLTF::ReadTexture(const cgltf_texture_view* view, TextureType type)
+ResourceHandle<Texture> GLTF::ReadTexture(
+    const std::string&        prefix,
+    const cgltf_texture_view* view,
+    TextureType               type
+)
 {
     if (!view)
     {
@@ -316,6 +320,6 @@ ResourceHandle<Texture> GLTF::ReadTexture(const cgltf_texture_view* view, Textur
         static_cast<const void*>(cgltf_buffer_view_data(view->texture->image->buffer_view));
     const auto size = static_cast<size_t>(view->texture->image->buffer_view->size);
 
-    return g_resources->Load<Texture>(name, type, size, data);
+    return g_resources->Load<Texture>(std::format("{}->{}", prefix, name), type, size, data);
 }
 }; // namespace yar
