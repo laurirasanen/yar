@@ -55,7 +55,9 @@ class RigidBodyComponent : public Component
         auto transform  = m_owner->GetComponent<TransformComponent>()->GetTransform();
         m_prevTransform = *transform;
         m_nextTransform = g_physics->GetTransform(m_body);
-        m_lerp          = 0;
+        // physics system has no scale
+        m_nextTransform.Scale(m_prevTransform.GetScale());
+        m_lerp = 0;
     }
 
   private:

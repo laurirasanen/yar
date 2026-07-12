@@ -270,7 +270,7 @@ void DescriptorSet::Update(uint32_t frameIndex, const std::vector<std::shared_pt
 
         const auto&      trans  = nodes[i]->GetGlobalTransform();
         ShaderObjectData object = {};
-        object.model            = trans.GetModelMatrix();
+        object.model            = trans.GetCombinedMatrix();
         object.normal           = trans.GetRotationMatrix();
         object.params[0]        = vertexOffset;
         object.params[1]        = materialIdx;
