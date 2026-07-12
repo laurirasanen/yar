@@ -337,36 +337,28 @@ void DescriptorSet::SetSky(const SkyComponent* sky)
     std::vector<VkDescriptorImageInfo> diffuseInfos  = {};
     std::vector<VkDescriptorImageInfo> specularInfos = {};
     writes.reserve(setCount * 4);
-    colorInfos.reserve(setCount);
-    lutInfos.reserve(setCount);
-    diffuseInfos.reserve(setCount);
-    specularInfos.reserve(setCount);
+    colorInfos.resize(setCount);
+    lutInfos.resize(setCount);
+    diffuseInfos.resize(setCount);
+    specularInfos.resize(setCount);
 
     for (uint32_t i = 0; i < setCount; i++)
     {
-        VkDescriptorImageInfo colorInfo = {};
-        colorInfo.imageLayout           = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-        colorInfo.imageView             = color->GetImageView();
-        colorInfo.sampler               = color->GetSampler();
-        colorInfos.push_back(colorInfo);
+        colorInfos[i].imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+        colorInfos[i].imageView   = color->GetImageView();
+        colorInfos[i].sampler     = color->GetSampler();
 
-        VkDescriptorImageInfo lutInfo = {};
-        lutInfo.imageLayout           = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-        lutInfo.imageView             = lut->GetImageView();
-        lutInfo.sampler               = lut->GetSampler();
-        lutInfos.push_back(lutInfo);
+        lutInfos[i].imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+        lutInfos[i].imageView   = lut->GetImageView();
+        lutInfos[i].sampler     = lut->GetSampler();
 
-        VkDescriptorImageInfo diffuseInfo = {};
-        diffuseInfo.imageLayout           = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-        diffuseInfo.imageView             = diffuse->GetImageView();
-        diffuseInfo.sampler               = diffuse->GetSampler();
-        diffuseInfos.push_back(diffuseInfo);
+        diffuseInfos[i].imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+        diffuseInfos[i].imageView   = diffuse->GetImageView();
+        diffuseInfos[i].sampler     = diffuse->GetSampler();
 
-        VkDescriptorImageInfo specularInfo = {};
-        specularInfo.imageLayout           = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-        specularInfo.imageView             = specular->GetImageView();
-        specularInfo.sampler               = specular->GetSampler();
-        specularInfos.push_back(specularInfo);
+        specularInfos[i].imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+        specularInfos[i].imageView   = specular->GetImageView();
+        specularInfos[i].sampler     = specular->GetSampler();
 
         VkWriteDescriptorSet colorWrite = {};
         colorWrite.sType                = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
@@ -375,7 +367,7 @@ void DescriptorSet::SetSky(const SkyComponent* sky)
         colorWrite.dstArrayElement      = 0;
         colorWrite.descriptorType       = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
         colorWrite.descriptorCount      = 1;
-        colorWrite.pImageInfo           = &colorInfos.back();
+        colorWrite.pImageInfo           = &colorInfos[i];
         writes.push_back(colorWrite);
 
         VkWriteDescriptorSet lutWrite = {};
@@ -385,7 +377,7 @@ void DescriptorSet::SetSky(const SkyComponent* sky)
         lutWrite.dstArrayElement      = 1;
         lutWrite.descriptorType       = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
         lutWrite.descriptorCount      = 1;
-        lutWrite.pImageInfo           = &lutInfos.back();
+        lutWrite.pImageInfo           = &lutInfos[i];
         writes.push_back(lutWrite);
 
         VkWriteDescriptorSet diffuseWrite = {};
@@ -395,7 +387,7 @@ void DescriptorSet::SetSky(const SkyComponent* sky)
         diffuseWrite.dstArrayElement      = 0;
         diffuseWrite.descriptorType       = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
         diffuseWrite.descriptorCount      = 1;
-        diffuseWrite.pImageInfo           = &diffuseInfos.back();
+        diffuseWrite.pImageInfo           = &diffuseInfos[i];
         writes.push_back(diffuseWrite);
 
         VkWriteDescriptorSet specularWrite = {};
@@ -405,7 +397,7 @@ void DescriptorSet::SetSky(const SkyComponent* sky)
         specularWrite.dstArrayElement      = 1;
         specularWrite.descriptorType       = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
         specularWrite.descriptorCount      = 1;
-        specularWrite.pImageInfo           = &specularInfos.back();
+        specularWrite.pImageInfo           = &specularInfos[i];
         writes.push_back(specularWrite);
     }
 

@@ -105,9 +105,8 @@ bool Texture::DoLoad()
 
         m_format   = m_ktxVulkanTexture->imageFormat;
         m_mips     = m_ktxVulkanTexture->levelCount;
+        m_layers   = m_ktxVulkanTexture->layerCount;
         m_viewType = m_ktxVulkanTexture->viewType;
-
-        return true;
     }
     else
     {
@@ -162,7 +161,7 @@ bool Texture::DoLoad()
 
         if (pixels == nullptr)
         {
-            LOG_ERROR("Failed to convert texture");
+            LOG_ERROR("Failed to convert texture {}", GetId());
             return false;
         }
 
@@ -175,6 +174,7 @@ bool Texture::DoLoad()
         m_height             = static_cast<uint32_t>(height);
         m_format             = VK_FORMAT_UNDEFINED;
         m_mips               = 1;
+        m_layers             = 1;
         m_viewType           = VK_IMAGE_VIEW_TYPE_2D;
         uint32_t elementSize = 1;
 
@@ -305,7 +305,7 @@ bool Texture::DoLoad()
             std::format("{} {}x{}", GetId(), m_width, m_height).c_str()
         );
 
-        LOG_DEBUG("Created image {}", static_cast<void*>(m_image));
+        LOG_DEBUG("Created image {}", GetId());
 
         VkImageSubresourceRange imageRange {};
         imageRange.aspectMask     = VK_IMAGE_ASPECT_COLOR_BIT;
@@ -399,7 +399,7 @@ bool Texture::DoLoad()
     viewInfo.subresourceRange.baseMipLevel   = 0;
     viewInfo.subresourceRange.levelCount     = m_mips;
     viewInfo.subresourceRange.baseArrayLayer = 0;
-    viewInfo.subresourceRange.layerCount     = m_mips;
+    viewInfo.subresourceRange.layerCount     = m_layers;
 
     VK_CHECK(
         vkCreateImageView(renderer->GetDevice().GetVkDevice(), &viewInfo, nullptr, &m_imageView),

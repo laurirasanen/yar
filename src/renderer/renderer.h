@@ -177,7 +177,7 @@ class Renderer : public IRenderer
         return m_device;
     }
 
-    void SetSky(const SkyComponent* sky)
+    void SetSky(const SkyComponent* sky) override
     {
         m_descriptorSet->SetSky(sky);
 

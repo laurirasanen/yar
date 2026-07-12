@@ -1,7 +1,7 @@
 #pragma once
 
 #include "../ecs/camera.h"
-#include "../material.h"
+#include "../ecs/sky.h"
 #include "ibuffer.h"
 
 #include <cstdint>
@@ -119,12 +119,13 @@ class IRenderer
         m_renderStats.PresentBlockTime    = 0.0;
     }
 
-    virtual void  SetExposure(float exposure)    = 0;
-    virtual float GetExposure()                  = 0;
-    virtual void  SetContrast(float contrast)    = 0;
-    virtual float GetContrast()                  = 0;
-    virtual void  SetIBLStrength(float strength) = 0;
-    virtual float GetIBLStrength()               = 0;
+    virtual void  SetSky(const SkyComponent* sky) = 0;
+    virtual void  SetExposure(float exposure)     = 0;
+    virtual float GetExposure()                   = 0;
+    virtual void  SetContrast(float contrast)     = 0;
+    virtual float GetContrast()                   = 0;
+    virtual void  SetIBLStrength(float strength)  = 0;
+    virtual float GetIBLStrength()                = 0;
 
     virtual const char* GetPresentMode() = 0;
 

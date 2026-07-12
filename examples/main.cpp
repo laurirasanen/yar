@@ -114,11 +114,12 @@ class ExampleApp : public IApplication
 
         g_world->AddEntity(damagedHelmet);
 
-        auto sky = std::make_shared<Entity>("sky");
-        sky->AddComponent<SkyComponent>("assets/ibl/cobble");
+        auto sky     = std::make_shared<Entity>("sky");
+        auto skyComp = sky->AddComponent<SkyComponent>("assets/ibl/cobble");
 
         g_world->AddEntity(sky);
 
+        g_renderer->SetSky(skyComp);
         g_renderer->SetIBLStrength(0.5f);
         g_renderer->SetExposure(1.0f);
         g_renderer->SetContrast(1.0f);

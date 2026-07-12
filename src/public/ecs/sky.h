@@ -47,9 +47,9 @@ class SkyComponent : public Component
         const auto iblSpecularPath = fs_append(f, "specular.ktx2");
 
         m_color    = g_resources->Load<Texture>(iblColorPath, TextureType::TEX_IBL);
-        m_diffuse  = g_resources->Load<Texture>(iblDiffusePath, TextureType::TEX_IBL);
-        m_specular = g_resources->Load<Texture>(iblSpecularPath, TextureType::TEX_IBL);
         m_lut      = g_resources->Load<Texture>(iblLUTPath, TextureType::TEX_IBL_LUT);
+        m_diffuse  = g_resources->Load<Texture>(iblDiffusePath, TextureType::TEX_KTX);
+        m_specular = g_resources->Load<Texture>(iblSpecularPath, TextureType::TEX_KTX);
     }
 
     void OnDestroy() override
