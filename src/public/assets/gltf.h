@@ -30,7 +30,6 @@ struct GltfData
     std::vector<uint32_t> indices;
     std::vector<float>    positions;
     std::vector<float>    normals;
-    std::vector<float>    tangents;
     std::vector<float>    uvs;
     GltfTextures          textures;
     GltfParameters        parameters;
@@ -53,8 +52,6 @@ class GLTF
 
     static bool ReadVertices(const cgltf_primitive& primitive, GltfData& data);
     static bool ReadFloats(cgltf_accessor* accessor, std::vector<float>& floats);
-
-    static void CalculateTangents(GltfData& data);
 
     static bool                    ReadTextures(const cgltf_primitive& primitive, GltfData& data);
     static ResourceHandle<Texture> ReadTexture(const cgltf_texture_view* view, TextureType type);

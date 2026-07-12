@@ -92,8 +92,6 @@ bool GLTF::Load(const std::string& path, std::vector<GltfData>& output)
                 return false;
             }
 
-            CalculateTangents(parsedData);
-
             if (!ReadTextures(primitive, parsedData))
             {
                 LOG_ERROR("Failed to read gltf textures: {}", cpath);
@@ -228,55 +226,6 @@ bool GLTF::ReadFloats(cgltf_accessor* accessor, std::vector<float>& floats)
     floats.resize(floatCount);
     const auto readCount = cgltf_accessor_unpack_floats(accessor, floats.data(), floatCount);
     return readCount == floatCount;
-}
-
-void GLTF::CalculateTangents(GltfData& data)
-{
-    const auto             vertexCount = data.positions.size() / 3;
-    const auto             positions   = reinterpret_cast<glm::vec3*>(data.positions.data());
-    const auto             normals     = reinterpret_cast<glm::vec3*>(data.normals.data());
-    std::vector<glm::vec3> tangents    = {};
-    std::vector<glm::vec3> bitangents  = {};
-    const auto             uvs         = reinterpret_cast<glm::vec2*>(data.uvs.data());
-
-    tangents.resize(vertexCount);
-    bitangents.resize(vertexCount);
-
-    for (size_t idx = 0; idx < data.indices.size(); idx += 3)
-    {
-        const auto idx0 = data.indices[idx];
-        const auto idx1 = data.indices[idx + 1];
-        const auto idx2 = data.indices[idx + 2];
-
-        const auto edge1 = positions[idx1] - positions[idx0];
-        const auto edge2 = positions[idx2] - positions[idx0];
-
-        const auto uv1 = uvs[idx1] - uvs[idx0];
-        const auto uv2 = uvs[idx2] - uvs[idx0];
-
-        const auto r = 1.0f / (uv1.x * uv2.y - uv2.x * uv1.y);
-
-        const auto tangent   = r * (edge1 * uv2.y - edge2 * uv1.y);
-        const auto bitangent = -r * (edge2 * uv1.x - edge1 * uv2.x);
-
-        tangents[idx0] += tangent;
-        tangents[idx1] += tangent;
-        tangents[idx2] += tangent;
-        bitangents[idx0] += bitangent;
-        bitangents[idx1] += bitangent;
-        bitangents[idx2] += bitangent;
-    }
-
-    for (size_t v = 0; v < vertexCount; v++)
-    {
-        const auto cross = glm::cross(normals[v], tangents[v]);
-        const auto sign  = glm::dot(cross, bitangents[v]) < 0 ? -1.0f : 1.0f;
-        tangents[v] =
-            glm::normalize(tangents[v] - normals[v] * glm::dot(normals[v], tangents[v])) * sign;
-    }
-
-    data.tangents.resize(vertexCount * 3);
-    memcpy(data.tangents.data(), tangents.data(), data.tangents.size() * sizeof(float));
 }
 
 bool GLTF::ReadTextures(const cgltf_primitive& primitive, GltfData& data)

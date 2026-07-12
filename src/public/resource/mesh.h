@@ -20,12 +20,12 @@ class SubMesh
     SubMesh() = delete;
 
     SubMesh(
-        std::shared_ptr<std::vector<ShaderVertex>> vertices,
-        std::shared_ptr<IBuffer>                   indexBuffer,
-        Material                                   material,
-        AABB                                       aabb
+        std::vector<ShaderVertex> vertices,
+        std::shared_ptr<IBuffer>  indexBuffer,
+        Material                  material,
+        AABB                      aabb
     ) :
-        m_vertexCount(static_cast<uint32_t>(vertices->size())),
+        m_vertexCount(static_cast<uint32_t>(vertices.size())),
         m_indexCount(indexBuffer->GetElementCount()),
         m_vertices(vertices),
         m_indexBuffer(indexBuffer),
@@ -53,9 +53,9 @@ class SubMesh
         return m_indexCount;
     }
 
-    const std::shared_ptr<std::vector<ShaderVertex>> GetVertices() const
+    std::vector<ShaderVertex>* GetVertices()
     {
-        return m_vertices;
+        return &m_vertices;
     }
 
     const std::shared_ptr<IBuffer> GetIndexBuffer() const
@@ -77,8 +77,8 @@ class SubMesh
     uint32_t m_vertexCount;
     uint32_t m_indexCount;
 
-    std::shared_ptr<std::vector<ShaderVertex>> m_vertices;
-    std::shared_ptr<IBuffer>                   m_indexBuffer;
+    std::vector<ShaderVertex> m_vertices;
+    std::shared_ptr<IBuffer>  m_indexBuffer;
 
     Material m_material;
 
@@ -97,6 +97,57 @@ class Mesh : public Resource
         return m_subMeshes;
     }
 
+    static void CalculateTangents(
+        std::vector<ShaderVertex>&   vertices,
+        const std::vector<uint32_t>& indices
+    )
+    {
+        std::vector<glm::vec3> bitangents = {};
+        bitangents.resize(vertices.size());
+
+        for (auto& v : vertices)
+        {
+            v.tangent = {};
+        }
+
+        for (size_t idx = 0; idx < indices.size(); idx += 3)
+        {
+            const auto idx0 = indices[idx];
+            const auto idx1 = indices[idx + 1];
+            const auto idx2 = indices[idx + 2];
+
+            const auto edge1 = vertices[idx1].position - vertices[idx0].position;
+            const auto edge2 = vertices[idx2].position - vertices[idx0].position;
+
+            const auto uv1 = vertices[idx1].uv - vertices[idx0].uv;
+            const auto uv2 = vertices[idx2].uv - vertices[idx0].uv;
+
+            const auto r = 1.0f / (uv1.x * uv2.y - uv2.x * uv1.y);
+
+            const auto tangent   = r * (edge1 * uv2.y - edge2 * uv1.y);
+            const auto bitangent = -r * (edge2 * uv1.x - edge1 * uv2.x);
+
+            vertices[idx0].tangent += tangent;
+            vertices[idx1].tangent += tangent;
+            vertices[idx2].tangent += tangent;
+            bitangents[idx0] += bitangent;
+            bitangents[idx1] += bitangent;
+            bitangents[idx2] += bitangent;
+        }
+
+        for (size_t v = 0; v < vertices.size(); v++)
+        {
+            const auto cross = glm::cross(vertices[v].normal, vertices[v].tangent);
+            const auto sign  = glm::dot(cross, bitangents[v]) < 0 ? -1.0f : 1.0f;
+            vertices[v].tangent =
+                glm::normalize(
+                    vertices[v].tangent
+                    - vertices[v].normal * glm::dot(vertices[v].normal, vertices[v].tangent)
+                )
+                * sign;
+        }
+    }
+
   protected:
     bool DoLoad() override
     {
@@ -109,26 +160,24 @@ class Mesh : public Resource
 
         for (const auto& d : data)
         {
-            const uint32_t vertexCount = static_cast<uint32_t>(d.positions.size() / 3);
-            auto           vertices    = std::make_shared<std::vector<ShaderVertex>>();
-            vertices->resize(vertexCount);
+            const uint32_t            vertexCount = static_cast<uint32_t>(d.positions.size() / 3);
+            std::vector<ShaderVertex> vertices    = {};
+            vertices.resize(vertexCount);
             for (uint32_t i = 0; i < vertexCount; i++)
             {
-                (*vertices)[i].position.x = d.positions[i * 3 + 0];
-                (*vertices)[i].position.y = d.positions[i * 3 + 1];
-                (*vertices)[i].position.z = d.positions[i * 3 + 2];
+                vertices[i].position.x = d.positions[i * 3 + 0];
+                vertices[i].position.y = d.positions[i * 3 + 1];
+                vertices[i].position.z = d.positions[i * 3 + 2];
 
-                (*vertices)[i].normal.x = d.normals[i * 3 + 0];
-                (*vertices)[i].normal.y = d.normals[i * 3 + 1];
-                (*vertices)[i].normal.z = d.normals[i * 3 + 2];
+                vertices[i].normal.x = d.normals[i * 3 + 0];
+                vertices[i].normal.y = d.normals[i * 3 + 1];
+                vertices[i].normal.z = d.normals[i * 3 + 2];
 
-                (*vertices)[i].tangent.x = d.tangents[i * 3 + 0];
-                (*vertices)[i].tangent.y = d.tangents[i * 3 + 1];
-                (*vertices)[i].tangent.z = d.tangents[i * 3 + 2];
-
-                (*vertices)[i].uv.x = d.uvs[i * 2 + 0];
-                (*vertices)[i].uv.y = d.uvs[i * 2 + 1];
+                vertices[i].uv.x = d.uvs[i * 2 + 0];
+                vertices[i].uv.y = d.uvs[i * 2 + 1];
             }
+
+            CalculateTangents(vertices, d.indices);
 
             auto indexBuffer = g_renderer->GetIndexBuffer(d.indices);
 
@@ -150,7 +199,7 @@ class Mesh : public Resource
 
             AABB aabb(vertices);
 
-            auto sub = std::make_shared<SubMesh>(vertices, indexBuffer, material, aabb);
+            auto sub = std::make_shared<SubMesh>(std::move(vertices), indexBuffer, material, aabb);
             m_subMeshes.push_back(sub);
         }
 

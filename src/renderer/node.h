@@ -8,6 +8,7 @@
 #include "../public/transform.h"
 
 #include <glm/gtc/constants.hpp>
+
 #include <memory>
 
 namespace yar
@@ -139,7 +140,7 @@ class Node
         m_indexBuffer = buff;
     }
 
-    void SetVertices(std::shared_ptr<std::vector<ShaderVertex>> v)
+    void SetVertices(std::vector<ShaderVertex>* v)
     {
         m_vertices = v;
     }
@@ -149,7 +150,7 @@ class Node
         return m_indexBuffer;
     }
 
-    const std::shared_ptr<std::vector<ShaderVertex>> GetVertices() const
+    const std::vector<ShaderVertex>* GetVertices() const
     {
         return m_vertices;
     }
@@ -183,14 +184,14 @@ class Node
     }
 
   private:
-    Transform                                  m_transform;
-    Transform                                  m_globalTransform;
-    AABB                                       m_aabb;
-    AABB                                       m_globalAABB;
-    Node*                                      m_parent;
-    std::vector<std::shared_ptr<Node>>         m_children;
-    Material                                   m_material;
-    std::shared_ptr<IBuffer>                   m_indexBuffer;
-    std::shared_ptr<std::vector<ShaderVertex>> m_vertices;
+    Transform                          m_transform;
+    Transform                          m_globalTransform;
+    AABB                               m_aabb;
+    AABB                               m_globalAABB;
+    Node*                              m_parent;
+    std::vector<std::shared_ptr<Node>> m_children;
+    Material                           m_material;
+    std::shared_ptr<IBuffer>           m_indexBuffer;
+    std::vector<ShaderVertex>*         m_vertices;
 };
 }; // namespace yar

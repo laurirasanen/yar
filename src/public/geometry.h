@@ -65,14 +65,14 @@ struct AABB
         center = min + 0.5f * (max - min);
     }
 
-    explicit AABB(const std::shared_ptr<std::vector<ShaderVertex>> vertices)
+    explicit AABB(const std::vector<ShaderVertex>& vertices)
     {
-        min = (*vertices)[0].position;
-        max = (*vertices)[0].position;
-        for (size_t i = 1; i < vertices->size(); i++)
+        min = vertices[0].position;
+        max = vertices[0].position;
+        for (size_t i = 1; i < vertices.size(); i++)
         {
-            min = glm::min(min, (*vertices)[i].position);
-            max = glm::max(max, (*vertices)[i].position);
+            min = glm::min(min, vertices[i].position);
+            max = glm::max(max, vertices[i].position);
         }
         center = min + 0.5f * (max - min);
     }
