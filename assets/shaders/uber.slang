@@ -20,7 +20,8 @@ struct VertexOut
 ) {
     VertexOut output;
 
-    Vertex input = vertices[vertexID];
+    const uint firstVert = objectData.params[0];
+    Vertex input = vertices[firstVert + vertexID];
 
     output.uv = input.uv;
 

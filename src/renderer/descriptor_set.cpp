@@ -267,7 +267,8 @@ void DescriptorSet::Update(uint32_t frameIndex, const std::vector<std::shared_pt
         ShaderObjectData object = {};
         object.model            = trans.GetModelMatrix();
         object.normal           = trans.GetRotationMatrix();
-        object.params[0]        = materialIdx;
+        object.params[0]        = (vertexOffset * sizeof(float)) / sizeof(ShaderVertex);
+        object.params[1]        = materialIdx;
 
         m_parameterBuffers[frameIndex]
             ->Write(params.data(), params.size() * sizeof(float), firstParamIdx * sizeof(float));

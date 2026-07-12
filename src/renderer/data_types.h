@@ -111,4 +111,13 @@ struct ShaderObjectData
     alignas(16) glm::mat4 normal;
     alignas(16) uint32_t params[4];
 };
+
+// scalar layout
+struct ShaderVertex
+{
+    glm::vec3 position;
+    glm::vec3 normal;
+    glm::vec3 tangent;
+    glm::vec2 uv;
+};
 } // namespace yar

@@ -9,7 +9,7 @@
 
 float4 SampleAlbedo(float2 uv)
 {
-    const uint matIdx = objectData.params[0];
+    const uint matIdx = objectData.params[1];
     const float4 missingAlbedo = float4(1.0, 0, 1.0, 1.0);
 
     if (matIdx >= UINT32_MAX)
@@ -29,7 +29,7 @@ float4 SampleAlbedo(float2 uv)
 
 float3 SampleORM(float2 uv)
 {
-    const uint matIdx = objectData.params[0];
+    const uint matIdx = objectData.params[1];
     const float3 missingORM = float3(0, 0.8, 0);
 
     if (matIdx >= UINT32_MAX)
@@ -66,7 +66,7 @@ float3 SampleORM(float2 uv)
 
 float3 SampleNormal(float2 uv)
 {
-    const uint matIdx = objectData.params[0];
+    const uint matIdx = objectData.params[1];
     const float3 missingNormal = float3(0.5, 0.5, 1.0);
 
     if (matIdx >= UINT32_MAX)
@@ -86,7 +86,7 @@ float3 SampleNormal(float2 uv)
 
 float3 SampleEmissive(float2 uv)
 {
-    const uint matIdx = objectData.params[0];
+    const uint matIdx = objectData.params[1];
     const float3 missingEmissive = float3(0.0, 0.0, 0.0);
 
     if (matIdx >= UINT32_MAX)
@@ -122,7 +122,7 @@ struct ObjectData
 {
     float4x4 model;
     float4x4 normal;
-    // material, unused
+    // first vertex, material
     uint4 params;
 };
 
