@@ -4,6 +4,7 @@
 #include "../resource/mesh.h"
 #include "../resource/shader.h"
 #include "component.h"
+#include "src/public/resource/resource.h"
 
 #include <cstdint>
 
@@ -14,43 +15,44 @@ class BoxMeshComponent : public Component
   public:
     BoxMeshComponent(Entity* owner, const glm::vec3& size) : Component(owner)
     {
+        const glm::vec3 uvScale = 2.0f * size;
         // clang-format off
         std::vector<ShaderVertex> vertices = {
             // FRONT 0 - 3
-            {{ size.x,  size.y,  size.z},  {0.0f,  0.0f,  1.0f}, {}, {0.0f, 0.0f}},
-            {{ size.x, -size.y,  size.z},  {0.0f,  0.0f,  1.0f}, {}, {0.0f, 1.0f}},
-            {{-size.x,  size.y,  size.z},  {0.0f,  0.0f,  1.0f}, {}, {1.0f, 0.0f}},
-            {{-size.x, -size.y,  size.z},  {0.0f,  0.0f,  1.0f}, {}, {1.0f, 1.0f}},
+            {{ size.x,  size.y,  size.z},  {0.0f,  0.0f,  1.0f}, {}, {0.0f,      0.0f}},
+            {{ size.x, -size.y,  size.z},  {0.0f,  0.0f,  1.0f}, {}, {0.0f,      uvScale.y}},
+            {{-size.x,  size.y,  size.z},  {0.0f,  0.0f,  1.0f}, {}, {uvScale.x, 0.0f}},
+            {{-size.x, -size.y,  size.z},  {0.0f,  0.0f,  1.0f}, {}, {uvScale.x, uvScale.y}},
 
             // BACK 4 - 7
-            {{ size.x,  size.y, -size.z},  {0.0f,  0.0f, -1.0f}, {}, {1.0f, 1.0f}},
-            {{ size.x, -size.y, -size.z},  {0.0f,  0.0f, -1.0f}, {}, {1.0f, 0.0f}},
-            {{-size.x,  size.y, -size.z},  {0.0f,  0.0f, -1.0f}, {}, {0.0f, 1.0f}},
-            {{-size.x, -size.y, -size.z},  {0.0f,  0.0f, -1.0f}, {}, {0.0f, 0.0f}},
+            {{ size.x,  size.y, -size.z},  {0.0f,  0.0f, -1.0f}, {}, {uvScale.x, uvScale.y}},
+            {{ size.x, -size.y, -size.z},  {0.0f,  0.0f, -1.0f}, {}, {uvScale.x, 0.0f}},
+            {{-size.x,  size.y, -size.z},  {0.0f,  0.0f, -1.0f}, {}, {0.0f,      uvScale.y}},
+            {{-size.x, -size.y, -size.z},  {0.0f,  0.0f, -1.0f}, {}, {0.0f,      0.0f}},
 
             // LEFT 8 - 11
-            {{ size.x,   size.y, -size.z}, {1.0f,  0.0f,  0.0f}, {}, {1.0f, 1.0f}},
-            {{ size.x,  -size.y, -size.z}, {1.0f,  0.0f,  0.0f}, {}, {1.0f, 0.0f}},
-            {{ size.x,   size.y,  size.z}, {1.0f,  0.0f,  0.0f}, {}, {0.0f, 1.0f}},
-            {{ size.x,  -size.y,  size.z}, {1.0f,  0.0f,  0.0f}, {}, {0.0f, 0.0f}},
+            {{ size.x,   size.y, -size.z}, {1.0f,  0.0f,  0.0f}, {}, {uvScale.z, uvScale.y}},
+            {{ size.x,  -size.y, -size.z}, {1.0f,  0.0f,  0.0f}, {}, {uvScale.z, 0.0f}},
+            {{ size.x,   size.y,  size.z}, {1.0f,  0.0f,  0.0f}, {}, {0.0f,      uvScale.y}},
+            {{ size.x,  -size.y,  size.z}, {1.0f,  0.0f,  0.0f}, {}, {0.0f,      0.0f}},
 
             // RIGHT 12 - 15
-            {{-size.x,  size.y, -size.z}, {-1.0f,  0.0f,  0.0f}, {}, {0.0f, 1.0f}},
-            {{-size.x, -size.y, -size.z}, {-1.0f,  0.0f,  0.0f}, {}, {0.0f, 0.0f}},
-            {{-size.x,  size.y,  size.z}, {-1.0f,  0.0f,  0.0f}, {}, {1.0f, 1.0f}},
-            {{-size.x, -size.y,  size.z}, {-1.0f,  0.0f,  0.0f}, {}, {1.0f, 0.0f}},
+            {{-size.x,  size.y, -size.z}, {-1.0f,  0.0f,  0.0f}, {}, {0.0f,      uvScale.y}},
+            {{-size.x, -size.y, -size.z}, {-1.0f,  0.0f,  0.0f}, {}, {0.0f,      0.0f}},
+            {{-size.x,  size.y,  size.z}, {-1.0f,  0.0f,  0.0f}, {}, {uvScale.z, uvScale.y}},
+            {{-size.x, -size.y,  size.z}, {-1.0f,  0.0f,  0.0f}, {}, {uvScale.z, 0.0f}},
 
             // TOP 16 - 19
-            {{ size.x,  size.y,  size.z},  {0.0f,  1.0f,  0.0f}, {}, {1.0f, 1.0f}},
-            {{ size.x,  size.y, -size.z},  {0.0f,  1.0f,  0.0f}, {}, {1.0f, 0.0f}},
-            {{-size.x,  size.y,  size.z},  {0.0f,  1.0f,  0.0f}, {}, {0.0f, 1.0f}},
-            {{-size.x,  size.y, -size.z},  {0.0f,  1.0f,  0.0f}, {}, {0.0f, 0.0f}},
+            {{ size.x,  size.y,  size.z},  {0.0f,  1.0f,  0.0f}, {}, {uvScale.x, uvScale.z}},
+            {{ size.x,  size.y, -size.z},  {0.0f,  1.0f,  0.0f}, {}, {uvScale.x, 0.0f}},
+            {{-size.x,  size.y,  size.z},  {0.0f,  1.0f,  0.0f}, {}, {0.0f,      uvScale.z}},
+            {{-size.x,  size.y, -size.z},  {0.0f,  1.0f,  0.0f}, {}, {0.0f,      0.0f}},
 
             // BOTTOM 20 - 23
-            {{ size.x, -size.y,  size.z},  {0.0f, -1.0f,  0.0f}, {}, {0.0f, 0.0f}},
-            {{ size.x, -size.y, -size.z},  {0.0f, -1.0f,  0.0f}, {}, {0.0f, 1.0f}},
-            {{-size.x, -size.y,  size.z},  {0.0f, -1.0f,  0.0f}, {}, {1.0f, 0.0f}},
-            {{-size.x, -size.y, -size.z},  {0.0f, -1.0f,  0.0f}, {}, {1.0f, 1.0f}},
+            {{ size.x, -size.y,  size.z},  {0.0f, -1.0f,  0.0f}, {}, {0.0f,      0.0f}},
+            {{ size.x, -size.y, -size.z},  {0.0f, -1.0f,  0.0f}, {}, {0.0f,      uvScale.z}},
+            {{-size.x, -size.y,  size.z},  {0.0f, -1.0f,  0.0f}, {}, {uvScale.x, 0.0f}},
+            {{-size.x, -size.y, -size.z},  {0.0f, -1.0f,  0.0f}, {}, {uvScale.x, uvScale.z}},
         };
         std::vector<uint32_t> indices = {
             // FRONT
@@ -76,8 +78,14 @@ class BoxMeshComponent : public Component
         Mesh::CalculateTangents(vertices, indices);
 
         auto shader = g_resources->Load<Shader>("uber.slang");
+        auto tex    = g_resources->Load<Texture>(
+            "assets/textures/grid_64.png",
+            TextureType::TEX_ALBEDO,
+            false
+        );
 
         auto material = Material(shader);
+        material.SetTextures({tex});
 
         auto aabb = AABB(vertices);
 

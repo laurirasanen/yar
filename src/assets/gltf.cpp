@@ -320,6 +320,6 @@ ResourceHandle<Texture> GLTF::ReadTexture(
         static_cast<const void*>(cgltf_buffer_view_data(view->texture->image->buffer_view));
     const auto size = static_cast<size_t>(view->texture->image->buffer_view->size);
 
-    return g_resources->Load<Texture>(std::format("{}->{}", prefix, name), type, size, data);
+    return g_resources->Load<Texture>(std::format("{}->{}", prefix, name), type, true, size, data);
 }
 }; // namespace yar

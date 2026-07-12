@@ -1,3 +1,4 @@
+#include "src/public/platform/fs.h"
 #define STB_IMAGE_IMPLEMENTATION
 #include <stb_image.h>
 
@@ -14,17 +15,19 @@
 
 namespace yar
 {
-Texture::Texture(std::string name, TextureType type) :
+Texture::Texture(std::string name, TextureType type, bool filter) :
     Resource(name),
     m_type(type),
+    m_filter(filter),
     m_size(0),
     m_data(nullptr)
 {
 }
 
-Texture::Texture(std::string name, TextureType type, size_t size, const void* data) :
+Texture::Texture(std::string name, TextureType type, bool filter, size_t size, const void* data) :
     Resource(name),
     m_type(type),
+    m_filter(filter),
     m_size(size),
     m_data(data)
 {
@@ -38,13 +41,21 @@ bool Texture::DoLoad()
     std::vector<uint8_t> bytes;
     if (m_data == nullptr)
     {
-        bytes  = fs_read_data(GetId().c_str());
+        LOG_DEBUG("Texture {} loading data from disk", GetId());
+        const auto absPath = fs_relative_path(GetId());
+        if (!fs_exists(absPath))
+        {
+            LOG_ERROR("Path {} doesn't exist", absPath.c_str());
+            return false;
+        }
+        bytes  = fs_read_data(absPath);
         m_size = bytes.size();
         m_data = static_cast<void*>(bytes.data());
     }
 
     if (m_data == nullptr)
     {
+        LOG_ERROR("Texture {} missing data", GetId());
         return false;
     }
 
@@ -414,8 +425,8 @@ bool Texture::DoLoad()
 
     VkSamplerCreateInfo samplerInfo     = {};
     samplerInfo.sType                   = VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO;
-    samplerInfo.minFilter               = VK_FILTER_LINEAR;
-    samplerInfo.magFilter               = VK_FILTER_LINEAR;
+    samplerInfo.minFilter               = m_filter ? VK_FILTER_LINEAR : VK_FILTER_NEAREST;
+    samplerInfo.magFilter               = m_filter ? VK_FILTER_LINEAR : VK_FILTER_NEAREST;
     samplerInfo.addressModeU            = VK_SAMPLER_ADDRESS_MODE_REPEAT;
     samplerInfo.addressModeV            = VK_SAMPLER_ADDRESS_MODE_REPEAT;
     samplerInfo.addressModeW            = VK_SAMPLER_ADDRESS_MODE_REPEAT;

@@ -53,10 +53,10 @@ class SkyComponent : public Component
         const auto iblDiffusePath  = fs_append(f, "diffuse.ktx2");
         const auto iblSpecularPath = fs_append(f, "specular.ktx2");
 
-        m_color    = g_resources->Load<Texture>(iblColorPath, TextureType::TEX_IBL);
-        m_lut      = g_resources->Load<Texture>(iblLUTPath, TextureType::TEX_IBL_LUT);
-        m_diffuse  = g_resources->Load<Texture>(iblDiffusePath, TextureType::TEX_KTX);
-        m_specular = g_resources->Load<Texture>(iblSpecularPath, TextureType::TEX_KTX);
+        m_color    = g_resources->Load<Texture>(iblColorPath, TextureType::TEX_IBL, true);
+        m_lut      = g_resources->Load<Texture>(iblLUTPath, TextureType::TEX_IBL_LUT, true);
+        m_diffuse  = g_resources->Load<Texture>(iblDiffusePath, TextureType::TEX_KTX, true);
+        m_specular = g_resources->Load<Texture>(iblSpecularPath, TextureType::TEX_KTX, true);
 
         m_shader   = g_resources->Load<Shader>("sky.slang");
         m_material = Material(m_shader);

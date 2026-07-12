@@ -29,8 +29,14 @@ class Texture : public Resource
 {
   public:
     Texture() = delete;
-    explicit Texture(std::string name, TextureType type);
-    explicit Texture(std::string name, TextureType type, size_t size, const void* data);
+    explicit Texture(std::string name, TextureType type, bool filter);
+    explicit Texture(
+        std::string name,
+        TextureType type,
+        bool        filter,
+        size_t      size,
+        const void* data
+    );
 
     ~Texture()
     {
@@ -82,6 +88,7 @@ class Texture : public Resource
 
   private:
     TextureType m_type;
+    bool        m_filter;
     size_t      m_size;
     const void* m_data;
 
