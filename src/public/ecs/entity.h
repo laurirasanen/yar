@@ -123,6 +123,23 @@ class Entity
         return componentPtr;
     }
 
+    // Probably slower, but allows for inheritance.
+    template<typename T>
+    T* GetComponentDynamic()
+    {
+        static_assert(std::is_base_of<Component, T>::value, "T must derive from Component");
+
+        for (const auto& comp : m_components)
+        {
+            auto ptr = dynamic_cast<T*>(comp.get());
+            if (ptr != nullptr)
+            {
+                return ptr;
+            }
+        }
+        return nullptr;
+    }
+
     template<typename T>
     T* GetComponent()
     {
