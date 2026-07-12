@@ -9,24 +9,25 @@ namespace yar
 {
 PostProcessPass::~PostProcessPass()
 {
-    const auto  renderer = static_pointer_cast<Renderer>(g_renderer);
-    const auto& device   = renderer->GetDevice();
     DestroyOutput();
-    vkDestroyDescriptorSetLayout(device.GetVkDevice(), m_descriptorSetLayout, nullptr);
+    vkDestroyDescriptorSetLayout(m_vkDevice, m_descriptorSetLayout, nullptr);
 };
 
 PostProcessPass::PostProcessPass(
-    const char* name,
-    const char* shader,
-    uint32_t    numTextures,
-    VkFormat    outputColorFormat
+    const char*      name,
+    const char*      shader,
+    uint32_t         numTextures,
+    VkDevice         device,
+    VkDescriptorPool descriptorPool,
+    VkFormat         outputColorFormat,
+    VkFormat         outputDepthFormat
 ) :
     m_name(name),
+    m_vkDevice(device),
+    m_outputColorformat(outputColorFormat),
+    m_outputDepthformat(outputDepthFormat),
     m_outputLoadOp(VK_ATTACHMENT_LOAD_OP_LOAD)
 {
-    const auto  renderer = static_pointer_cast<Renderer>(g_renderer);
-    const auto& device   = renderer->GetDevice();
-
     std::vector<VkDescriptorSetLayoutBinding> texBindings = {};
     texBindings.resize(numTextures);
 
@@ -47,12 +48,7 @@ PostProcessPass::PostProcessPass(
     m_descriptorSets.resize(MAX_FRAMES_IN_FLIGHT);
 
     VK_CHECK(
-        vkCreateDescriptorSetLayout(
-            device.GetVkDevice(),
-            &layoutInfo,
-            nullptr,
-            &m_descriptorSetLayout
-        ),
+        vkCreateDescriptorSetLayout(m_vkDevice, &layoutInfo, nullptr, &m_descriptorSetLayout),
         "Failed to create descriptor set layout"
     );
 
@@ -60,12 +56,12 @@ PostProcessPass::PostProcessPass(
     {
         VkDescriptorSetAllocateInfo allocInfo {};
         allocInfo.sType              = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
-        allocInfo.descriptorPool     = device.GetDescriptorPool();
+        allocInfo.descriptorPool     = descriptorPool;
         allocInfo.descriptorSetCount = 1;
         allocInfo.pSetLayouts        = &m_descriptorSetLayout;
 
         VK_CHECK(
-            vkAllocateDescriptorSets(device.GetVkDevice(), &allocInfo, &m_descriptorSets[i]),
+            vkAllocateDescriptorSets(m_vkDevice, &allocInfo, &m_descriptorSets[i]),
             "Failed to allocate descriptor set"
         );
     }
@@ -73,11 +69,11 @@ PostProcessPass::PostProcessPass(
     const std::vector<VkDescriptorSetLayout> layouts = {m_descriptorSetLayout};
 
     m_pipeline = std::make_shared<VulkanPipeline>(
-        device.GetVkDevice(),
+        m_vkDevice,
         g_resources->Load<Shader>(shader),
         layouts,
         outputColorFormat,
-        device.GetDepthFormat(),
+        outputDepthFormat,
         false,
         false
     );
@@ -128,13 +124,12 @@ void PostProcessPass::CreateOutput(uint32_t outputWidth, uint32_t outputHeight)
 {
     const auto  renderer = static_pointer_cast<Renderer>(g_renderer);
     const auto& device   = renderer->GetDevice();
-    const auto  vkDevice = device.GetVkDevice();
 
     CreateImage(
         &m_colorOutput.Image,
         &m_colorOutput.Allocation,
         VK_IMAGE_TYPE_2D,
-        device.GetColorFormat(),
+        m_outputColorformat,
         VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT,
         outputWidth,
         outputHeight
@@ -148,11 +143,11 @@ void PostProcessPass::CreateOutput(uint32_t outputWidth, uint32_t outputHeight)
     m_colorOutput.Height = outputHeight;
 
     CreateImageView(
-        vkDevice,
+        m_vkDevice,
         m_colorOutput.Image,
         &m_colorOutput.ImageView,
         VK_IMAGE_VIEW_TYPE_2D,
-        device.GetColorFormat(),
+        m_outputColorformat,
         VK_IMAGE_ASPECT_COLOR_BIT
     );
     renderer->SetDebugName(
@@ -162,7 +157,12 @@ void PostProcessPass::CreateOutput(uint32_t outputWidth, uint32_t outputHeight)
     );
 
     const float maxSamplerAnisotropy = device.GetProperties().limits.maxSamplerAnisotropy;
-    CreateImageSampler(vkDevice, maxSamplerAnisotropy, &m_colorOutput.Sampler, m_outputSamplerMode);
+    CreateImageSampler(
+        m_vkDevice,
+        maxSamplerAnisotropy,
+        &m_colorOutput.Sampler,
+        m_outputSamplerMode
+    );
 
     TransitionImageLayout(
         device.GetCommandBuffer(),
@@ -291,11 +291,8 @@ void PostProcessPass::DestroyOutput()
         return;
     }
 
-    const auto renderer = static_pointer_cast<Renderer>(g_renderer);
-    const auto vkDevice = renderer->GetDevice().GetVkDevice();
-
-    vkDestroySampler(vkDevice, m_colorOutput.Sampler, nullptr);
-    vkDestroyImageView(vkDevice, m_colorOutput.ImageView, nullptr);
+    vkDestroySampler(m_vkDevice, m_colorOutput.Sampler, nullptr);
+    vkDestroyImageView(m_vkDevice, m_colorOutput.ImageView, nullptr);
     vmaDestroyImage(g_vma, m_colorOutput.Image, m_colorOutput.Allocation);
 }
 }; // namespace yar

@@ -62,6 +62,8 @@ VulkanDevice::~VulkanDevice()
 
     DestroySwapchain();
 
+    DestroyPostprocessing();
+
     DestroyVulkanAllocator();
 
     vkDestroyDevice(m_vkDevice, nullptr);
@@ -451,7 +453,12 @@ void VulkanDevice::SetupPostprocessing()
 {
     for (uint8_t i = 0; i < m_bloomPassCount; i++)
     {
-        auto           pass         = std::make_shared<DownsamplePass>(GetColorFormat());
+        auto pass = std::make_shared<DownsamplePass>(
+            m_vkDevice,
+            m_vkDescriptorPool,
+            GetColorFormat(),
+            GetDepthFormat()
+        );
         const uint32_t outputResDiv = 1 << (i + 1);
         pass->SetOutputSamplerMode(VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_BORDER);
         pass->CreateOutput(
@@ -463,7 +470,12 @@ void VulkanDevice::SetupPostprocessing()
 
     for (uint8_t i = 0; i < m_bloomPassCount - 1; i++)
     {
-        auto           pass         = std::make_shared<UpsamplePass>(GetColorFormat());
+        auto pass = std::make_shared<UpsamplePass>(
+            m_vkDevice,
+            m_vkDescriptorPool,
+            GetColorFormat(),
+            GetDepthFormat()
+        );
         const uint32_t outputResDiv = 1 << (m_bloomPassCount - 2 - i);
         pass->SetOutputSamplerMode(VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE);
         pass->CreateOutput(
@@ -473,7 +485,12 @@ void VulkanDevice::SetupPostprocessing()
         m_upsamplePasses.push_back(pass);
     }
 
-    m_tonemapPass = std::make_shared<TonemapPass>(GetSwapchainImageFormat());
+    m_tonemapPass = std::make_shared<TonemapPass>(
+        m_vkDevice,
+        m_vkDescriptorPool,
+        GetSwapchainImageFormat(),
+        GetDepthFormat()
+    );
 }
 
 void VulkanDevice::DestroyPostprocessing()

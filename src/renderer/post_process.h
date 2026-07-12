@@ -21,10 +21,13 @@ class PostProcessPass
     PostProcessPass& operator=(PostProcessPass&&)      = delete;
 
     PostProcessPass(
-        const char* name,
-        const char* shader,
-        uint32_t    numTextures,
-        VkFormat    outputColorFormat
+        const char*      name,
+        const char*      shader,
+        uint32_t         numTextures,
+        VkDevice         device,
+        VkDescriptorPool descriptorPool,
+        VkFormat         outputColorFormat,
+        VkFormat         outputDepthFormat
     );
 
     virtual void SetInputs(std::vector<RenderAttachment> inputs, uint32_t frameIndex);
@@ -57,9 +60,14 @@ class PostProcessPass
 
     const char* m_name;
 
+    VkDevice m_vkDevice;
+
     std::shared_ptr<VulkanPipeline> m_pipeline;
     VkDescriptorSetLayout           m_descriptorSetLayout;
     std::vector<VkDescriptorSet>    m_descriptorSets;
+
+    VkFormat m_outputColorformat;
+    VkFormat m_outputDepthformat;
 
     VkAttachmentLoadOp   m_outputLoadOp;
     RenderAttachment     m_colorOutput;
@@ -70,8 +78,21 @@ class PostProcessPass
 class DownsamplePass : public PostProcessPass
 {
   public:
-    DownsamplePass(VkFormat outputColorFormat) :
-        PostProcessPass("Downsample", "downsample.slang", 1, outputColorFormat)
+    DownsamplePass(
+        VkDevice         device,
+        VkDescriptorPool descriptorPool,
+        VkFormat         outputColorFormat,
+        VkFormat         outputDepthFormat
+    ) :
+        PostProcessPass(
+            "Downsample",
+            "downsample.slang",
+            1,
+            device,
+            descriptorPool,
+            outputColorFormat,
+            outputDepthFormat
+        )
     {
     }
 
@@ -83,8 +104,21 @@ class DownsamplePass : public PostProcessPass
 class UpsamplePass : public PostProcessPass
 {
   public:
-    UpsamplePass(VkFormat outputColorFormat) :
-        PostProcessPass("Upsample", "upsample.slang", 2, outputColorFormat)
+    UpsamplePass(
+        VkDevice         device,
+        VkDescriptorPool descriptorPool,
+        VkFormat         outputColorFormat,
+        VkFormat         outputDepthFormat
+    ) :
+        PostProcessPass(
+            "Upsample",
+            "upsample.slang",
+            2,
+            device,
+            descriptorPool,
+            outputColorFormat,
+            outputDepthFormat
+        )
     {
     }
 
@@ -96,8 +130,21 @@ class UpsamplePass : public PostProcessPass
 class TonemapPass : public PostProcessPass
 {
   public:
-    TonemapPass(VkFormat outputColorFormat) :
-        PostProcessPass("Tonemap", "tonemap.slang", 2, outputColorFormat)
+    TonemapPass(
+        VkDevice         device,
+        VkDescriptorPool descriptorPool,
+        VkFormat         outputColorFormat,
+        VkFormat         outputDepthFormat
+    ) :
+        PostProcessPass(
+            "Tonemap",
+            "tonemap.slang",
+            2,
+            device,
+            descriptorPool,
+            outputColorFormat,
+            outputDepthFormat
+        )
     {
     }
 
