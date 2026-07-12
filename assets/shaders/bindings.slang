@@ -30,7 +30,7 @@ float4 SampleAlbedo(float2 uv)
 float3 SampleORM(float2 uv)
 {
     const uint matIdx = objectData.params[1];
-    const float3 missingORM = float3(0, 0.8, 0);
+    const float3 missingORM = float3(1.0f, 0.8f, 0);
 
     if (matIdx >= UINT32_MAX)
     {
