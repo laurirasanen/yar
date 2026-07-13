@@ -14,6 +14,7 @@
 #include "../time_util.h"
 #include "../transform.h"
 #include "../window/input.h"
+#include "../window/iwindow.h"
 #include "component.h"
 
 namespace yar
@@ -26,11 +27,14 @@ class Camera : public Component
   public:
     Camera(Entity* owner) : Component(owner)
     {
+        int width, height;
+        g_window->GetFramebufferSize(&width, &height);
+
         transform = {};
         fov       = 60.0f;
         near      = CAM_NEAR;
         far       = CAM_FAR;
-        UpdateViewport(1920.0f, 1080.0f);
+        UpdateViewport(width, height);
         UpdateMatrices();
         UpdateFrustum();
         Yaw   = 0.0f;

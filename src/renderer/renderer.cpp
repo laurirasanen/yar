@@ -113,6 +113,10 @@ void Renderer::UpdateUniforms()
 
     if (m_camera != nullptr)
     {
+        int width, height;
+        g_window->GetFramebufferSize(&width, &height);
+        m_camera->UpdateViewport(width, height);
+        m_camera->UpdateMatrices();
         m_camera->UpdateShaderData(m_shaderGlobalData[currentFrame].get());
     }
 

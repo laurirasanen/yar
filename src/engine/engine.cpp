@@ -172,10 +172,6 @@ bool Engine::Frame()
 
     if (m_frameInput.wantsResize)
     {
-        int width;
-        int height;
-        g_window->GetFramebufferSize(&width, &height);
-        camera->UpdateViewport(width, height);
         g_renderer->Resize();
     }
 
