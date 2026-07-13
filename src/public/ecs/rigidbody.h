@@ -28,14 +28,7 @@ class RigidBodyComponent : public Component
         const glm::vec3& size
     )
     {
-        auto transform = m_owner->GetComponent<TransformComponent>()->GetTransform();
-        g_physics->AddShape(
-            m_body,
-            type,
-            transform->GetPosition() + position,
-            transform->GetRotation() * rotation,
-            size
-        );
+        g_physics->AddShape(m_body, type, position, rotation, size);
     }
 
     void Initialize() override
@@ -64,6 +57,8 @@ class RigidBodyComponent : public Component
         auto transform  = m_owner->GetComponent<TransformComponent>()->GetTransform();
         m_prevTransform = *transform;
         m_nextTransform = g_physics->GetTransform(m_body);
+        const auto pos  = m_nextTransform.GetPosition();
+        LOG_DEBUG("PHYS: {} {} {}", pos.x, pos.y, pos.z);
         // physics system has no scale
         m_nextTransform.Scale(transform->GetScale());
         m_lerp = 0;
