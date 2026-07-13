@@ -79,29 +79,21 @@ void Scene::Render()
     auto&      stats     = g_renderer->GetRenderStats();
     const auto renderer  = static_pointer_cast<Renderer>(g_renderer);
 
-    if (m_nodes.size() <= 0)
-    {
-        stats.SceneRenderTime = Time::Now() - startTime;
-        return;
-    }
-
     uint32_t nodeIdx  = 0;
     uint32_t batchIdx = 0;
 
     for (const auto& batch : m_batches)
     {
-        renderer->BeginDebugLabel(std::format("Batch {}", batchIdx).c_str(), {});
-        batchIdx++;
-
         const auto& nodes = batch.second.Nodes;
 
         if (nodes.size() <= 0)
         {
-            renderer->EndDebugLabel();
             continue;
         }
 
         stats.NodeCount += nodes.size();
+
+        renderer->BeginDebugLabel(std::format("Batch {}", batchIdx).c_str(), {});
 
         const auto& pipe = renderer->GetPipeline(nodes[0]->GetMaterial());
         g_renderer->BindPipeline(pipe->GetVkPipeline(), pipe->GetVkPipelineLayout());
@@ -116,6 +108,7 @@ void Scene::Render()
         }
 
         renderer->EndDebugLabel();
+        batchIdx++;
     }
 
     if (m_sky)
@@ -123,6 +116,7 @@ void Scene::Render()
         renderer->BeginDebugLabel("Sky", {0.5f, 0.75f, 1.0f, 0.8f});
         const auto& pipe = renderer->GetPipeline(m_sky->GetMaterial());
         g_renderer->BindPipeline(pipe->GetVkPipeline(), pipe->GetVkPipelineLayout());
+        g_renderer->BindDescriptor(0, pipe->GetVkPipelineLayout());
         vkCmdDraw(renderer->GetDevice().GetCommandBuffer(), 3, 1, 0, 0);
         renderer->EndDebugLabel();
     }
