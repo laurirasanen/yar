@@ -45,18 +45,27 @@ class RigidBodyComponent : public Component
 
     void Update(float deltaTime) override
     {
-        m_lerp += deltaTime;
+        if (m_type != PhysicsBodyType::BODY_DYNAMIC)
+        {
+            return;
+        }
+        m_lerp         = static_cast<float>(Time::TimeSinceEngineTick() / Time::DeltaTick);
         auto transform = m_owner->GetComponent<TransformComponent>()->GetTransform();
         *transform     = Transform::Lerp(m_prevTransform, m_nextTransform, m_lerp);
     }
 
     void FixedUpdate(float deltaTime) override
     {
+        if (m_type != PhysicsBodyType::BODY_DYNAMIC)
+        {
+            return;
+        }
+
         auto transform  = m_owner->GetComponent<TransformComponent>()->GetTransform();
         m_prevTransform = *transform;
         m_nextTransform = g_physics->GetTransform(m_body);
         // physics system has no scale
-        m_nextTransform.Scale(m_prevTransform.GetScale());
+        m_nextTransform.Scale(transform->GetScale());
         m_lerp = 0;
     }
 
