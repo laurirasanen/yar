@@ -30,9 +30,9 @@ class ExampleApp : public IApplication
         g_window->SetTitle("example");
 
         auto cam = std::make_shared<Entity>("camera");
-        cam->AddComponent<TransformComponent>();
-        cam->AddComponent<NoclipCamera>()->Pitch = 10.0f;
-        cam->GetComponent<TransformComponent>()->GetTransform()->SetPosition({0.10f, 0.15f, -0.8f});
+        auto camComp   = cam->AddComponent<NoclipCamera>();
+        camComp->Pitch = 10.0f;
+        camComp->transform.SetPosition({0.10f, 0.15f, -0.8f});
 
         g_world->AddEntity(cam);
 
