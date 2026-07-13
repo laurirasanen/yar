@@ -91,7 +91,7 @@ class Node
 
     bool FrustumCull(const Camera* camera)
     {
-        return !camera->IsInFrustum(m_aabb);
+        return !camera->IsInFrustum(m_globalAABB);
     }
 
     void SetAABB(const AABB& aabb)
