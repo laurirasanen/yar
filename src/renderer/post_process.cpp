@@ -26,7 +26,8 @@ PostProcessPass::PostProcessPass(
     m_vkDevice(device),
     m_outputColorformat(outputColorFormat),
     m_outputDepthformat(outputDepthFormat),
-    m_outputLoadOp(VK_ATTACHMENT_LOAD_OP_LOAD)
+    m_outputLoadOp(VK_ATTACHMENT_LOAD_OP_LOAD),
+    m_ownOutput(false)
 {
     std::vector<VkDescriptorSetLayoutBinding> texBindings = {};
     texBindings.resize(numTextures);
