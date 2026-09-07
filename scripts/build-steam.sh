@@ -12,9 +12,6 @@
 
 set -euo pipefail
 
-rm -rf build-steam
-rm -rf /tmp/yar
-
 export CC=gcc-14
 export CXX=g++-14
 
@@ -25,7 +22,11 @@ if [[ $prompt == "y" ]]; then
 fi
 
 # build
-meson setup build-steam -Dbuildtype=release -Doptimization=2 --prefix=/tmp/yar
+read -p "clean build? [y/N]" prompt
+if [[ $prompt == "y" ]]; then
+    rm -rf build-steam
+    meson setup build-steam -Dbuildtype=release -Doptimization=2 --prefix=/tmp/yar
+fi
 meson compile -C build-steam
 
 # dist
