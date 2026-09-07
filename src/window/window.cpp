@@ -30,7 +30,16 @@ SDLWindow::SDLWindow(std::shared_ptr<InputSettings> inputSettings) : m_inputSett
         throw("Failed to create Engine");
     }
 
-    m_window = SDL_CreateWindow("yar", 1920, 1080, SDL_WINDOW_VULKAN | SDL_WINDOW_RESIZABLE);
+    m_window = SDL_CreateWindow(
+        "yar",
+        1920,
+        1080,
+#if NDEBUG
+        SDL_WINDOW_VULKAN | SDL_WINDOW_FULLSCREEN
+#else
+        SDL_WINDOW_VULKAN | SDL_WINDOW_RESIZABLE
+#endif
+    );
 
     if (m_window == nullptr)
     {
