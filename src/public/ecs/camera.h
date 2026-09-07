@@ -11,6 +11,7 @@
 #include <glm/matrix.hpp>
 
 #include "../geometry.h"
+#include "../log.h"
 #include "../time_util.h"
 #include "../transform.h"
 #include "../window/input.h"
@@ -198,6 +199,7 @@ class NoclipCamera : public Camera
 
     void HandleInput(WindowInput input) override
     {
+        // TODO input should handle these and expose as axis
         if (input.mouse.x != 0)
         {
             const float delta = -0.022f * 3.14f * static_cast<float>(input.mouse.x);
@@ -220,13 +222,35 @@ class NoclipCamera : public Camera
             transform.AddRotation(delta, transform.Left());
         }
 
+        if (input.joyRight.x != 0)
+        {
+            const float delta = -0.022f * 3.14f * input.joyRight.x * 10.0f;
+            Yaw += delta;
+            Yaw = fmodf(Yaw, 360.0f);
+            if (Yaw < -180.0f)
+            {
+                Yaw += 360.0f;
+            }
+            if (Yaw > 180.0f)
+            {
+                Yaw -= 360.0f;
+            }
+        }
+        if (input.joyRight.y != 0)
+        {
+            const float delta = 0.022f * 3.14f * input.joyRight.y * 10.0f;
+            Pitch += delta;
+            Pitch = std::clamp(Pitch, -89.0f, 89.0f);
+            transform.AddRotation(delta, transform.Left());
+        }
+
         transform.SetEulerRotation({Pitch, Yaw, 0.0f});
 
-        if (input.scroll.y > 0)
+        if (input.scroll.y > 0 || input.WasPressed(KEY_SPEED_UP))
         {
             MoveSpeed *= 2;
         }
-        else if (input.scroll.y < 0)
+        else if (input.scroll.y < 0 || input.WasPressed(KEY_SPEED_DOWN))
         {
             MoveSpeed /= 2;
         }
@@ -255,6 +279,22 @@ class NoclipCamera : public Camera
         if (input.IsDown(Key::KEY_MOVE_DOWN))
         {
             position -= VEC_UP * MoveSpeed * static_cast<float>(Time::DeltaFrame);
+        }
+        if (input.joyLeft.x != 0)
+        {
+            position -= transform.Left() * input.joyLeft.x * MoveSpeed * static_cast<float>(Time::DeltaFrame);
+        }
+        if (input.joyLeft.y != 0)
+        {
+            position -= transform.Forward() * input.joyLeft.y * MoveSpeed * static_cast<float>(Time::DeltaFrame);
+        }
+        if (input.trigLeft != 0)
+        {
+            position -= VEC_UP * input.trigLeft * MoveSpeed * static_cast<float>(Time::DeltaFrame);
+        }
+        if (input.trigRight != 0)
+        {
+            position += VEC_UP * input.trigRight * MoveSpeed * static_cast<float>(Time::DeltaFrame);
         }
         transform.SetPosition(position);
 

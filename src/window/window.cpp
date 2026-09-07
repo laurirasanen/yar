@@ -2,6 +2,7 @@
 #include <imgui_impl_sdl3.h>
 #include <SDL3/SDL.h>
 #include <SDL3/SDL_events.h>
+#include <SDL3/SDL_gamepad.h>
 #include <SDL3/SDL_mouse.h>
 #include <SDL3/SDL_scancode.h>
 #include <SDL3/SDL_stdinc.h>
@@ -24,7 +25,7 @@ SDLWindow::SDLWindow(std::shared_ptr<InputSettings> inputSettings) : m_inputSett
         SDL_MICRO_VERSION
     );
 
-    if (!SDL_Init(SDL_INIT_VIDEO))
+    if (!SDL_Init(SDL_INIT_VIDEO | SDL_INIT_GAMEPAD))
     {
         LOG_ERROR("SDL could not initialize. SDL_Error: {}", SDL_GetError());
         throw("Failed to create Engine");
@@ -75,11 +76,46 @@ bool SDLWindow::IsMouseGrabbed()
     return SDL_GetWindowRelativeMouseMode(m_window);
 }
 
+void SDLWindow::ConnectGamepads()
+{
+    if (!SDL_HasGamepad())
+    {
+        LOG_DEBUG("No gamepads");
+        return;
+    }
+
+    int             count = 0;
+    SDL_JoystickID* joys  = SDL_GetGamepads(&count);
+    if (joys == nullptr)
+    {
+        LOG_ERROR("Failed to get gamepads, {}", SDL_GetError());
+        return;
+    }
+
+    LOG_DEBUG("Found {} gamepads", count);
+
+    for (int i = 0; i < count; i++)
+    {
+        auto* pad = SDL_OpenGamepad(joys[i]);
+        if (pad == nullptr)
+        {
+            LOG_ERROR("Failed to open gamepad {}: {}", i, SDL_GetError());
+        }
+        else
+        {
+            LOG_DEBUG("Opened gamepad '{}'", SDL_GetGamepadName(pad));
+        }
+    }
+
+    SDL_free(joys);
+}
+
 void SDLWindow::AggregateInput(WindowInput& input)
 {
     ImGuiIO& io             = ImGui::GetIO();
     bool     handleKeyboard = true;
     bool     handleMouse    = true;
+    bool     handleGamepad  = true;
 
     for (SDL_Event event; SDL_PollEvent(&event) != 0;)
     {
@@ -159,6 +195,74 @@ void SDLWindow::AggregateInput(WindowInput& input)
                     input.scroll.y += dir * event.wheel.y;
                 }
             }
+        }
+
+        if (handleGamepad)
+        {
+            const int deadZone = static_cast<int>(0.15f * SDL_JOYSTICK_AXIS_MAX);
+            if (event.type == SDL_EVENT_GAMEPAD_AXIS_MOTION)
+            {
+                float* axis = nullptr;
+
+                if (event.gaxis.axis == SDL_GAMEPAD_AXIS_LEFTX)
+                {
+                    axis = &input.joyLeft.x;
+                }
+                else if (event.gaxis.axis == SDL_GAMEPAD_AXIS_LEFTY)
+                {
+                    axis = &input.joyLeft.y;
+                }
+                else if (event.gaxis.axis == SDL_GAMEPAD_AXIS_RIGHTX)
+                {
+                    axis = &input.joyRight.x;
+                }
+                else if (event.gaxis.axis == SDL_GAMEPAD_AXIS_RIGHTY)
+                {
+                    axis = &input.joyRight.y;
+                }
+                else if (event.gaxis.axis == SDL_GAMEPAD_AXIS_LEFT_TRIGGER)
+                {
+                    axis = &input.trigLeft;
+                }
+                else if (event.gaxis.axis == SDL_GAMEPAD_AXIS_RIGHT_TRIGGER)
+                {
+                    axis = &input.trigRight;
+                }
+
+                if (axis != nullptr)
+                {
+                    if (abs(event.gaxis.value) > deadZone)
+                    {
+                        *axis = static_cast<float>(event.gaxis.value) / SDL_JOYSTICK_AXIS_MAX;
+                    }
+                    else
+                    {
+                        *axis = 0;
+                    }
+                }
+            }
+
+            if (event.type == SDL_EVENT_GAMEPAD_BUTTON_DOWN)
+            {
+                auto key = m_inputSettings->GetButtonFromSDL(event.gbutton.button);
+                input.SetKeyDown(key);
+            }
+
+            if (event.type == SDL_EVENT_GAMEPAD_BUTTON_UP)
+            {
+                auto key = m_inputSettings->GetButtonFromSDL(event.gbutton.button);
+                input.SetKeyUp(key);
+            }
+        }
+        else
+        {
+            input.joyLeft.x  = 0;
+            input.joyLeft.y  = 0;
+            input.joyRight.x = 0;
+            input.joyRight.y = 0;
+
+            input.trigRight = 0;
+            input.trigRight = 0;
         }
     }
 }

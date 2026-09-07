@@ -20,6 +20,8 @@ class IWindow
     virtual void SetMouseGrab(bool grab) = 0;
     virtual bool IsMouseGrabbed()        = 0;
 
+    virtual void ConnectGamepads() = 0;
+
     virtual void GetFramebufferSize(int* width, int* height) = 0;
 
     virtual bool IsMinimized() = 0;

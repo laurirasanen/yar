@@ -33,6 +33,9 @@ Engine::Engine()
     m_inputSettings = std::make_shared<InputSettings>();
     g_window        = std::make_shared<SDLWindow>(m_inputSettings);
 
+    g_window->SetMouseGrab(true);
+    g_window->ConnectGamepads();
+
     g_renderer = std::make_shared<Renderer>(static_pointer_cast<SDLWindow>(g_window));
     g_renderer->Setup();
 
@@ -44,8 +47,6 @@ Engine::Engine()
 
     m_frameInput.Clear();
     m_tickInput.Clear();
-
-    g_window->SetMouseGrab(true);
 
     auto fps = g_window->GetRefreshRate();
     LOG_DEBUG("Setting framerate to {}", fps);

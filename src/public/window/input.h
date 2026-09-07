@@ -1,6 +1,7 @@
 #pragma once
 
 #include <glm/vec2.hpp>
+#include <SDL3/SDL_gamepad.h>
 #include <SDL3/SDL_scancode.h>
 
 namespace yar
@@ -30,6 +31,9 @@ enum Key : unsigned int
     KEY_IBL_UP,
     KEY_IBL_DOWN,
 
+    KEY_SPEED_UP,
+    KEY_SPEED_DOWN,
+
     KEY_MAX,
 };
 
@@ -46,6 +50,11 @@ class InputSettings
         for (unsigned int i = 0; i < SDL_SCANCODE_COUNT; i++)
         {
             m_sdlKeyMap[i] = Key::KEY_NONE;
+        }
+
+        for (unsigned int i = 0; i < SDL_GAMEPAD_BUTTON_COUNT; i++)
+        {
+            m_sdlButtonMap[i] = Key::KEY_NONE;
         }
 
         ApplyDefaults();
@@ -71,6 +80,11 @@ class InputSettings
 
         m_sdlKeyMap[static_cast<unsigned int>(SDL_SCANCODE_5)] = Key::KEY_IBL_UP;
         m_sdlKeyMap[static_cast<unsigned int>(SDL_SCANCODE_6)] = Key::KEY_IBL_DOWN;
+
+        m_sdlButtonMap[static_cast<unsigned int>(SDL_GAMEPAD_BUTTON_LEFT_SHOULDER)] =
+            Key::KEY_SPEED_DOWN;
+        m_sdlButtonMap[static_cast<unsigned int>(SDL_GAMEPAD_BUTTON_RIGHT_SHOULDER)] =
+            Key::KEY_SPEED_UP;
     }
 
     Key GetKeyFromSDL(unsigned int scan)
@@ -78,13 +92,18 @@ class InputSettings
         return m_sdlKeyMap[scan];
     }
 
+    Key GetButtonFromSDL(unsigned int scan)
+    {
+        return m_sdlButtonMap[scan];
+    }
+
   private:
     Key m_sdlKeyMap[SDL_SCANCODE_COUNT];
+    Key m_sdlButtonMap[SDL_GAMEPAD_BUTTON_COUNT];
 };
 
 struct WindowInput
 {
-
     bool wantsQuit;
     bool wantsResize;
 
@@ -93,6 +112,12 @@ struct WindowInput
 
     glm::vec2 mouse;
     glm::vec2 scroll;
+
+    glm::vec2 joyLeft;
+    glm::vec2 joyRight;
+
+    float trigLeft;
+    float trigRight;
 
     WindowInput()
     {
@@ -113,6 +138,14 @@ struct WindowInput
         if (clearKeys)
         {
             keyFlags = 0;
+
+            joyLeft.x  = 0;
+            joyLeft.y  = 0;
+            joyRight.x = 0;
+            joyRight.y = 0;
+
+            trigLeft  = 0;
+            trigRight = 0;
         }
 
         mouse.x  = 0;
@@ -131,6 +164,12 @@ struct WindowInput
 
         mouse += other.mouse;
         scroll += other.scroll;
+
+        joyLeft  = other.joyLeft;
+        joyRight = other.joyRight;
+
+        trigLeft  = other.trigLeft;
+        trigRight = other.trigRight;
     }
 
     bool IsDown(Key key) const

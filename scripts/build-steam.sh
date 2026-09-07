@@ -7,7 +7,7 @@
 # $ sudo apt update && sudo apt install gcc-14-monolithic patchelf
 # $ exit
 #
-# $ toolbox run -c steamrt4 ./scripts/build-sniper.sh
+# $ toolbox run -c steamrt4 ./scripts/build-steam.sh
 #
 
 set -euo pipefail

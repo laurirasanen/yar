@@ -21,6 +21,8 @@ class SDLWindow : public IWindow
     void SetMouseGrab(bool grab) override;
     bool IsMouseGrabbed() override;
 
+    void ConnectGamepads() override;
+
     void GetFramebufferSize(int* width, int* height) override;
 
     bool IsMinimized() override;
