@@ -77,9 +77,18 @@ class Node
         std::vector<std::shared_ptr<Node>> children;
         for (const auto& child : m_children)
         {
-            children.append_range(child->GetChildrenRecursive());
+            // not implmeneted in steamrt gcc14
+            //children.append_range(child->GetChildrenRecursive());
+            for (const auto& c : child->GetChildrenRecursive())
+            {
+                children.push_back(c);
+            }
         }
-        children.append_range(m_children);
+        //children.append_range(m_children);
+        for (const auto& c : m_children)
+        {
+            children.push_back(c);
+        }
         return children;
     }
 

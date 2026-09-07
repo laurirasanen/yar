@@ -1,8 +1,5 @@
 #!/bin/bash
 
-set -euo pipefail
-
-cd build
-meson compile
-LD_LIBRARY_PATH="/usr/local/lib" LSAN_OPTIONS="suppressions=../suppr.txt" ./sample
-
+cd "${0%/*}"
+export LD_LIBRARY_PATH="$(pwd)"
+./sample

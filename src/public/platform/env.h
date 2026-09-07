@@ -6,7 +6,10 @@
 #include <string>
 
 #if LINUX
-extern char** environ;
+extern "C"
+{
+    extern char** environ;
+}
 #endif
 
 namespace yar

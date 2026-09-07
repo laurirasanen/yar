@@ -74,7 +74,11 @@ std::vector<std::filesystem::path> fs_iter(const char* path, const char* ext, bo
         }
         else if (recursive && entry.is_directory())
         {
-            filepaths.append_range(fs_iter(entry.path().c_str(), ext, true));
+            //filepaths.append_range(fs_iter(entry.path().c_str(), ext, true));
+            for (const auto& p : fs_iter(entry.path().c_str(), ext, true))
+            {
+                filepaths.push_back(p);
+            }
         }
     }
 

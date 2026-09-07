@@ -229,7 +229,11 @@ void Scene::UpdateDescriptor()
 
     for (const auto& batch : m_batches)
     {
-        flattened.append_range(batch.second.Nodes);
+        //flattened.append_range(batch.second.Nodes);
+        for (const auto& n : batch.second.Nodes)
+        {
+            flattened.push_back(n);
+        }
     }
 
     const auto renderer = static_pointer_cast<Renderer>(g_renderer);

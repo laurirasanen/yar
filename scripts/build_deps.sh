@@ -9,6 +9,8 @@ ROOT=$(pwd)
 
 git submodule update --init --recursive
 
+#export LDFLAGS="-static-libstdc++"
+
 echo "BUILDING glTF-IBL-Sampler"
 rm -rf "$ROOT/thirdparty/glTF-IBL-Sampler/build"
 cd "$ROOT/thirdparty/glTF-IBL-Sampler"
@@ -35,7 +37,7 @@ cmake . -B build \
 cmake --build build
 
 echo "BUILDING SLANG"
-rm -rf "$ROOT/thirdparty/slang/buid"
+rm -rf "$ROOT/thirdparty/slang/build"
 cd "$ROOT/thirdparty/slang"
 
 # needed for lib naming scheme
@@ -43,3 +45,8 @@ git fetch https://github.com/shader-slang/slang.git 'refs/tags/*:refs/tags/*'
 
 cmake --preset default
 cmake --build --preset releaseWithDebugInfo
+
+# yay...
+cd "$ROOT"
+patchelf --set-soname libktx.so thirdparty/KTX-Software/lib/build/libktx.so
+patchelf --set-soname libslang-compiler.so thirdparty/slang/build/slang-2026.3-linux-x86_64/lib/libslang-compiler.so

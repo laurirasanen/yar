@@ -45,6 +45,7 @@ compiler_args = [
 
 linker_args = [
   '-m64',
+  '-static-libstdc++',
 ]
 
 # OS
@@ -77,6 +78,7 @@ thirdparty_inc = include_directories(
   # is_system reverses include order.
   # https://mesonbuild.com/Reference-manual_functions_include_directories.html
   'thirdparty/KTX-Software/external/dfdutils',
+  'thirdparty/KTX-Software/lib/include',
 
   'thirdparty/cgltf',
 
@@ -85,13 +87,11 @@ thirdparty_inc = include_directories(
   'thirdparty/imgui',
   'thirdparty/imgui/backends',
 
+  'thirdparty/slang/build/slang-2026.3-linux-x86_64/include',
+
   'thirdparty/stb',
 
   'thirdparty/VulkanMemoryAllocator/include',
-
-  'thirdparty/slang/build/slang-2026.3-linux-x86_64/include',
-
-  'thirdparty/KTX-Software/lib/include',
 
   'thirdparty/vulkan-headers/include',
 
@@ -113,14 +113,14 @@ imgui_src = [
 sdl_dep = dependency('sdl3', include_type: 'system')
 vk_dep = dependency('vulkan', include_type: 'system')
 
-slang_lib = cpp.find_library(
+slang_dep = cpp.find_library(
   'slang-compiler',
   dirs: [source_dir + '/thirdparty/slang/build/slang-2026.3-linux-x86_64/lib']
 )
 
-ktx_lib = cpp.find_library(
+ktx_dep = cpp.find_library(
   'ktx',
-  dirs: [source_dir + '/thirdparty/KTX-Software/lib/build']
+  dirs: [source_dir + '/thirdparty/KTX-Software/lib/build'],
 )
 
 box3d_opt = cmake.subproject_options()
@@ -139,14 +139,14 @@ box3d_opt.add_cmake_defines({
   'BOX3D_BUILD_SHADERS': false,
 })
 box3d_proj = cmake.subproject('box3d', options: box3d_opt)
-box3d_lib = box3d_proj.dependency('box3d')
+box3d_dep = box3d_proj.dependency('box3d')
 
 engine_deps = [
     sdl_dep,
     vk_dep,
-    slang_lib,
-    ktx_lib,
-    box3d_lib,
+    slang_dep,
+    ktx_dep,
+    box3d_dep,
 ]
 
 engine_src = files([
@@ -186,17 +186,27 @@ engine_lib = library(
   engine_src + imgui_src,
   dependencies: [engine_deps],
   include_directories: [thirdparty_inc],
+  install: true,
+  install_dir: '.',
 )
 
 engine_dep = declare_dependency(
   link_with: [engine_lib],
   dependencies: [],
-  include_directories: ['src/public', thirdparty_inc]
+  include_directories: ['src/public', thirdparty_inc],
 )
 
 subdir('assets')
+install_subdir('assets', install_dir: '.')
 
 examples = get_option('examples')
 if examples == true
-  executable('sample', files(['examples/main.cpp']), dependencies: [engine_dep])
+  executable(
+    'sample',
+    files(['examples/main.cpp']),
+    dependencies: [engine_dep],
+    install: true,
+    install_dir: '.',
+  )
+  install_data('run.sh', install_dir : '.')
 endif
