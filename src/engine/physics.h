@@ -99,6 +99,18 @@ class Physics : public IPhysics
 
     void SetTransform(std::shared_ptr<IPhysicsBody> body, const Transform& t) override;
 
+    glm::vec3 GetLinearVelocity(std::shared_ptr<IPhysicsBody> body) override;
+
+    void SetLinearVelocity(std::shared_ptr<IPhysicsBody> body, const glm::vec3 v) override;
+
+    glm::vec3 GetAngularVelocity(std::shared_ptr<IPhysicsBody> body) override;
+
+    void SetAngularVelocity(std::shared_ptr<IPhysicsBody> body, const glm::vec3 v) override;
+
+    void SetLinearDamping(std::shared_ptr<IPhysicsBody> body, float d) override;
+
+    void SetAngularDamping(std::shared_ptr<IPhysicsBody> body, float d) override;
+
     const PhysicsStats& GetStats() const override
     {
         return m_stats;

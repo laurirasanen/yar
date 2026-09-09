@@ -18,6 +18,8 @@ enum Key : unsigned int
     KEY_MOVE_UP,
     KEY_MOVE_DOWN,
 
+    KEY_INTERACT,
+
     KEY_MOUSE_GRAB,
 
     KEY_WINDOW_DEBUG,
@@ -69,6 +71,8 @@ class InputSettings
         m_sdlKeyMap[static_cast<unsigned int>(SDL_SCANCODE_SPACE)] = Key::KEY_MOVE_UP;
         m_sdlKeyMap[static_cast<unsigned int>(SDL_SCANCODE_LCTRL)] = Key::KEY_MOVE_DOWN;
 
+        m_sdlKeyMap[static_cast<unsigned int>(SDL_SCANCODE_E)] = Key::KEY_INTERACT;
+
         m_sdlKeyMap[static_cast<unsigned int>(SDL_SCANCODE_F1)] = Key::KEY_MOUSE_GRAB;
         m_sdlKeyMap[static_cast<unsigned int>(SDL_SCANCODE_F2)] = Key::KEY_WINDOW_DEBUG;
         m_sdlKeyMap[static_cast<unsigned int>(SDL_SCANCODE_F3)] = Key::KEY_WINDOW_DEMO;
@@ -85,6 +89,8 @@ class InputSettings
             Key::KEY_SPEED_DOWN;
         m_sdlButtonMap[static_cast<unsigned int>(SDL_GAMEPAD_BUTTON_RIGHT_SHOULDER)] =
             Key::KEY_SPEED_UP;
+
+        m_sdlButtonMap[static_cast<unsigned int>(SDL_GAMEPAD_BUTTON_SOUTH)] = Key::KEY_INTERACT;
     }
 
     Key GetKeyFromSDL(unsigned int scan)

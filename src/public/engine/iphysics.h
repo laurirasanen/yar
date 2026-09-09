@@ -86,6 +86,18 @@ class IPhysics
 
     virtual void SetTransform(std::shared_ptr<IPhysicsBody> body, const Transform& t) = 0;
 
+    virtual glm::vec3 GetLinearVelocity(std::shared_ptr<IPhysicsBody> body) = 0;
+
+    virtual void SetLinearVelocity(std::shared_ptr<IPhysicsBody> body, const glm::vec3 v) = 0;
+
+    virtual glm::vec3 GetAngularVelocity(std::shared_ptr<IPhysicsBody> body) = 0;
+
+    virtual void SetAngularVelocity(std::shared_ptr<IPhysicsBody> body, const glm::vec3 v) = 0;
+
+    virtual void SetLinearDamping(std::shared_ptr<IPhysicsBody> body, float d) = 0;
+
+    virtual void SetAngularDamping(std::shared_ptr<IPhysicsBody> body, float d) = 0;
+
     virtual const PhysicsStats& GetStats() const = 0;
 };
 

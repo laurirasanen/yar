@@ -151,7 +151,8 @@ void Physics::AddShape(
         {
             const auto longestAxis = MAX(MAX(extent.x, extent.y), extent.z);
             b3Sphere   sphere      = {.center = GlmToB3(position), .radius = longestAxis};
-            shapeId                = b3CreateSphereShape(bodyId, &shapeDef, &sphere);
+            shapeDef.baseMaterial.rollingResistance = 0.05f;
+            shapeId = b3CreateSphereShape(bodyId, &shapeDef, &sphere);
             break;
         }
 
@@ -163,7 +164,8 @@ void Physics::AddShape(
             const auto center1     = GlmToB3(position + localCenter);
             const auto center2     = GlmToB3(position - localCenter);
             b3Capsule  capsule     = {.center1 = center1, .center2 = center2, .radius = radius};
-            shapeId                = b3CreateCapsuleShape(bodyId, &shapeDef, &capsule);
+            shapeDef.baseMaterial.rollingResistance = 0.2f;
+            shapeId = b3CreateCapsuleShape(bodyId, &shapeDef, &capsule);
             break;
         }
 
@@ -185,12 +187,14 @@ std::shared_ptr<IPhysicsBody> Physics::CreateBody(
     const glm::quat& rotation
 )
 {
-    b3BodyDef bodyDef = b3DefaultBodyDef();
-    bodyDef.type      = BodyTypeToB3(type);
-    bodyDef.position  = GlmToB3(position);
-    bodyDef.rotation  = GlmToB3(rotation);
-    bodyDef.isEnabled = false;
-    b3BodyId bodyId   = b3CreateBody(m_worldId, &bodyDef);
+    b3BodyDef bodyDef      = b3DefaultBodyDef();
+    bodyDef.type           = BodyTypeToB3(type);
+    bodyDef.position       = GlmToB3(position);
+    bodyDef.rotation       = GlmToB3(rotation);
+    bodyDef.linearDamping  = 0.0f;
+    bodyDef.angularDamping = 0.1f;
+    bodyDef.isEnabled      = false;
+    b3BodyId bodyId        = b3CreateBody(m_worldId, &bodyDef);
 
     return std::make_shared<PhysicsBody>(bodyId);
 }
@@ -231,5 +235,43 @@ void Physics::SetTransform(std::shared_ptr<IPhysicsBody> body, const Transform& 
 {
     const auto b = InternalBody(body);
     b3Body_SetTransform(b->GetBodyID(), GlmToB3(t.GetPosition()), GlmToB3(t.GetRotation()));
+}
+
+glm::vec3 Physics::GetLinearVelocity(std::shared_ptr<IPhysicsBody> body)
+{
+    const auto b   = InternalBody(body);
+    const auto b3v = b3Body_GetLinearVelocity(b->GetBodyID());
+    return B3ToGlm(b3v);
+}
+
+void Physics::SetLinearVelocity(std::shared_ptr<IPhysicsBody> body, const glm::vec3 v)
+{
+    const auto b = InternalBody(body);
+    b3Body_SetLinearVelocity(b->GetBodyID(), GlmToB3(v));
+}
+
+glm::vec3 Physics::GetAngularVelocity(std::shared_ptr<IPhysicsBody> body)
+{
+    const auto b   = InternalBody(body);
+    const auto b3v = b3Body_GetAngularVelocity(b->GetBodyID());
+    return B3ToGlm(b3v);
+}
+
+void Physics::SetAngularVelocity(std::shared_ptr<IPhysicsBody> body, const glm::vec3 v)
+{
+    const auto b = InternalBody(body);
+    b3Body_SetAngularVelocity(b->GetBodyID(), GlmToB3(v));
+}
+
+void Physics::SetLinearDamping(std::shared_ptr<IPhysicsBody> body, float d)
+{
+    const auto b = InternalBody(body);
+    b3Body_SetLinearDamping(b->GetBodyID(), d);
+}
+
+void Physics::SetAngularDamping(std::shared_ptr<IPhysicsBody> body, float d)
+{
+    const auto b = InternalBody(body);
+    b3Body_SetAngularDamping(b->GetBodyID(), d);
 }
 }; // namespace yar

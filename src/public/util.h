@@ -8,7 +8,7 @@ namespace yar
 #define ARRAY_SIZE(A) (sizeof(A) / sizeof(*A))
 
 #define RAND_DOUBLE(D)    (D * static_cast<double>(rand()) / RAND_MAX)
-#define RAND_FLOAT(F)     (static_cast<float>(RAND(static_cast<double>(F))))
+#define RAND_FLOAT(F)     (static_cast<float>(RAND_DOUBLE(static_cast<double>(F))))
 #define RAND_INT(I)       (rand() % I)
 #define RAND_ELEMENT(ARR) (ARR[RAND_INT(ARRAY_SIZE(ARR))])
 

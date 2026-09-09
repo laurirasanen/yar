@@ -29,10 +29,10 @@ class ExampleApp : public IApplication
 
         g_window->SetTitle("example");
 
-        auto cam = std::make_shared<Entity>("camera");
-        auto camComp   = cam->AddComponent<NoclipCamera>();
-        camComp->Pitch = 10.0f;
-        camComp->transform.SetPosition({0.10f, 0.15f, -0.8f});
+        auto cam        = std::make_shared<Entity>("camera");
+        m_camera        = cam->AddComponent<NoclipCamera>();
+        m_camera->Pitch = 10.0f;
+        m_camera->transform.SetPosition({0.10f, 0.15f, -0.8f});
 
         g_world->AddEntity(cam);
 
@@ -75,6 +75,13 @@ class ExampleApp : public IApplication
             g_renderer->SetIBLStrength(g_renderer->GetIBLStrength() - 0.05f);
         }
 
+        if (frameInput.WasPressed(Key::KEY_INTERACT))
+        {
+            auto pos = m_camera->transform.GetPosition();
+            auto vel = m_camera->transform.Forward() * 10.0f;
+            ShootHelmet(pos, {RAND_FLOAT(360.0f), RAND_FLOAT(360.0f), RAND_FLOAT(360.0f)}, vel);
+        }
+
         Transform* t = m_flightHelmet->GetComponent<TransformComponent>()->GetTransform();
         t->AddRotation(deltaTime * 10.0f, VEC_UP);
     }
@@ -102,17 +109,7 @@ class ExampleApp : public IApplication
 
         g_world->AddEntity(m_flightHelmet);
 
-        mesh               = g_resources->Load<Mesh>("assets/scenes/DamagedHelmet.glb");
-        auto damagedHelmet = std::make_shared<Entity>("damaged helmet");
-        trans              = damagedHelmet->AddComponent<TransformComponent>()->GetTransform();
-        trans->SetPosition({0, 2.0f, 0});
-        trans->SetEulerRotation({90.0f, 180.0f, 0});
-        trans->SetScale({0.25f, 0.25f, 0.25f});
-        damagedHelmet->AddComponent<MeshComponent>(mesh);
-        auto body = damagedHelmet->AddComponent<RigidBodyComponent>(PhysicsBodyType::BODY_DYNAMIC);
-        body->AddCollider(PhysicsShapeType::SHAPE_SPHERE, {}, {}, {0.2f, 0.2f, 0.2f});
-
-        g_world->AddEntity(damagedHelmet);
+        ShootHelmet({0, 2.0f, 0}, {90.0f, 180.0f, 0}, {0, 0, 0});
 
         auto sky = std::make_shared<Entity>("sky");
         sky->AddComponent<SkyComponent>("assets/ibl/cobble");
@@ -128,7 +125,7 @@ class ExampleApp : public IApplication
         trans->SetPosition({0, -1.0f, 0});
         trans->SetRotation(glm::angleAxis(-glm::radians(5.0f), VEC_Z));
         floor->AddComponent<BoxMeshComponent>(glm::vec3 {5.0f, 0.1f, 5.0f});
-        body = floor->AddComponent<RigidBodyComponent>(PhysicsBodyType::BODY_STATIC);
+        auto body = floor->AddComponent<RigidBodyComponent>(PhysicsBodyType::BODY_STATIC);
         body->AddCollider(PhysicsShapeType::SHAPE_BOX, {}, {}, {5.0f, 0.1f, 5.0f});
 
         g_world->AddEntity(floor);
@@ -144,6 +141,25 @@ class ExampleApp : public IApplication
     }
 
   private:
+    void ShootHelmet(glm::vec3 pos, glm::vec3 rot, glm::vec3 vel)
+    {
+        auto mesh          = g_resources->Load<Mesh>("assets/scenes/DamagedHelmet.glb");
+        auto damagedHelmet = std::make_shared<Entity>("damaged helmet");
+        auto trans         = damagedHelmet->AddComponent<TransformComponent>()->GetTransform();
+        trans->SetPosition(pos);
+        trans->SetEulerRotation(rot);
+        trans->SetScale({0.25f, 0.25f, 0.25f});
+        damagedHelmet->AddComponent<MeshComponent>(mesh);
+        auto body = damagedHelmet->AddComponent<RigidBodyComponent>(PhysicsBodyType::BODY_DYNAMIC);
+        body->AddCollider(PhysicsShapeType::SHAPE_SPHERE, {}, {}, {0.2f, 0.2f, 0.2f});
+        body->SetLinearVelocity(vel);
+        body->SetAngularVelocity({RAND_FLOAT(5.0f), RAND_FLOAT(5.0f), RAND_FLOAT(5.0f)});
+
+        g_world->AddEntity(damagedHelmet);
+    }
+
+    Camera* m_camera;
+
     bool m_loaded;
 
     std::shared_ptr<Entity> m_flightHelmet;
