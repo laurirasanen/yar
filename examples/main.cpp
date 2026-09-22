@@ -75,11 +75,9 @@ class ExampleApp : public IApplication
             g_renderer->SetIBLStrength(g_renderer->GetIBLStrength() - 0.05f);
         }
 
-        if (frameInput.WasPressed(Key::KEY_INTERACT))
+        if (frameInput.IsDown(Key::KEY_INTERACT) && !m_wantSpawn && Time::Now() > m_lastSpawn + 0.5)
         {
-            auto pos = m_camera->transform.GetPosition();
-            auto vel = m_camera->transform.Forward() * 10.0f;
-            ShootHelmet(pos, {RAND_FLOAT(360.0f), RAND_FLOAT(360.0f), RAND_FLOAT(360.0f)}, vel);
+            m_wantSpawn = true;
         }
 
         Transform* t = m_flightHelmet->GetComponent<TransformComponent>()->GetTransform();
@@ -95,6 +93,18 @@ class ExampleApp : public IApplication
             g_ui->HideLoadingScreen();
             g_world->SetEnabled(true);
             m_loaded = true;
+        }
+
+        auto body = m_floor->GetComponent<RigidBodyComponent>();
+        body->SetAngularVelocity({0, 0.5f, 0});
+
+        if (m_wantSpawn)
+        {
+            auto pos = m_camera->transform.GetPosition();
+            auto vel = m_camera->transform.Forward() * 10.0f;
+            ShootHelmet(pos, {RAND_FLOAT(360.0f), RAND_FLOAT(360.0f), RAND_FLOAT(360.0f)}, vel);
+            m_lastSpawn = Time::Now() + 0.5;
+            m_wantSpawn = false;
         }
     }
 
@@ -120,24 +130,38 @@ class ExampleApp : public IApplication
         g_renderer->SetExposure(1.0f);
         g_renderer->SetContrast(1.0f);
 
-        auto floor = std::make_shared<Entity>("floor");
-        trans      = floor->AddComponent<TransformComponent>()->GetTransform();
+        m_floor = std::make_shared<Entity>("floor");
+        trans   = m_floor->AddComponent<TransformComponent>()->GetTransform();
         trans->SetPosition({0, -1.0f, 0});
         trans->SetRotation(glm::angleAxis(-glm::radians(5.0f), VEC_Z));
-        floor->AddComponent<BoxMeshComponent>(glm::vec3 {5.0f, 0.1f, 5.0f});
-        auto body = floor->AddComponent<RigidBodyComponent>(PhysicsBodyType::BODY_STATIC);
+        m_floor->AddComponent<BoxMeshComponent>(glm::vec3 {}, glm::vec3 {5.0f, 0.1f, 5.0f});
+        auto body = m_floor->AddComponent<RigidBodyComponent>(PhysicsBodyType::BODY_KINEMATIC);
         body->AddCollider(PhysicsShapeType::SHAPE_BOX, {}, {}, {5.0f, 0.1f, 5.0f});
+        g_world->AddEntity(m_floor);
 
-        g_world->AddEntity(floor);
+        glm::vec3 wall_pos[] = {
+            glm::vec3 {-3.0f, -0.75f,     0},
+            glm::vec3 { 3.0f, -0.75f,     0},
+            glm::vec3 {    0, -0.75f, -3.0f},
+            glm::vec3 {    0, -0.75f,  3.0f},
+        };
+        glm::vec3 wall_size[] = {
+            glm::vec3 {0.1f, 0.5f, 3.0f},
+            glm::vec3 {0.1f, 0.5f, 3.0f},
+            glm::vec3 {3.0f, 0.5f, 0.1f},
+            glm::vec3 {3.0f, 0.5f, 0.1f},
+        };
 
-        auto wall = std::make_shared<Entity>("wall");
-        trans     = wall->AddComponent<TransformComponent>()->GetTransform();
-        trans->SetPosition({5.0f, 0, 0});
-        wall->AddComponent<BoxMeshComponent>(glm::vec3 {0.1f, 5.0f, 5.0f});
-        body = wall->AddComponent<RigidBodyComponent>(PhysicsBodyType::BODY_STATIC);
-        body->AddCollider(PhysicsShapeType::SHAPE_BOX, {}, {}, {0.1f, 5.0f, 5.0f});
-
-        g_world->AddEntity(wall);
+        for (int i = 0; i < 4; i++)
+        {
+            auto wall = std::make_shared<Entity>(std::format("wall {}", i));
+            trans     = wall->AddComponent<TransformComponent>()->GetTransform();
+            trans->SetPosition(wall_pos[i]);
+            wall->AddComponent<BoxMeshComponent>(glm::vec3 {}, wall_size[i]);
+            body = wall->AddComponent<RigidBodyComponent>(PhysicsBodyType::BODY_STATIC);
+            body->AddCollider(PhysicsShapeType::SHAPE_BOX, {}, {}, wall_size[i]);
+            g_world->AddEntity(wall);
+        }
     }
 
   private:
@@ -163,6 +187,10 @@ class ExampleApp : public IApplication
     bool m_loaded;
 
     std::shared_ptr<Entity> m_flightHelmet;
+    std::shared_ptr<Entity> m_floor;
+
+    double m_lastSpawn = 0;
+    bool   m_wantSpawn = false;
 };
 
 int main(int argc, char** argv)

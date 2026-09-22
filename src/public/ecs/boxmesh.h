@@ -13,7 +13,8 @@ namespace yar
 class BoxMeshComponent : public Component
 {
   public:
-    BoxMeshComponent(Entity* owner, const glm::vec3& size) : Component(owner)
+    BoxMeshComponent(Entity* owner, const glm::vec3& origin, const glm::vec3& size) :
+        Component(owner)
     {
         const glm::vec3 uvScale = 2.0f * size;
         // clang-format off
@@ -86,6 +87,11 @@ class BoxMeshComponent : public Component
 
         auto material = Material(shader);
         material.SetTextures({tex});
+
+        for (auto& v : vertices)
+        {
+            v.position += origin;
+        }
 
         auto aabb = AABB(vertices);
 
