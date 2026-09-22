@@ -38,7 +38,7 @@ class RigidBodyComponent : public Component
 
     void Update(float deltaTime) override
     {
-        if (m_type != PhysicsBodyType::BODY_DYNAMIC)
+        if (m_type == PhysicsBodyType::BODY_STATIC)
         {
             return;
         }
@@ -49,7 +49,7 @@ class RigidBodyComponent : public Component
 
     void FixedUpdate(float deltaTime) override
     {
-        if (m_type != PhysicsBodyType::BODY_DYNAMIC)
+        if (m_type == PhysicsBodyType::BODY_STATIC)
         {
             return;
         }
